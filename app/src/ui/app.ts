@@ -1415,15 +1415,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
             : ''
         }</p>
         <div class="field"><label for="inp-n0">${
-          esc(curExtra?.nameLabel?.() ?? '') || L().fieldBottom
+          // Подписи полей — по выбранному сопернику, а не по позиции руки
+          // на экране: «нижний/верхний» врали при развороте стола и ничего
+          // не значили в матче с ботом (идея 0007).
+          esc(curExtra?.nameLabel?.() ?? '') ||
+          (opponentPref === 'human' ? L().fieldName : L().fieldYourName)
         }</label>
           <input id="inp-n0" type="text" value="${esc(savedP1) || L().defaultP1}" maxlength="16"></div>
         ${
-          wantSecondName
-            ? `<div class="field"><label for="inp-n1">${L().fieldTop}</label>
-          <input id="inp-n1" type="text" value="${
-            opponentPref !== 'human' ? L().botName : esc(savedP2) || L().defaultP2
-          }" maxlength="16"></div>`
+          wantSecondName && opponentPref === 'human'
+            ? `<div class="field"><label for="inp-n1">${L().fieldOpponentName}</label>
+          <input id="inp-n1" type="text" value="${esc(savedP2) || L().defaultP2}" maxlength="16"></div>`
             : ''
         }
         <div class="field"><label for="inp-opp">${L().fieldOpponent}</label>
@@ -1490,6 +1492,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   let lotFirst: 0 | 1 | null = null;
 
+  /** Имя второго места. У бота оно нередактируемое и говорит об уровне —
+   *  иначе в идущем матче не видно, с каким ботом играешь (идея 0007);
+   *  поле ввода при боте не рендерится вовсе. У человека — из поля. */
+  function secondName(): string {
+    if (opponentPref === 'easy') return L().botNameEasy;
+    if (opponentPref === 'normal') return L().botNameNormal;
+    if (opponentPref === 'strong') return L().botNameStrong;
+    return document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim() || L().defaultP2;
+  }
+
   function rollLot(): void {
     // Жребий как в §2.5: тянем по кости, у кого сумма меньше — тот первый.
     // Чистая визуализация: на партию влияет только то, кто оказался первым.
@@ -1501,7 +1513,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
     lotFirst = pipSum(a) < pipSum(b) ? 0 : 1;
     const n0 = ($('#inp-n0') as HTMLInputElement).value.trim() || L().defaultP1;
-    const n1 = ($('#inp-n1') as HTMLInputElement).value.trim() || L().defaultP2;
+    const n1 = secondName();
     const ta = parseTile(a);
     const tb = parseTile(b);
     $('#lot-row').innerHTML = `
@@ -1521,8 +1533,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const curExtra = extraOpponents.find((o) => o.id === opponentPref);
     if (lotFirst === null && curExtra?.needsLots !== false) return;
     const n0 = ($('#inp-n0') as HTMLInputElement).value.trim() || L().defaultP1;
-    const n1 =
-      document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim() || L().defaultP2;
+    const n1 = secondName();
     const variant: Variant = {
       doubleOnlyCloses: ($('#inp-variant') as HTMLInputElement).checked,
       // Канонические 100 в состояние и протокол не пишем: без поля они
@@ -1990,10 +2001,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       targetPref = Number(t.value);
       persistUi();
     } else if (t.id === 'inp-n0' || t.id === 'inp-n1') {
-      // Имена запоминаются между запусками; автоимена ботов не сохраняем.
+      // Имена запоминаются между запусками. Поле второго имени существует
+      // только в матче с человеком — имя бота нередактируемо (идея 0007).
       const v = t.value.trim().slice(0, 16);
       if (t.id === 'inp-n0') savedP1 = v;
-      else if (v !== L().botName) savedP2 = v;
+      else savedP2 = v;
       persistUi();
     } else if (t.id === 'inp-lang-start') {
       // Введённые, но ещё не сохранённые имена не теряем; автоподстановки
@@ -2001,7 +2013,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       const n0 = document.querySelector<HTMLInputElement>('#inp-n0')?.value.trim();
       if (n0 && n0 !== L().defaultP1) savedP1 = n0;
       const n1 = document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim();
-      if (n1 && n1 !== L().botName && n1 !== L().defaultP2) savedP2 = n1;
+      if (n1 && n1 !== L().defaultP2) savedP2 = n1;
       const varOn = document.querySelector<HTMLInputElement>('#inp-variant')?.checked;
       setLocale(t.value as Locale);
       persistUi();
@@ -2022,14 +2034,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       if (n0el && n0 !== undefined) n0el.value = n0;
       const varEl = document.querySelector<HTMLInputElement>('#inp-variant');
       if (varEl && varOn !== undefined) varEl.checked = varOn;
-      // Имя верхнего игрока меняем только если оно осталось автоподставленным.
-      const n1 = document.querySelector<HTMLInputElement>('#inp-n1');
-      if (n1) {
-        const autoNames = [L().botName, L().defaultP2];
-        if (autoNames.includes(n1.value.trim()) || n1.value.trim() === '') {
-          n1.value = opponentPref !== 'human' ? L().botName : L().defaultP2;
-        }
-      }
+      // Поле второго имени появляется/исчезает вместе с пунктом (у ботов
+      // его нет — имя нередактируемое, идея 0007); перерисовка выше уже
+      // подставила savedP2/дефолт, править его дополнительно не нужно.
     }
   });
 
