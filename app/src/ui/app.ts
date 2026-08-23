@@ -1836,10 +1836,13 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // зияют просветы, и добор срабатывал через раз (баг 0007). Улетает
     // ближайшая к пальцу кость; какая выдана — по-прежнему решает движок.
     // Ход по тени, кнопка, кость в руке и открытый оверлей важнее кучи.
+    // Панель подтверждения — тоже (баг 0017): на телефоне она лежит
+    // в границах зоны, и тап «Отмена» проваливался в добор с тостом
+    // «брать из базара нельзя» (на «Поставить» спасал 300-мс гейт).
     if (
       !replay &&
       elOverlay.hidden &&
-      !target.closest('[data-move],[data-action],[data-tile]')
+      !target.closest('[data-move],[data-action],[data-tile],#confirm-bar')
     ) {
       const zone = pileZone();
       if (zone && ev.clientX >= zone.l && ev.clientX <= zone.r && ev.clientY >= zone.t && ev.clientY <= zone.b) {
