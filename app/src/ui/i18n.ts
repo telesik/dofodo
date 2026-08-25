@@ -31,8 +31,9 @@ const ru = {
   linkRules: 'Правила игры',
   linkSupport: 'Поддержать авторов',
   linkPrivacy: 'Политика конфиденциальности',
-  fieldBottom: 'Нижний игрок',
-  fieldTop: 'Верхний игрок',
+  fieldName: 'Имя игрока',
+  fieldYourName: 'Ваше имя',
+  fieldOpponentName: 'Имя соперника',
   fieldLang: 'Язык',
   settingsTitle: 'Настройки',
   btnDone: 'Готово',
@@ -123,6 +124,8 @@ const ru = {
   ptsShort: 'очк.',
   matchWin: (name: string) => `Победа в матче: ${name}!`,
   matchDraw: 'Ничья в матче — счёты равны (§10.5)',
+  matchRoundLabel: (n: number) => `Партия ${n}`,
+  resultTime: (round: string, total: string) => `Время партии ${round} · матча ${total}`,
   btnNextRound: 'Следующая партия',
   btnAbortMatch: 'Бросить матч',
   btnNewMatch: 'Новый матч',
@@ -175,14 +178,18 @@ const ru = {
   confirmNo: 'Отмена',
   statusBotThinking: (name: string) => `${name}: думает…`,
   tutorBotTurn: 'Сейчас ходит бот — он думает сам, подождите немного.',
+  tutorRemoteTurn: 'Сейчас ходит соперник — подождите немного.',
   tipRelayout: 'Переложить ветки по-другому: раскладка на правила не влияет (§6.3)',
   rootDeadTitle: 'Тупик корня — с этой стороны кости не ставятся (§6.2)',
   fieldOpponent: 'Соперник',
+  fieldTarget: 'Матч до',
   oppHuman: 'человек',
   oppBotEasy: 'бот — лёгкий',
   oppBotNormal: 'бот — обычный',
   oppBotStrong: 'бот — сильный',
-  botName: 'Бот',
+  botNameEasy: 'Лёгкий бот',
+  botNameNormal: 'Обычный бот',
+  botNameStrong: 'Сильный бот',
   tutorStart:
     'Введите имена и бросьте жребий — первым ходит тот, у кого меньше сумма на вытянутой кости (§2.5). Потом «Начать матч»: по 7 костей в руки, 14 — в закрытый базар (§2.3). Дальше подсказки поведут по ходу партии.',
   tutorRootHasDouble:
@@ -204,8 +211,8 @@ const ru = {
   tutorDraw:
     'Сходить нечем — кликните кучу базара (§8.2). Кость подойдёт — обязаны сходить ею; нет — останется в руке, ход перейдёт.',
   tutorPass: 'Сходить нечем, базар пуст — ход пропускается сам (§8.3).',
-  tutorOver:
-    'Партия окончена: очки получает тот, у кого сумма на руках больше (§10.3). Матч проигрывает набравший 100 (§10.5).',
+  tutorOver: (target: number) =>
+    `Партия окончена: очки получает тот, у кого сумма на руках больше (§10.3). Матч проигрывает набравший ${target} (§10.5).`,
   tutorPending:
     'Проверьте выбранный ход: поставить — кнопкой или повторным кликом по тени; передумали — отмена или другая тень.',
 
@@ -222,8 +229,9 @@ const en: Dict = {
   linkRules: 'Game rules',
   linkSupport: 'Support the authors',
   linkPrivacy: 'Privacy policy',
-  fieldBottom: 'Bottom player',
-  fieldTop: 'Top player',
+  fieldName: 'Player name',
+  fieldYourName: 'Your name',
+  fieldOpponentName: 'Opponent name',
   fieldLang: 'Language',
   settingsTitle: 'Settings',
   btnDone: 'Done',
@@ -304,6 +312,8 @@ const en: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Match victory: ${name}!`,
   matchDraw: 'Match drawn — equal totals (§10.5)',
+  matchRoundLabel: (n) => `Game ${n}`,
+  resultTime: (round, total) => `Game time ${round} · match ${total}`,
   btnNextRound: 'Next game',
   btnAbortMatch: 'Abandon match',
   btnNewMatch: 'New match',
@@ -352,14 +362,18 @@ const en: Dict = {
   confirmNo: 'Cancel',
   statusBotThinking: (name) => `${name}: thinking…`,
   tutorBotTurn: 'The bot is taking its turn — give it a moment.',
+  tutorRemoteTurn: 'Your opponent is taking their turn — give them a moment.',
   tipRelayout: 'Rearrange the branches differently: the layout does not affect the rules (§6.3)',
   rootDeadTitle: 'Root dead end — no tiles on this side (§6.2)',
   fieldOpponent: 'Opponent',
+  fieldTarget: 'Play to',
   oppHuman: 'human',
   oppBotEasy: 'bot — easy',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — strong',
-  botName: 'Bot',
+  botNameEasy: 'Easy bot',
+  botNameNormal: 'Normal bot',
+  botNameStrong: 'Strong bot',
   tutorStart:
     'Enter the names and draw lots — whoever draws the tile with the lower total moves first (§2.5). Then “Start match”: 7 tiles per hand, 14 go to the face-down boneyard (§2.3). From there the hints will guide you through the game.',
   tutorRootHasDouble:
@@ -381,8 +395,8 @@ const en: Dict = {
   tutorDraw:
     'No move — click the boneyard pile (§8.2). If the drawn tile fits, you must play it; otherwise it stays in your hand and the turn passes.',
   tutorPass: 'No move and the boneyard is empty — the turn is passed automatically (§8.3).',
-  tutorOver:
-    'The game is over: points go to whoever holds more (§10.3). Whoever reaches 100 loses the match (§10.5).',
+  tutorOver: (target) =>
+    `The game is over: points go to whoever holds more (§10.3). Whoever reaches ${target} loses the match (§10.5).`,
   tutorPending:
     'Check the selected move: place it with the button or by clicking the ghost again; changed your mind — cancel or pick another ghost.',
 
@@ -396,8 +410,9 @@ const es: Dict = {
   linkRules: 'Reglas del juego',
   linkSupport: 'Apoyar a los autores',
   linkPrivacy: 'Política de privacidad',
-  fieldBottom: 'Jugador inferior',
-  fieldTop: 'Jugador superior',
+  fieldName: 'Nombre del jugador',
+  fieldYourName: 'Tu nombre',
+  fieldOpponentName: 'Nombre del rival',
   fieldLang: 'Idioma',
   settingsTitle: 'Ajustes',
   btnDone: 'Listo',
@@ -478,6 +493,8 @@ const es: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `¡Victoria del encuentro: ${name}!`,
   matchDraw: 'Encuentro empatado — sumas iguales (§10.5)',
+  matchRoundLabel: (n) => `Juego ${n}`,
+  resultTime: (round, total) => `Tiempo del juego ${round} · del encuentro ${total}`,
   btnNextRound: 'Siguiente juego',
   btnAbortMatch: 'Abandonar encuentro',
   btnNewMatch: 'Nuevo encuentro',
@@ -526,14 +543,18 @@ const es: Dict = {
   confirmNo: 'Cancelar',
   statusBotThinking: (name) => `${name}: pensando…`,
   tutorBotTurn: 'Le toca al bot — juega solo, espere un momento.',
+  tutorRemoteTurn: 'Le toca al rival — espere un momento.',
   tipRelayout: 'Reacomodar las ramas: la disposición no afecta a las reglas (§6.3)',
   rootDeadTitle: 'Extremo ciego de la raíz: por este lado no se colocan fichas (§6.2)',
   fieldOpponent: 'Rival',
+  fieldTarget: 'Jugar hasta',
   oppHuman: 'humano',
   oppBotEasy: 'bot — fácil',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — fuerte',
-  botName: 'Bot',
+  botNameEasy: 'Bot fácil',
+  botNameNormal: 'Bot normal',
+  botNameStrong: 'Bot fuerte',
   tutorStart:
     'Escriba los nombres y echen a suertes: mueve primero quien saca la ficha de menor suma (§2.5). Luego «Empezar partida»: 7 fichas por mano y 14 al pozo boca abajo (§2.3). Después las pistas le guiarán durante el juego.',
   tutorRootHasDouble:
@@ -556,8 +577,8 @@ const es: Dict = {
   tutorDraw:
     'Sin jugada — haga clic en el pozo (§8.2). Si la ficha sirve, debe jugarla; si no, se queda en la mano y el turno pasa.',
   tutorPass: 'Sin jugada y pozo vacío: el turno se pasa solo (§8.3).',
-  tutorOver:
-    'Juego terminado: puntúa quien retiene más en la mano (§10.3). Pierde el encuentro quien llega a 100 (§10.5).',
+  tutorOver: (target) =>
+    `Juego terminado: puntúa quien retiene más en la mano (§10.3). Pierde el encuentro quien llega a ${target} (§10.5).`,
   tutorPending:
     'Revise la jugada elegida: colóquela con el botón o con otro clic en la sombra; si cambia de idea — cancele o elija otra sombra.',
 
@@ -571,8 +592,9 @@ const de: Dict = {
   linkRules: 'Spielregeln',
   linkSupport: 'Die Autoren unterstützen',
   linkPrivacy: 'Datenschutzerklärung',
-  fieldBottom: 'Unterer Spieler',
-  fieldTop: 'Oberer Spieler',
+  fieldName: 'Spielername',
+  fieldYourName: 'Ihr Name',
+  fieldOpponentName: 'Name des Gegners',
   fieldLang: 'Sprache',
   settingsTitle: 'Einstellungen',
   btnDone: 'Fertig',
@@ -653,6 +675,8 @@ const de: Dict = {
   ptsShort: 'Pkt.',
   matchWin: (name) => `Matchsieg: ${name}!`,
   matchDraw: 'Match unentschieden — gleiche Summen (§10.5)',
+  matchRoundLabel: (n) => `Partie ${n}`,
+  resultTime: (round, total) => `Partiedauer ${round} · Matchdauer ${total}`,
   btnNextRound: 'Nächste Partie',
   btnAbortMatch: 'Match abbrechen',
   btnNewMatch: 'Neues Match',
@@ -701,14 +725,18 @@ const de: Dict = {
   confirmNo: 'Abbrechen',
   statusBotThinking: (name) => `${name}: denkt nach…`,
   tutorBotTurn: 'Der Bot ist am Zug — er spielt selbst, einen Moment.',
+  tutorRemoteTurn: 'Der Gegner ist am Zug — einen Moment, bitte.',
   tipRelayout: 'Zweige anders legen: die Anordnung berührt die Regeln nicht (§6.3)',
   rootDeadTitle: 'Sackgasse der Wurzel — an dieser Seite wird nicht angelegt (§6.2)',
   fieldOpponent: 'Gegner',
+  fieldTarget: 'Match bis',
   oppHuman: 'Mensch',
   oppBotEasy: 'Bot — leicht',
   oppBotNormal: 'Bot — normal',
   oppBotStrong: 'Bot — stark',
-  botName: 'Bot',
+  botNameEasy: 'Leichter Bot',
+  botNameNormal: 'Normaler Bot',
+  botNameStrong: 'Starker Bot',
   tutorStart:
     'Namen eingeben und losen — wer den Stein mit der kleineren Summe zieht, beginnt (§2.5). Dann „Match starten“: je 7 Steine auf die Hand, 14 in den verdeckten Talon (§2.3). Danach führen die Hinweise durch die Partie.',
   tutorRootHasDouble:
@@ -731,8 +759,8 @@ const de: Dict = {
   tutorDraw:
     'Kein Zug — klicken Sie den Talon an (§8.2). Passt der Stein, müssen Sie ihn legen; sonst bleibt er in der Hand und der Gegner ist am Zug.',
   tutorPass: 'Kein Zug und der Talon ist leer — der Zug wird automatisch übersprungen (§8.3).',
-  tutorOver:
-    'Die Partie ist zu Ende: Punkte bekommt, wer mehr auf der Hand behält (§10.3). Das Match verliert, wer 100 erreicht (§10.5).',
+  tutorOver: (target) =>
+    `Die Partie ist zu Ende: Punkte bekommt, wer mehr auf der Hand behält (§10.3). Das Match verliert, wer ${target} erreicht (§10.5).`,
   tutorPending:
     'Prüfen Sie den gewählten Zug: legen — per Knopf oder erneutem Klick auf den Schatten; umentschieden — abbrechen oder einen anderen Schatten wählen.',
 
@@ -746,8 +774,9 @@ const pt: Dict = {
   linkRules: 'Regras do jogo',
   linkSupport: 'Apoiar os autores',
   linkPrivacy: 'Política de privacidade',
-  fieldBottom: 'Jogador de baixo',
-  fieldTop: 'Jogador de cima',
+  fieldName: 'Nome do jogador',
+  fieldYourName: 'Seu nome',
+  fieldOpponentName: 'Nome do adversário',
   fieldLang: 'Idioma',
   settingsTitle: 'Configurações',
   btnDone: 'Pronto',
@@ -828,6 +857,8 @@ const pt: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Vitória da partida: ${name}!`,
   matchDraw: 'Partida empatada — somas iguais (§10.5)',
+  matchRoundLabel: (n) => `Jogo ${n}`,
+  resultTime: (round, total) => `Tempo do jogo ${round} · da partida ${total}`,
   btnNextRound: 'Próximo jogo',
   btnAbortMatch: 'Abandonar a partida',
   btnNewMatch: 'Nova partida',
@@ -876,14 +907,18 @@ const pt: Dict = {
   confirmNo: 'Cancelar',
   statusBotThinking: (name) => `${name}: pensando…`,
   tutorBotTurn: 'É a vez do bot — ele joga sozinho, um instante.',
+  tutorRemoteTurn: 'É a vez do adversário — um instante.',
   tipRelayout: 'Reacomodar os ramos: a disposição não afeta as regras (§6.3)',
   rootDeadTitle: 'Beco da raiz — deste lado não se joga (§6.2)',
   fieldOpponent: 'Adversário',
+  fieldTarget: 'Jogar até',
   oppHuman: 'humano',
   oppBotEasy: 'bot — fácil',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — forte',
-  botName: 'Bot',
+  botNameEasy: 'Bot fácil',
+  botNameNormal: 'Bot normal',
+  botNameStrong: 'Bot forte',
   tutorStart:
     'Digite os nomes e sorteiem — começa quem tira a peça de menor soma (§2.5). Depois «Começar a partida»: 7 peças por mão, 14 vão ao dorme fechado (§2.3). Daí em diante as dicas guiam você pelo jogo.',
   tutorRootHasDouble:
@@ -905,8 +940,8 @@ const pt: Dict = {
   tutorDraw:
     'Sem jogada — clique no dorme (§8.2). Se a peça servir, você deve jogá-la; senão ela fica na mão e a vez passa.',
   tutorPass: 'Sem jogada e dorme vazio — a vez passa sozinha (§8.3).',
-  tutorOver:
-    'Jogo encerrado: pontua quem retém mais na mão (§10.3). Perde a partida quem chega a 100 (§10.5).',
+  tutorOver: (target) =>
+    `Jogo encerrado: pontua quem retém mais na mão (§10.3). Perde a partida quem chega a ${target} (§10.5).`,
   tutorPending:
     'Revise a jogada escolhida: coloque com o botão ou com outro clique na sombra; mudou de ideia — cancele ou escolha outra sombra.',
 
@@ -920,8 +955,9 @@ const zh: Dict = {
   linkRules: '游戏规则',
   linkSupport: '支持作者',
   linkPrivacy: '隐私政策',
-  fieldBottom: '下方玩家',
-  fieldTop: '上方玩家',
+  fieldName: '玩家昵称',
+  fieldYourName: '你的昵称',
+  fieldOpponentName: '对手昵称',
   fieldLang: '语言',
   settingsTitle: '设置',
   btnDone: '完成',
@@ -1001,6 +1037,8 @@ const zh: Dict = {
   ptsShort: '分',
   matchWin: (name) => `比赛获胜：${name}！`,
   matchDraw: '比赛平局——总分相同（§10.5）',
+  matchRoundLabel: (n) => `第 ${n} 局`,
+  resultTime: (round, total) => `用时：本局 ${round}，全场 ${total}`,
   btnNextRound: '下一局',
   btnAbortMatch: '放弃比赛',
   btnNewMatch: '新比赛',
@@ -1049,14 +1087,18 @@ const zh: Dict = {
   confirmNo: '取消',
   statusBotThinking: (name) => `${name}：思考中…`,
   tutorBotTurn: '现在轮到电脑——它会自己出牌，请稍候。',
+  tutorRemoteTurn: '现在轮到对手——请稍候。',
   tipRelayout: '重新排布枝条：摆放方式不影响规则（§6.3）',
   rootDeadTitle: '根牌死端——此侧不能接牌（§6.2）',
   fieldOpponent: '对手',
+  fieldTarget: '比赛至（分）',
   oppHuman: '真人',
   oppBotEasy: '电脑——简单',
   oppBotNormal: '电脑——普通',
   oppBotStrong: '电脑——强',
-  botName: '电脑',
+  botNameEasy: '简单电脑',
+  botNameNormal: '普通电脑',
+  botNameStrong: '强力电脑',
   tutorStart:
     '输入玩家名并抽签——摸到点数和较小的牌者先行（§2.5）。然后「开始比赛」：每人 7 张牌，14 张进入盖放的牌堆（§2.3）。之后提示会引导您完成对局。',
   tutorRootHasDouble:
@@ -1074,7 +1116,8 @@ const zh: Dict = {
   tutorDraw:
     '无牌可出——点击牌堆（§8.2）。摸到的牌可用就必须打出；不可用则留在手中，轮到对方。',
   tutorPass: '无牌可出且牌堆已空——自动跳过本轮（§8.3）。',
-  tutorOver: '本局结束：手中剩余点数多者得分（§10.3）。先到 100 分者输掉整场比赛（§10.5）。',
+  tutorOver: (target) =>
+    `本局结束：手中剩余点数多者得分（§10.3）。先到 ${target} 分者输掉整场比赛（§10.5）。`,
   tutorPending: '请核对所选走法：按按钮或再次点击虚影放牌；想换——取消或点击其他虚影。',
 
   versionWord: '版本',
@@ -1097,8 +1140,9 @@ const uk: Dict = {
   linkRules: 'Правила гри',
   linkSupport: 'Підтримати авторів',
   linkPrivacy: 'Політика конфіденційності',
-  fieldBottom: 'Нижній гравець',
-  fieldTop: 'Верхній гравець',
+  fieldName: 'Ім’я гравця',
+  fieldYourName: 'Ваше ім’я',
+  fieldOpponentName: 'Ім’я суперника',
   fieldLang: 'Мова',
   settingsTitle: 'Налаштування',
   btnDone: 'Готово',
@@ -1179,6 +1223,8 @@ const uk: Dict = {
   ptsShort: 'очк.',
   matchWin: (name) => `Перемога в матчі: ${name}!`,
   matchDraw: 'Нічия в матчі — рахунки рівні (§10.5)',
+  matchRoundLabel: (n) => `Партія ${n}`,
+  resultTime: (round, total) => `Час партії ${round} · матчу ${total}`,
   btnNextRound: 'Наступна партія',
   btnAbortMatch: 'Покинути матч',
   btnNewMatch: 'Новий матч',
@@ -1227,14 +1273,18 @@ const uk: Dict = {
   confirmNo: 'Скасувати',
   statusBotThinking: (name) => `${name}: думає…`,
   tutorBotTurn: 'Зараз ходить бот — він думає сам, зачекайте трохи.',
+  tutorRemoteTurn: 'Зараз ходить суперник — зачекайте трохи.',
   tipRelayout: 'Перекласти гілки по-іншому: розкладка на правила не впливає (§6.3)',
   rootDeadTitle: 'Глухий кут кореня — з цього боку кістки не ставляться (§6.2)',
   fieldOpponent: 'Суперник',
+  fieldTarget: 'Матч до',
   oppHuman: 'людина',
   oppBotEasy: 'бот — легкий',
   oppBotNormal: 'бот — звичайний',
   oppBotStrong: 'бот — сильний',
-  botName: 'Бот',
+  botNameEasy: 'Легкий бот',
+  botNameNormal: 'Звичайний бот',
+  botNameStrong: 'Сильний бот',
   tutorStart:
     'Введіть імена і киньте жереб — першим ходить той, у кого менша сума на витягнутій кістці (§2.5). Потім «Почати матч»: по 7 кісток у руки, 14 — у закритий базар (§2.3). Далі підказки вестимуть по ходу партії.',
   tutorRootHasDouble:
@@ -1256,8 +1306,8 @@ const uk: Dict = {
   tutorDraw:
     'Ходити нічим — клікніть купу базару (§8.2). Кістка підійде — зобов’язані сходити нею; ні — залишиться в руці, хід перейде.',
   tutorPass: 'Ходити нічим, базар порожній — хід пропускається сам (§8.3).',
-  tutorOver:
-    'Партію закінчено: очки отримує той, у кого сума на руках більша (§10.3). Матч програє той, хто набере 100 (§10.5).',
+  tutorOver: (target) =>
+    `Партію закінчено: очки отримує той, у кого сума на руках більша (§10.3). Матч програє той, хто набере ${target} (§10.5).`,
   tutorPending:
     'Перевірте обраний хід: поставити — кнопкою або повторним кліком по тіні; передумали — скасуйте чи оберіть іншу тінь.',
 

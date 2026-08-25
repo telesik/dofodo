@@ -17,6 +17,7 @@ import {
   pipSum,
   replayRound,
   seedFromCrypto,
+  matchTarget,
   startMatch,
   validateProtocol,
   type GameState,
@@ -293,6 +294,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // Помимо встроенных значений допускает id пунктов из opts.opponentOptions.
   type OpponentPref = 'human' | BotLevel | (string & {});
   let opponentPref: OpponentPref = 'human';
+  /** Цель матча (§10.5): к выбору предлагаются эти значения, канон — 100. */
+  const MATCH_TARGETS: readonly number[] = [50, 100, 150, 200];
+  let targetPref = 100;
   // Имена игроков переживают перезапуск (пустая строка = не задано).
   let savedP1 = '';
   let savedP2 = '';
@@ -312,6 +316,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       toggles?: Record<string, boolean>;
       roundsDone?: number;
       tutorAsked?: boolean;
+      target?: number;
     };
     markOwners = !!prefs.markOwners;
     if (typeof prefs.p1Name === 'string') savedP1 = prefs.p1Name.slice(0, 16);
@@ -333,6 +338,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     ];
     if (validOpp.includes(prefs.opponent ?? '')) {
       opponentPref = prefs.opponent as OpponentPref;
+    }
+    if (typeof prefs.target === 'number' && MATCH_TARGETS.includes(prefs.target)) {
+      targetPref = prefs.target;
     }
     for (const t of extraToggles) {
       toggleState.set(t.id, prefs.toggles?.[t.id] ?? t.initial);
@@ -363,6 +371,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           confirm: confirmOn,
           tutor: tutorOn,
           opponent: opponentPref,
+          target: targetPref,
           p1Name: savedP1,
           p2Name: savedP2,
           toggles: Object.fromEntries(toggleState),
@@ -460,6 +469,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         typeof r.seed === 'number' &&
         Array.isArray(r.history) &&
         Array.isArray(m.rounds) &&
+        // Цель матча из сырого JSON решает, когда матч кончится, —
+        // порченое значение (0, строка) сломало бы finishRound.
+        !!m.variant &&
+        targetOk(m.variant.target) &&
+        !!r.variant &&
+        targetOk(r.variant.target) &&
         (m.bot == null ||
           ((m.bot.player === 0 || m.bot.player === 1) &&
             ['easy', 'normal', 'strong'].includes(m.bot.level)));
@@ -467,6 +482,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } catch {
       return drop();
     }
+  }
+
+  /** Валидная цель матча в сыром JSON: поля нет или целое больше нуля. */
+  function targetOk(t: unknown): boolean {
+    return t === undefined || (typeof t === 'number' && Number.isInteger(t) && t > 0);
   }
 
   function toast(text: string, warn = false): void {
@@ -577,13 +597,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
    * Полёт кости из руки к месту установки. Цель пересчитывается каждый кадр:
    * автомасштаб в это же время может панорамировать и зумить стол.
    */
-  function flyPlacement(seq: number, tile: TileId, from: DOMRect): void {
+  function flyPlacement(seq: number, values: readonly [number, number], from: DOMRect): void {
     flightCancel?.();
     flyingSeq = seq; // отменённый полёт мог сбросить флаг скрытия
-    const pt = parseTile(tile);
     const clone = document.createElement('div');
     clone.className = 'flying-tile fly-place';
-    clone.innerHTML = tileSvgElement(tileFace(pt.hi, pt.lo, { shadow: 'flat' }), 88);
+    clone.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
     document.body.appendChild(clone);
     const start = { x: from.left + from.width / 2, y: from.top + from.height / 2 };
     const startAngle = handsVertical ? 90 : 0;
@@ -628,8 +647,22 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // прилетающий уже в перерисованный DOM (куча базара, призраки).
   let lastDispatchAt = 0;
 
-  function dispatch(move: Move): void {
+  // --- Время на ход (идея 0003) -------------------------------------------------
+  // Замер честный: от показа позиции до dispatch. Всё, что разбивает ход
+  // (уход приложения с глаз, просмотр истории, восстановление из сейва),
+  // обнуляет turnStartedAt — такой ход уходит в историю без t.
+  let turnStartedAt: number | null = null;
+  let turnKey = '';
+  /** Матч восстановлен из сейва: первый показанный ход не мерить. */
+  let spoilNextTurn = false;
+
+  /** external — ход рождён не за этим экраном (BLE-надстройка):
+   *  своё t не подставляем, пришедшее не трогаем. */
+  function dispatch(move: Move, external = false): void {
     if (replay || !match || match.round.phase === 'over') return;
+    if (!external && move.t === undefined && turnStartedAt !== null) {
+      move = { ...move, t: Math.max(0, Math.round(performance.now() - turnStartedAt)) };
+    }
     clearTimeout(autoPassTimer);
     // Точка старта полёта: кость в руке ходящего (до применения хода).
     let flyFrom: DOMRect | null = null;
@@ -675,7 +708,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     opts.onMove?.(move, round);
     renderAll();
     if (placedSeq !== null) {
-      if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.tile, flyFrom);
+      if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.values, flyFrom);
       // Автомасштаб сам держит всё в кадре; без него доводим кость минимальным
       // сдвигом — после перекладки дерева она могла уехать за край.
       if (!board.isAutoFit()) board.ensureVisible(placedSeq);
@@ -704,11 +737,23 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const round = match.round;
     const legal = round.phase === 'over' ? [] : legalMoves(round);
 
+    // Ход начинается, когда позиция показана: смена ключа заводит таймер
+    // заново. Сид в ключе различает и партии, и матчи — иначе первая
+    // позиция любого матча («0 ходов») совпадала бы с первой позицией
+    // предыдущего. Повторные рендеры того же хода (смена языка, зеркало,
+    // пан/зум) таймер не трогают; скрытое окно сразу портит замер.
+    const tk = `${round.seed}|${round.history.length}`;
+    if (tk !== turnKey) {
+      turnKey = tk;
+      turnStartedAt = spoilNextTurn || document.hidden ? null : performance.now();
+      spoilNextTurn = false;
+    }
+
     deriveSelection(round, legal);
     ensurePileSprites();
     renderTopbar(round);
-    // В ход бота руки и куча не приглашают к действию: без классов
-    // playable/can-draw — кликать всё равно нельзя.
+    // В чужой ход (бот или удалённый соперник) руки и куча не приглашают
+    // к действию: без классов playable/can-draw — кликать всё равно нельзя.
     const legalUi = notMyTurn() ? [] : legal;
     renderHand(0, round, legalUi);
     renderHand(1, round, legalUi);
@@ -724,7 +769,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   function deriveSelection(round: GameState, legal: readonly Move[]): void {
     if (round.phase === 'over' || notMyTurn()) {
-      // В ход бота человеку нечего выбирать: без выделения, без призраков.
+      // В чужой ход (бот или удалённый соперник) человеку нечего выбирать:
+      // без выделения, без призраков.
       selected = null;
       if (round.phase === 'over') return;
       if (pending) pending = null;
@@ -757,7 +803,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     elStatusPrompt.innerHTML = prompt;
     elBtnFit.classList.toggle('active', board.isAutoFit());
     // Кнопка перекладки веток осмысленна, только когда есть повороты.
-    elBtnRelayout.hidden = !round.placed.some((p) => p.kind === 'turn');
+    // В сетевом матче ручной перекладки нет вовсе (идея 0005, решение
+    // автора): раскладка локальна и партнёру не передаётся, поэтому
+    // перестройка по прихоти одного разводит столы двух устройств —
+    // сидящий рядом живой партнёр теряется, «это не спортивно».
+    // Hot-seat и бот не в счёт — там экран один.
+    elBtnRelayout.hidden = remoteSeat !== null || !round.placed.some((p) => p.kind === 'turn');
   }
 
   // Формулировки без глаголов прошедшего времени: имена игроков любого рода.
@@ -791,6 +842,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
     const name = `<b>${esc(nameOf(round.current))}</b>`;
     if (notMyTurn()) {
+      // Несмотря на имя ключа, текст обязан оставаться нейтральным
+      // («Имя: думает…»): этой строкой ждут и бота, и живого соперника
+      // BLE-матча (remoteSeat). «Бот» словом — только в tutorText.
       return { event, prompt: L().statusBotThinking(name) };
     }
     if (round.phase === 'root') {
@@ -990,8 +1044,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   /** Подсказка режима обучения: что сейчас можно сделать и как. */
   function tutorText(round: GameState, legal: readonly Move[]): string {
-    if (round.phase === 'over') return L().tutorOver;
-    if (notMyTurn()) return L().tutorBotTurn;
+    if (round.phase === 'over') return L().tutorOver(matchTarget(round.variant));
+    // Ход не человека за этим экраном: бот думает сам, а за удалённым
+    // местом (BLE-матч) сидит живой игрок — «ботом» его не называть.
+    if (botsTurnNow()) return L().tutorBotTurn;
+    if (notMyTurn()) return L().tutorRemoteTurn;
     if (pending) return L().tutorPending;
     if (round.phase === 'root') {
       if (round.mustPlay) return L().tutorRootMustPlay;
@@ -1092,6 +1149,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   function openHistory(): void {
     if (!match) return;
+    // Просмотр истории — не обдумывание позиции: замер испорчен (0003).
+    turnStartedAt = null;
     const rounds: RoundProtocol[] = match.rounds.map((r) => ({
       seed: r.seed,
       first: r.first,
@@ -1286,7 +1345,13 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       ) {
         throw new Error(L().errNotProto);
       }
-      const variant: Variant = { doubleOnlyCloses: !!data.variant?.doubleOnlyCloses };
+      const importedTarget = data.variant?.target;
+      const variant: Variant = {
+        doubleOnlyCloses: !!data.variant?.doubleOnlyCloses,
+        ...(typeof importedTarget === 'number' && targetOk(importedTarget)
+          ? { target: importedTarget }
+          : {}),
+      };
       const check = validateProtocol({ ...data, variant });
       if (!check.ok) {
         throw new Error(L().errRoundBad(check.round + 1, check.error));
@@ -1350,15 +1415,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
             : ''
         }</p>
         <div class="field"><label for="inp-n0">${
-          esc(curExtra?.nameLabel?.() ?? '') || L().fieldBottom
+          // Подписи полей — по выбранному сопернику, а не по позиции руки
+          // на экране: «нижний/верхний» врали при развороте стола и ничего
+          // не значили в матче с ботом (идея 0007).
+          esc(curExtra?.nameLabel?.() ?? '') ||
+          (opponentPref === 'human' ? L().fieldName : L().fieldYourName)
         }</label>
           <input id="inp-n0" type="text" value="${esc(savedP1) || L().defaultP1}" maxlength="16"></div>
         ${
-          wantSecondName
-            ? `<div class="field"><label for="inp-n1">${L().fieldTop}</label>
-          <input id="inp-n1" type="text" value="${
-            opponentPref !== 'human' ? L().botName : esc(savedP2) || L().defaultP2
-          }" maxlength="16"></div>`
+          wantSecondName && opponentPref === 'human'
+            ? `<div class="field"><label for="inp-n1">${L().fieldOpponentName}</label>
+          <input id="inp-n1" type="text" value="${esc(savedP2) || L().defaultP2}" maxlength="16"></div>`
             : ''
         }
         <div class="field"><label for="inp-opp">${L().fieldOpponent}</label>
@@ -1378,6 +1445,15 @@ export function initApp(opts: AppOptions = {}): AppHandle {
               )
               .join('')}
           </select></div>
+        <div class="field"><label>${L().fieldTarget}</label>
+          <span class="target-opts">
+            ${MATCH_TARGETS.map(
+              (v) =>
+                `<label class="check"><input type="radio" name="match-target" value="${v}" ${
+                  v === targetPref ? 'checked' : ''
+                }>${v}</label>`,
+            ).join('')}
+          </span></div>
         <label class="check"><input id="inp-variant" type="checkbox">
           ${L().variantText}
         </label>
@@ -1416,6 +1492,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   let lotFirst: 0 | 1 | null = null;
 
+  /** Имя второго места. У бота оно нередактируемое и говорит об уровне —
+   *  иначе в идущем матче не видно, с каким ботом играешь (идея 0007);
+   *  поле ввода при боте не рендерится вовсе. У человека — из поля. */
+  function secondName(): string {
+    if (opponentPref === 'easy') return L().botNameEasy;
+    if (opponentPref === 'normal') return L().botNameNormal;
+    if (opponentPref === 'strong') return L().botNameStrong;
+    return document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim() || L().defaultP2;
+  }
+
   function rollLot(): void {
     // Жребий как в §2.5: тянем по кости, у кого сумма меньше — тот первый.
     // Чистая визуализация: на партию влияет только то, кто оказался первым.
@@ -1427,7 +1513,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
     lotFirst = pipSum(a) < pipSum(b) ? 0 : 1;
     const n0 = ($('#inp-n0') as HTMLInputElement).value.trim() || L().defaultP1;
-    const n1 = ($('#inp-n1') as HTMLInputElement).value.trim() || L().defaultP2;
+    const n1 = secondName();
     const ta = parseTile(a);
     const tb = parseTile(b);
     $('#lot-row').innerHTML = `
@@ -1447,9 +1533,14 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const curExtra = extraOpponents.find((o) => o.id === opponentPref);
     if (lotFirst === null && curExtra?.needsLots !== false) return;
     const n0 = ($('#inp-n0') as HTMLInputElement).value.trim() || L().defaultP1;
-    const n1 =
-      document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim() || L().defaultP2;
-    const variant = { doubleOnlyCloses: ($('#inp-variant') as HTMLInputElement).checked };
+    const n1 = secondName();
+    const variant: Variant = {
+      doubleOnlyCloses: ($('#inp-variant') as HTMLInputElement).checked,
+      // Канонические 100 в состояние и протокол не пишем: без поля они
+      // подразумеваются, а протоколы остаются совместимыми со старыми
+      // сборками (важно для сетевого матча).
+      ...(targetPref !== 100 ? { target: targetPref } : {}),
+    };
     const opp = opponentPref;
     const botLevel =
       opp === 'easy' || opp === 'normal' || opp === 'strong' ? (opp as BotLevel) : null;
@@ -1463,6 +1554,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     remoteSeat = null;
     opts.onMatchReset?.();
     match = startMatch({ names: [n0, n1], first: lotFirst, variant, bot });
+    // Новый матч — новый отсчёт времени хода, каким бы ни был сид (0003).
+    turnKey = '';
     selected = null;
     pending = null;
     pileRoundKey = -1;
@@ -1472,6 +1565,34 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     renderAll();
     playShuffle();
     toast(L().toastFirstOpen(nameOf(lotFirst)));
+  }
+
+  /**
+   * Сумма значений с подстановкой среднего вместо null (идея 0003):
+   * (sum · length / known) — то же, что «каждому null — среднее
+   * известных». Все значения null — null: показывать нечего.
+   * Подстановка живёт только на показе — в лог она не пишется.
+   */
+  function avgFill(vals: readonly (number | null)[]): number | null {
+    const known = vals.filter((v): v is number => v !== null);
+    if (known.length === 0) return null;
+    const sum = known.reduce((a, b) => a + b, 0);
+    return Math.round((sum * vals.length) / known.length);
+  }
+
+  /** Оценка времени партии: ходы без честного t получают среднее
+   *  по замеренным ходам этой же партии. */
+  function roundTimeMs(moves: readonly Move[]): number | null {
+    return avgFill(moves.map((m) => (typeof m.t === 'number' ? m.t : null)));
+  }
+
+  /** м:сс до часа, дальше ч:мм:сс — три сегмента не спутать с двумя. */
+  function fmtDuration(ms: number): string {
+    const s = Math.round(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const min = Math.floor((s % 3600) / 60);
+    const ss = String(s % 60).padStart(2, '0');
+    return h > 0 ? `${h}:${String(min).padStart(2, '0')}:${ss}` : `${min}:${ss}`;
   }
 
   function renderRoundOver(): void {
@@ -1541,6 +1662,19 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         </div>`;
     }
 
+    // Время партии и матча (0003) — только когда есть честные замеры.
+    // Партия совсем без замеров (старый сейв, всё скрытым окном) на показе
+    // получает среднее замеренных партий — лог при этом остаётся честным.
+    const perRound = match.rounds.map((r) => roundTimeMs(r.moves));
+    const knownRounds = perRound.filter((v): v is number => v !== null);
+    let timeRow = '';
+    if (knownRounds.length > 0) {
+      const avg = knownRounds.reduce((a, b) => a + b, 0) / knownRounds.length;
+      const rt = Math.round(perRound[perRound.length - 1] ?? avg);
+      const mt = Math.round(perRound.reduce((acc: number, v) => acc + (v ?? avg), 0));
+      timeRow = `<div class="match-round">${L().resultTime(fmtDuration(rt), fmtDuration(mt))}</div>`;
+    }
+
     // Подсказки нужны первые партии, дальше только мешают. Предлагаем убрать
     // их один раз и больше не возвращаемся к вопросу, каким бы ни был ответ.
     const tutorOffer =
@@ -1558,6 +1692,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <h2>${causeTitle}</h2>
         <p class="sub">${causeSub}${result.winner === null ? L().resultTieNote : ''}</p>
         <div class="result-grid">${rows}</div>
+        <div class="match-round">${L().matchRoundLabel(match.rounds.length)}</div>
+        ${timeRow}
         <div class="match-score">${esc(nameOf(0))} ${match.totals[0]} : ${match.totals[1]} ${esc(
           nameOf(1),
         )}</div>
@@ -1700,10 +1836,13 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // зияют просветы, и добор срабатывал через раз (баг 0007). Улетает
     // ближайшая к пальцу кость; какая выдана — по-прежнему решает движок.
     // Ход по тени, кнопка, кость в руке и открытый оверлей важнее кучи.
+    // Панель подтверждения — тоже (баг 0017): на телефоне она лежит
+    // в границах зоны, и тап «Отмена» проваливался в добор с тостом
+    // «брать из базара нельзя» (на «Поставить» спасал 300-мс гейт).
     if (
       !replay &&
       elOverlay.hidden &&
-      !target.closest('[data-move],[data-action],[data-tile]')
+      !target.closest('[data-move],[data-action],[data-tile],#confirm-bar')
     ) {
       const zone = pileZone();
       if (zone && ev.clientX >= zone.l && ev.clientX <= zone.r && ev.clientY >= zone.t && ev.clientY <= zone.b) {
@@ -1757,6 +1896,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         const saved = loadSaved();
         if (saved) {
           match = saved;
+          // Ход, разбитый перезапуском приложения, не меряем (идея 0003).
+          spoilNextTurn = true;
+          turnKey = '';
           selected = null;
           pending = null;
           pileRoundKey = -1;
@@ -1827,6 +1969,19 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   });
 
   // Ползунок и селект партии в панели истории; выбор файла протокола.
+  // Приложение ушло с глаз (сворачивание, блокировка, внешний браузер) —
+  // текущий замер времени хода испорчен (идея 0003).
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) turnStartedAt = null;
+  });
+  // WKWebView/бфкэш могут усыпить страницу и без visibilitychange.
+  window.addEventListener('pagehide', () => {
+    turnStartedAt = null;
+  });
+  document.addEventListener('freeze', () => {
+    turnStartedAt = null;
+  });
+
   document.addEventListener('input', (ev) => {
     const t = ev.target as HTMLInputElement;
     if (t.id === 'replay-slider' && replay) {
@@ -1844,11 +1999,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } else if (t.id === 'inp-protocol' && t.files?.[0]) {
       void importProtocol(t.files[0]);
       t.value = '';
+    } else if (t.name === 'match-target') {
+      // Радио строятся из MATCH_TARGETS — чужих значений тут не бывает.
+      targetPref = Number(t.value);
+      persistUi();
     } else if (t.id === 'inp-n0' || t.id === 'inp-n1') {
-      // Имена запоминаются между запусками; автоимена ботов не сохраняем.
+      // Имена запоминаются между запусками. Поле второго имени существует
+      // только в матче с человеком — имя бота нередактируемо (идея 0007).
       const v = t.value.trim().slice(0, 16);
       if (t.id === 'inp-n0') savedP1 = v;
-      else if (v !== L().botName) savedP2 = v;
+      else savedP2 = v;
       persistUi();
     } else if (t.id === 'inp-lang-start') {
       // Введённые, но ещё не сохранённые имена не теряем; автоподстановки
@@ -1856,7 +2016,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       const n0 = document.querySelector<HTMLInputElement>('#inp-n0')?.value.trim();
       if (n0 && n0 !== L().defaultP1) savedP1 = n0;
       const n1 = document.querySelector<HTMLInputElement>('#inp-n1')?.value.trim();
-      if (n1 && n1 !== L().botName && n1 !== L().defaultP2) savedP2 = n1;
+      if (n1 && n1 !== L().defaultP2) savedP2 = n1;
       const varOn = document.querySelector<HTMLInputElement>('#inp-variant')?.checked;
       setLocale(t.value as Locale);
       persistUi();
@@ -1877,14 +2037,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       if (n0el && n0 !== undefined) n0el.value = n0;
       const varEl = document.querySelector<HTMLInputElement>('#inp-variant');
       if (varEl && varOn !== undefined) varEl.checked = varOn;
-      // Имя верхнего игрока меняем только если оно осталось автоподставленным.
-      const n1 = document.querySelector<HTMLInputElement>('#inp-n1');
-      if (n1) {
-        const autoNames = [L().botName, L().defaultP2];
-        if (autoNames.includes(n1.value.trim()) || n1.value.trim() === '') {
-          n1.value = opponentPref !== 'human' ? L().botName : L().defaultP2;
-        }
-      }
+      // Поле второго имени появляется/исчезает вместе с пунктом (у ботов
+      // его нет — имя нередактируемое, идея 0007); перерисовка выше уже
+      // подставила savedP2/дефолт, править его дополнительно не нужно.
     }
   });
 
@@ -1915,7 +2070,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // Ручная перекладка веток: другая валидная раскладка того же дерева (§6.3).
   let relayoutSalt = 0;
   elBtnRelayout.addEventListener('click', () => {
-    if (!match || replay || match.round.phase === 'over') return;
+    // remoteSeat — страховка: в сетевом матче кнопка и так скрыта (идея 0005).
+    if (!match || replay || remoteSeat !== null || match.round.phase === 'over') return;
     const next = shuffleLayout(match.round, ++relayoutSalt);
     if (!next) return;
     match = { ...match, round: next };
@@ -2098,7 +2254,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // открыт режим истории, молча терялся бы (dispatch в replay — no-op).
     dispatch: (m) => {
       if (replay) exitReplay();
-      dispatch(m);
+      dispatch(m, true);
     },
     getMatch: () => match,
     setRemoteSeat(seat) {
@@ -2114,6 +2270,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         bot: null,
       });
       remoteSeat = o.remoteSeat;
+      // Сид рематча приходит извне и может повториться — ключ сбрасываем (0003).
+      turnKey = '';
       selected = null;
       pending = null;
       pileRoundKey = -1;
@@ -2129,6 +2287,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     nextRoundWith(seed) {
       if (!match || match.outcome) return;
       match = nextRound(match, seed);
+      turnKey = '';
       selected = null;
       pending = null;
       pileRoundKey = -1;

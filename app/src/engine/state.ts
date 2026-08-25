@@ -87,6 +87,16 @@ export type LogEntry =
 export interface Variant {
   /** §11.1 «Дубль только закрывает»: дубль нельзя ставить прямо. */
   readonly doubleOnlyCloses: boolean;
+  /** Цель матча (§10.5): проигрывает набравший столько очков.
+   *  Поле необязательное, без него — канонические 100: старые
+   *  протоколы, сохранённые матчи и сетевые сборки остаются валидными
+   *  (тот же приём, что у move.side). */
+  readonly target?: number;
+}
+
+/** Цель матча: правило «нет поля — канонические 100» в одном месте. */
+export function matchTarget(variant: Variant): number {
+  return variant.target ?? 100;
 }
 
 export interface GameState {
@@ -125,7 +135,19 @@ export interface GameState {
 }
 
 export type Move =
-  | { readonly type: 'placeRoot'; readonly tile: TileId }
+  | {
+      readonly type: 'placeRoot';
+      readonly tile: TileId;
+      /**
+       * «Чистое» время обдумывания хода, мс (идея 0003). Правилам
+       * и легальности безразлично (moveEquals его не сравнивает),
+       * в историю и протокол попадает как есть — тот же приём, что
+       * у side. Лог хранит только честные замеры: у хода, разбитого
+       * сворачиванием приложения или восстановлением из сейва, поля
+       * просто нет; подстановка среднего — забота показа, не движка.
+       */
+      readonly t?: number;
+    }
   | {
       readonly type: 'place';
       readonly tile: TileId;
@@ -138,9 +160,19 @@ export type Move =
        * протокол, чтобы раскладка воспроизводилась при реплее один в один.
        */
       readonly side?: 0 | 1;
+      /** Время обдумывания хода, мс — см. placeRoot.t (идея 0003). */
+      readonly t?: number;
     }
-  | { readonly type: 'draw' }
-  | { readonly type: 'pass' };
+  | {
+      readonly type: 'draw';
+      /** Время обдумывания хода, мс — см. placeRoot.t (идея 0003). */
+      readonly t?: number;
+    }
+  | {
+      readonly type: 'pass';
+      /** Время обдумывания хода, мс — см. placeRoot.t (идея 0003). */
+      readonly t?: number;
+    };
 
 export function cellKey(v: Vec): string {
   return `${v.x},${v.y}`;

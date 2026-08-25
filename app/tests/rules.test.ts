@@ -6,10 +6,12 @@ import {
   isDouble,
   legalMoves,
   newRound,
+  replayRound,
   placementsForTile,
   scoreRound,
   startMatch,
   finishRound,
+  matchTarget,
   nextRound,
   type GameState,
   type Move,
@@ -327,6 +329,24 @@ describe('завершение партии (§9) и очки (§10)', () => {
   });
 });
 
+describe('время хода (t, идея 0003)', () => {
+  it('t не влияет на легальность, попадает в историю и переживает реплей', () => {
+    let s = newRound({ seed: 5, first: 0, variant: BASE });
+    // Первый ход — корень, второй — обычное выставление: обе ветки
+    // moveEquals (placeRoot и place) проходят с лишним полем t.
+    s = applyMove(s, { ...legalMoves(s)[0]!, t: 4321 });
+    expect(s.history[0]!.t).toBe(4321);
+    s = applyMove(s, { ...legalMoves(s)[0]!, t: 777 });
+    expect(s.history[1]!.t).toBe(777);
+    // Ход без t остаётся ходом без t — движок ничего не подставляет.
+    s = applyMove(s, legalMoves(s)[0]!);
+    expect(s.history[2]!.t).toBeUndefined();
+    // Реплей протокола с t: та же проверка легальности, t сохраняется.
+    const replayed = replayRound({ seed: 5, first: 0, moves: s.history }, BASE);
+    expect(replayed.history).toEqual(s.history);
+  });
+});
+
 describe('матч (§2.5, §10.5)', () => {
   it('очки копятся, матч кончается на 100+, проигрывает больший', () => {
     let m = startMatch({ names: ['А', 'Б'], first: 0, variant: BASE, seed: 7 });
@@ -370,6 +390,49 @@ describe('матч (§2.5, §10.5)', () => {
     m = finishRound(m);
     m = nextRound(m, 9);
     expect(m.first).toBe(0);
+  });
+
+  it('цель матча из variant.target: до 50 короче, до 150 длиннее', () => {
+    // Правило «нет поля — 100» живёт в одном месте.
+    expect(matchTarget(BASE)).toBe(100);
+    expect(matchTarget({ ...BASE, target: 50 })).toBe(50);
+    // До 50: 99 очков сразу закрывают матч.
+    let short = startMatch({
+      names: ['А', 'Б'],
+      first: 0,
+      variant: { ...BASE, target: 50 },
+      seed: 7,
+    });
+    short = {
+      ...short,
+      round: {
+        ...short.round,
+        phase: 'over',
+        result: { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 },
+      },
+    };
+    short = finishRound(short);
+    expect(short.outcome).toEqual({ kind: 'loss', loser: 1 });
+    // До 150: те же 99 матч не заканчивают, цель переживает nextRound.
+    let long = startMatch({
+      names: ['А', 'Б'],
+      first: 0,
+      variant: { ...BASE, target: 150 },
+      seed: 7,
+    });
+    long = {
+      ...long,
+      round: {
+        ...long.round,
+        phase: 'over',
+        result: { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 },
+      },
+    };
+    long = finishRound(long);
+    expect(long.outcome).toBeNull();
+    long = nextRound(long, 8);
+    expect(long.variant.target).toBe(150);
+    expect(long.round.variant.target).toBe(150);
   });
 
   it('равные счёты 100+ — ничья в матче (§10.5)', () => {
