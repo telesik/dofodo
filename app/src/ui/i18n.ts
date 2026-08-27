@@ -200,12 +200,12 @@ const ru = {
     'Вытянутый дубль обязан стать корнем (§5.3) — кликните след в центре стола.',
   tutorPick: 'Кликните светлую кость в руке — на столе появятся тени её ходов (§6.3).',
   tutorPlace:
-    'Кликните тень — там встанет кость. Цифры в кружках: открытый конец, перечёркнутый — мёртвый (§9.1).',
+    'Кликните тень — там встанет кость. Перечёркнутый кружок — мёртвый конец (§9.1).',
   tutorTurnSides:
     'Поворот даёт развилку: две тени — две стороны изгиба. На правила выбор не влияет (§6.3).',
   tutorCross: 'Поперёк дубль закрывает ветку навсегда (§7.1).',
   tutorFresh:
-    'У свежего конца (пунктирный кружок) первая кость ложится только прямо — ни поворота, ни закрытия дублем (§6.4).',
+    'У свежего конца развилки первая кость ложится только прямо — ни поворота, ни закрытия дублем (§6.4), потому тень у него одна.',
   tutorMustPlay:
     'Кость из базара подошла — обязаны сходить именно ею (§8.2): кликните одну из теней.',
   tutorDraw:
@@ -384,12 +384,12 @@ const en: Dict = {
     'The drawn double must become the root (§5.3) — click the outline at the centre of the table.',
   tutorPick: 'Click a lit tile in your hand — ghosts of its moves appear on the table (§6.3).',
   tutorPlace:
-    'Click a ghost — the tile goes there. Numbers in circles are open ends; crossed-out ones are dead (§9.1).',
+    'Click a ghost — the tile goes there. A crossed-out circle is a dead end (§9.1).',
   tutorTurnSides:
     'A turn creates a fork: two ghosts, two ways to bend the branch. The choice does not affect the rules (§6.3).',
   tutorCross: 'A double played crosswise closes the branch for good (§7.1).',
   tutorFresh:
-    'A fresh end (dashed circle) takes its first tile straight only — no turn, no closing double (§6.4).',
+    'A fresh end of a fork takes its first tile straight only — no turn, no closing double (§6.4), which is why it has just one ghost.',
   tutorMustPlay:
     'The tile drawn from the boneyard fits — you must play it (§8.2): click one of the ghosts.',
   tutorDraw:
@@ -566,12 +566,12 @@ const es: Dict = {
   tutorPick:
     'Haga clic en una ficha iluminada de su mano: aparecerán las sombras de sus jugadas (§6.3).',
   tutorPlace:
-    'Haga clic en una sombra: ahí irá la ficha. Los números en círculos son extremos abiertos; los tachados, muertos (§9.1).',
+    'Haga clic en una sombra: ahí irá la ficha. Un círculo tachado es un extremo muerto (§9.1).',
   tutorTurnSides:
     'El giro crea una bifurcación: dos sombras, dos lados para doblar la rama. La elección no afecta a las reglas (§6.3).',
   tutorCross: 'El doble atravesado cierra la rama para siempre (§7.1).',
   tutorFresh:
-    'En un extremo fresco (círculo punteado) la primera ficha va solo recta: ni giro ni cierre con doble (§6.4).',
+    'En un extremo fresco de una bifurcación la primera ficha va solo recta: ni giro ni cierre con doble (§6.4); por eso tiene una sola sombra.',
   tutorMustPlay:
     'La ficha robada del pozo sirve — está obligado a jugarla (§8.2): haga clic en una de las sombras.',
   tutorDraw:
@@ -748,12 +748,12 @@ const de: Dict = {
   tutorPick:
     'Klicken Sie einen hellen Stein in Ihrer Hand an — auf dem Tisch erscheinen die Schatten seiner Züge (§6.3).',
   tutorPlace:
-    'Klicken Sie einen Schatten an — dorthin kommt der Stein. Zahlen in Kreisen sind offene Enden, durchgestrichene sind tot (§9.1).',
+    'Klicken Sie einen Schatten an — dorthin kommt der Stein. Ein durchgestrichener Kreis ist ein totes Ende (§9.1).',
   tutorTurnSides:
     'Der Abzweig erzeugt eine Gabelung: zwei Schatten, zwei Richtungen für den Zweig. Die Wahl berührt die Regeln nicht (§6.3).',
   tutorCross: 'Ein Pasch quer schließt den Zweig für immer (§7.1).',
   tutorFresh:
-    'Auf ein frisches Ende (gestrichelter Kreis) kommt der erste Stein nur gerade — kein Abzweig, kein Schließen mit Pasch (§6.4).',
+    'Auf ein frisches Ende einer Gabelung kommt der erste Stein nur gerade — kein Abzweig, kein Schließen mit Pasch (§6.4); darum hat es nur einen Schatten.',
   tutorMustPlay:
     'Der vom Talon gezogene Stein passt — Sie müssen ihn legen (§8.2): klicken Sie einen der Schatten an.',
   tutorDraw:
@@ -929,12 +929,12 @@ const pt: Dict = {
     'A dupla comprada deve ser a raiz (§5.3): clique na silhueta no centro da mesa.',
   tutorPick: 'Clique numa peça acesa da sua mão — as sombras das jogadas aparecem na mesa (§6.3).',
   tutorPlace:
-    'Clique numa sombra — é ali que a peça vai. Números em círculos são pontas abertas; riscados, mortas (§9.1).',
+    'Clique numa sombra — é ali que a peça vai. Um círculo riscado é uma ponta morta (§9.1).',
   tutorTurnSides:
     'A curva cria uma bifurcação: duas sombras, dois lados para dobrar o ramo. A escolha não afeta as regras (§6.3).',
   tutorCross: 'A dupla atravessada fecha o ramo para sempre (§7.1).',
   tutorFresh:
-    'Numa ponta fresca (círculo pontilhado) a primeira peça vai só reta — sem curva e sem fechar com dupla (§6.4).',
+    'Numa ponta fresca de uma bifurcação a primeira peça vai só reta — sem curva e sem fechar com dupla (§6.4); por isso ela tem uma só sombra.',
   tutorMustPlay:
     'A peça comprada do dorme serve — você é obrigado a jogá-la (§8.2): clique numa das sombras.',
   tutorDraw:
@@ -1107,11 +1107,11 @@ const zh: Dict = {
     '手中没有对子——点击牌堆摸一张牌（§5.3）。摸到对子后，它立刻成为根牌。',
   tutorRootMustPlay: '摸到的对子必须成为根牌（§5.3）——点击桌面中央的轮廓。',
   tutorPick: '点击手中亮起的牌，桌上会出现它的走法虚影（§6.3）。',
-  tutorPlace: '点击虚影，牌就放在那里。圆圈中的数字是开放端，划掉的是死端（§9.1）。',
+  tutorPlace: '点击虚影，牌就放在那里。划掉的圆圈是死端（§9.1）。',
   tutorTurnSides:
     '转向形成分叉：两个虚影就是枝条弯曲的两个方向。选择不影响规则（§6.3）。',
   tutorCross: '对子横放则永久封枝（§7.1）。',
-  tutorFresh: '新端（虚线圆圈）上的第一张牌只能直放——不能转向，也不能用对子封枝（§6.4）。',
+  tutorFresh: '分叉的新端上第一张牌只能直放——不能转向，也不能用对子封枝（§6.4），所以它只有一个虚影。',
   tutorMustPlay: '从牌堆摸到的牌可用——必须打出它（§8.2）：点击其中一个虚影。',
   tutorDraw:
     '无牌可出——点击牌堆（§8.2）。摸到的牌可用就必须打出；不可用则留在手中，轮到对方。',
@@ -1295,12 +1295,12 @@ const uk: Dict = {
     'Витягнутий дубль мусить стати коренем (§5.3) — клікніть слід у центрі столу.',
   tutorPick: 'Клікніть світлу кістку в руці — на столі з’являться тіні її ходів (§6.3).',
   tutorPlace:
-    'Клікніть тінь — там стане кістка. Цифри в кружках: відкритий кінець, перекреслений — мертвий (§9.1).',
+    'Клікніть тінь — там стане кістка. Перекреслене кружальце — мертвий кінець (§9.1).',
   tutorTurnSides:
     'Поворот створює розвилку: дві тіні — два боки згину гілки. На правила вибір не впливає (§6.3).',
   tutorCross: 'Упоперек дубль закриває гілку назавжди (§7.1).',
   tutorFresh:
-    'На свіжому кінці (пунктирне кружальце) перша кістка лягає лише прямо — ні повороту, ні закриття дублем (§6.4).',
+    'На свіжому кінці розвилки перша кістка лягає лише прямо — ні повороту, ні закриття дублем (§6.4), тому тінь у нього одна.',
   tutorMustPlay:
     'Кістка з базару підійшла — зобов’язані сходити саме нею (§8.2): клікніть одну з тіней.',
   tutorDraw:
