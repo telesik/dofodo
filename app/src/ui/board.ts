@@ -56,6 +56,27 @@ export function samePlacement(a: Move, b: Move): boolean {
   return false;
 }
 
+/**
+ * Концы, на которые в этом рендере лягут тени ходов: их подписи номиналов
+ * не рисуются — тень накрывает кружок и путает (идея 0010), а оставшиеся
+ * при выбранной кости цифры читаются как «сюда она не идёт». Гейт по
+ * selected повторяет условие отрисовки призраков: без выбранной кости
+ * теней нет и стол подписан целиком. На черновике хода подписи остаются
+ * погашенными сами собой: pending живёт, только пока выбрана его кость
+ * (см. deriveSelection в app.ts), а значит, тени продолжают рисоваться.
+ */
+export function shadedEndIds(
+  ghostMoves: readonly Move[],
+  selected: TileId | null,
+): ReadonlySet<number> {
+  const ids = new Set<number>();
+  if (selected === null) return ids;
+  for (const m of ghostMoves) {
+    if (m.type === 'place') ids.add(m.endId);
+  }
+  return ids;
+}
+
 const MIN_W = CELL * 5;
 const MAX_W = CELL * 44;
 /**
@@ -446,9 +467,14 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       );
     }
 
-    // Маркеры открытых концов.
+    // Маркеры открытых концов. Затенённые концы остаются без подписи
+    // (идея 0010): подпись именно не рисуется, а не прячется под тень.
+    // Крестики мёртвых концов под гашение не попадают сами собой:
+    // на мёртвый конец легального хода не существует, тени туда не лечь.
     const dead = deadValues(game);
+    const shaded = shadedEndIds(opts.ghostMoves, opts.selected);
     for (const e of game.ends) {
+      if (shaded.has(e.id)) continue;
       const a = scene(e.attach);
       const x = a.x * CELL;
       const y = a.y * CELL;

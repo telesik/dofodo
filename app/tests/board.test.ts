@@ -1,9 +1,10 @@
 // Геометрия сцены стола. Правил не касается (§6.3: раскладка правилам
 // безразлична) — здесь проверяется только то, что картинка строится верно.
 import { describe, expect, it } from 'vitest';
-import { sceneCell, tileTransform } from '../src/ui/board';
+import { sceneCell, shadedEndIds, tileTransform } from '../src/ui/board';
 import { CELL } from '../src/ui/tile-svg';
-import type { Vec } from '../src/engine';
+import { legalMoves, type Move, type Vec } from '../src/engine';
+import { BASE, playout } from './helpers';
 
 /** Угол из строки transform, приведённый к [0, 360). */
 function angleOf(tr: string): number {
@@ -81,5 +82,62 @@ describe('зеркальный стол (§6.3 — только вид)', () => 
     const tr = tileTransform({ x: 2, y: 0 }, { x: 2, y: 1 }, true);
     expect(angleOf(tr)).toBeCloseTo(90, 6);
     expect(centerOf(tr).x).toBeCloseTo(-2 * CELL, 6);
+  });
+});
+
+describe('подписи концов и тени (идея 0010)', () => {
+  // Ходы в каноническом виде: TileId через дефис (tileId в tiles.ts),
+  // поперёк кладётся только дубль (§7.1).
+  const place = (
+    tile: string,
+    endId: number,
+    mode: 'straight' | 'turn' | 'cross',
+    side?: 0 | 1,
+  ): Move => ({
+    type: 'place',
+    tile,
+    endId,
+    mode,
+    ...(side !== undefined ? { side } : {}),
+  });
+
+  it('без выбранной кости не затенён ни один конец', () => {
+    // Гейт по selected — защита контракта render: непустые ghostMoves
+    // без выбранной кости не рисуются, значит и подписи не гасятся.
+    expect(shadedEndIds([], null).size).toBe(0);
+    expect(shadedEndIds([place('6-4', 1, 'straight')], null).size).toBe(0);
+  });
+
+  it('в наборе — ровно концы переданных теней', () => {
+    const shaded = shadedEndIds(
+      [place('6-4', 1, 'straight'), place('3-3', 3, 'cross')],
+      '6-4',
+    );
+    // Про game.ends функция не знает: гасится лишь то, куда легла тень,
+    // конец без тени (id вне списка ходов) остаётся с подписью.
+    expect([...shaded].sort()).toEqual([1, 3]);
+  });
+
+  it('поворот двумя тенями затеняет свой конец, тень корня — ничего', () => {
+    const turns = shadedEndIds(
+      [place('6-4', 5, 'turn', 0), place('6-4', 5, 'turn', 1)],
+      '6-4',
+    );
+    expect([...turns]).toEqual([5]);
+    // До корня концов нет вовсе: тень корня не касается подписей.
+    const root: Move = { type: 'placeRoot', tile: '6-6' };
+    expect(shadedEndIds([root], '6-6').size).toBe(0);
+  });
+
+  it('endId каждого легального хода есть среди game.ends', () => {
+    // Гашение ищет маркер по id: единственный способ его сломать —
+    // разъезд нумераций Move.endId и End.id. Целая партия случайной
+    // политикой проверяет соответствие на каждом ходе.
+    playout(20260827, 0, BASE, (state) => {
+      const ids = new Set(state.ends.map((e) => e.id));
+      for (const m of legalMoves(state)) {
+        if (m.type === 'place') expect(ids.has(m.endId)).toBe(true);
+      }
+    });
   });
 });
