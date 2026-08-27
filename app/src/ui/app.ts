@@ -209,7 +209,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const rules = link
       ? `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().rulesWord(RULES_VERSION)}</a>`
       : L().rulesWord(RULES_VERSION);
-    return `${L().versionWord} ${__APP_VERSION__} (${rules}, hashCommit=${__GIT_HASH__})`;
+    return `${L().versionWord} ${__APP_VERSION__} (${rules}, ${__GIT_HASH__})`;
   }
 
   function updateBadge(): void {
