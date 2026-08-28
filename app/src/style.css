@@ -521,14 +521,6 @@ textarea,
   stroke-dasharray: 3.5 3;
 }
 
-.end-num {
-  fill: rgba(239, 230, 208, 0.85);
-  font-size: 13px;
-  font-weight: 600;
-  text-anchor: middle;
-  font-family: Georgia, serif;
-}
-
 .end-marker.dead .end-ring {
   stroke: rgba(194, 84, 58, 0.55);
 }

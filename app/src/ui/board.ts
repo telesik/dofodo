@@ -485,15 +485,14 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
         : e.fresh
           ? L().endFresh(e.value)
           : L().endOpen(e.value);
+      // Живой конец — пустой кружок без цифры (идея 0016): якорь «здесь
+      // открытый конец» остаётся, а номинал читается по самой кости — цифра
+      // добавляла мелкий шум. Значение осталось в <title>-подсказке.
       parts.push(
         `<g class="${cls}" transform="translate(${x} ${y})">
           <title>${hint}</title>
           <circle r="13" class="end-ring"/>
-          ${
-            isDead
-              ? `<path d="M -5 -5 L 5 5 M 5 -5 L -5 5" class="end-x"/>`
-              : `<text class="end-num" dy="0.36em">${e.value}</text>`
-          }
+          ${isDead ? `<path d="M -5 -5 L 5 5 M 5 -5 L -5 5" class="end-x"/>` : ''}
         </g>`,
       );
     }
