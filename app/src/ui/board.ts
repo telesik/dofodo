@@ -77,6 +77,37 @@ export function shadedEndIds(
   return ids;
 }
 
+/**
+ * Тени, которым рисуется только дальняя половина (идея 0017). Приставная
+ * половина у теней одного конца несёт один номинал, но прямая и повёрнутая
+ * ориентации ложатся друг на друга, а раскладки пипсов 2, 3 и 6 к повороту
+ * на 90° не симметричны — объединение читается как другое число («2» ∪ «2»
+ * выглядит четвёркой). Правило: есть на конце прямая тень — приставную
+ * половину рисует только она, поворотам остаётся дальняя. Исключения:
+ * черновик хода (pending) рисуется полным — он показывает, как кость
+ * ляжет на самом деле; конец из одних поворотов не трогаем — их приставки
+ * отличаются на 180°, а все раскладки 180°-симметричны; пара «прямо +
+ * поперёк» (дубль) не в счёт — тень поперёк перекрывает приставку лишь
+ * частично и другого числа не образует.
+ */
+export function farHalfGhosts(
+  ghostMoves: readonly Move[],
+  pending?: Move | null,
+): ReadonlySet<Move> {
+  const straightEnds = new Set<number>();
+  for (const m of ghostMoves) {
+    if (m.type === 'place' && m.mode === 'straight') straightEnds.add(m.endId);
+  }
+  const far = new Set<Move>();
+  for (const m of ghostMoves) {
+    if (m.type !== 'place' || m.mode !== 'turn') continue;
+    if (!straightEnds.has(m.endId)) continue;
+    if (pending && samePlacement(m, pending)) continue;
+    far.add(m);
+  }
+  return far;
+}
+
 const MIN_W = CELL * 5;
 const MAX_W = CELL * 44;
 /**
@@ -500,6 +531,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     // Призраки ходов выбранной кости.
     lastGhostCells = [];
     if (opts.selected !== null) {
+      const farHalf = farHalfGhosts(opts.ghostMoves, opts.pending);
       for (const m of opts.ghostMoves) {
         if (m.type === 'placeRoot') {
           // Как ляжет корень (§6.2): горизонтально, тупик с дальней от роста
@@ -511,7 +543,9 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
         } else if (m.type === 'place') {
           const geo = placementGeometry(game, m.tile, m.endId, m.mode, m.side);
           lastGhostCells.push(geo.cells[0], geo.cells[1]);
-          parts.push(ghostSvg(game, m, [geo.cells[0], geo.cells[1]], m.mode, opts));
+          parts.push(
+            ghostSvg(game, m, [geo.cells[0], geo.cells[1]], m.mode, opts, farHalf.has(m)),
+          );
         }
       }
     }
@@ -542,6 +576,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     cells: readonly [Vec, Vec],
     mode: string,
     opts: BoardRenderOptions,
+    farHalfOnly = false,
   ): string {
     const values: [number, number] =
       move.type === 'place'
@@ -557,14 +592,26 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       ? `data-move='${JSON.stringify(move).replace(/'/g, '&#39;')}'`
       : '';
     const pending = opts.pending && samePlacement(move, opts.pending) ? ' pending' : '';
+    // Приставная половина (cells[0], локально слева) у такой тени не рисуется
+    // вовсе (идея 0017): её рисует прямая тень того же конца. Полутело —
+    // скругление только наружных углов, разделитель остаётся общей кромкой.
+    const body = farHalfOnly
+      ? `<path d="M 0 ${-TILE_W / 2} H ${TILE_L / 2 - TILE_R}
+          A ${TILE_R} ${TILE_R} 0 0 1 ${TILE_L / 2} ${-TILE_W / 2 + TILE_R}
+          V ${TILE_W / 2 - TILE_R}
+          A ${TILE_R} ${TILE_R} 0 0 1 ${TILE_L / 2 - TILE_R} ${TILE_W / 2}
+          H 0 Z" class="ghost-body"/>`
+      : `<rect x="${-TILE_L / 2}" y="${-TILE_W / 2}" width="${TILE_L}" height="${TILE_W}"
+        rx="${TILE_R}" class="ghost-body"/>`;
     // Пипсы призрака — реальные значения кости после выставления.
     return `
-    <g transform="${tileTr(cells[0], cells[1])}" class="ghost ghost-${mode}${pending}" ${dataMove}>
+    <g transform="${tileTr(cells[0], cells[1])}" class="ghost ghost-${mode}${
+      farHalfOnly ? ' ghost-half' : ''
+    }${pending}" ${dataMove}>
       <title>${modeLabel(mode)}</title>
-      <rect x="${-TILE_L / 2}" y="${-TILE_W / 2}" width="${TILE_L}" height="${TILE_W}"
-        rx="${TILE_R}" class="ghost-body"/>
+      ${body}
       <line x1="0" y1="${-TILE_W / 2 + 7}" x2="0" y2="${TILE_W / 2 - 7}" class="ghost-divider"/>
-      ${ghostPips(values[0], -CELL / 2)}
+      ${farHalfOnly ? '' : ghostPips(values[0], -CELL / 2)}
       ${ghostPips(values[1], CELL / 2)}
     </g>`;
   }

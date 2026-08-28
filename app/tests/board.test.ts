@@ -1,7 +1,7 @@
 // Геометрия сцены стола. Правил не касается (§6.3: раскладка правилам
 // безразлична) — здесь проверяется только то, что картинка строится верно.
 import { describe, expect, it } from 'vitest';
-import { sceneCell, shadedEndIds, tileTransform } from '../src/ui/board';
+import { farHalfGhosts, sceneCell, shadedEndIds, tileTransform } from '../src/ui/board';
 import { CELL } from '../src/ui/tile-svg';
 import { legalMoves, type Move, type Vec } from '../src/engine';
 import { BASE, playout } from './helpers';
@@ -139,5 +139,56 @@ describe('подписи концов и тени (идея 0010)', () => {
         if (m.type === 'place') expect(ids.has(m.endId)).toBe(true);
       }
     });
+  });
+});
+
+describe('приставная половина теней конца (идея 0017)', () => {
+  const place = (
+    tile: string,
+    endId: number,
+    mode: 'straight' | 'turn' | 'cross',
+    side?: 0 | 1,
+  ): Move => ({
+    type: 'place',
+    tile,
+    endId,
+    mode,
+    ...(side !== undefined ? { side } : {}),
+  });
+
+  it('рядом с прямой тенью повороты остаются без приставной половины', () => {
+    const straight = place('6-4', 5, 'straight');
+    const t0 = place('6-4', 5, 'turn', 0);
+    const t1 = place('6-4', 5, 'turn', 1);
+    const far = farHalfGhosts([straight, t0, t1]);
+    expect(far.has(t0)).toBe(true);
+    expect(far.has(t1)).toBe(true);
+    expect(far.has(straight)).toBe(false);
+  });
+
+  it('конец из одних поворотов не трогается: приставки 180°-симметричны', () => {
+    const far = farHalfGhosts([place('6-4', 5, 'turn', 0), place('6-4', 5, 'turn', 1)]);
+    expect(far.size).toBe(0);
+  });
+
+  it('прямая тень другого конца поворот не урезает', () => {
+    const turn = place('6-4', 5, 'turn', 0);
+    expect(farHalfGhosts([place('6-4', 1, 'straight'), turn]).has(turn)).toBe(false);
+  });
+
+  it('черновик хода рисуется полным: он показывает, как кость ляжет', () => {
+    const straight = place('6-4', 5, 'straight');
+    const t0 = place('6-4', 5, 'turn', 0);
+    const t1 = place('6-4', 5, 'turn', 1);
+    const far = farHalfGhosts([straight, t0, t1], t0);
+    // Сторона поворота — часть тождества хода: урезанным перестаёт быть
+    // ровно выбранный поворот, его зеркальный собрат остаётся дальней половиной.
+    expect(far.has(t0)).toBe(false);
+    expect(far.has(t1)).toBe(true);
+  });
+
+  it('пара «прямо + поперёк» дубля не в счёт', () => {
+    const far = farHalfGhosts([place('3-3', 2, 'straight'), place('3-3', 2, 'cross')]);
+    expect(far.size).toBe(0);
   });
 });
