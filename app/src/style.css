@@ -1083,12 +1083,13 @@ textarea,
   line-height: 1.45;
 }
 
+/* Без капса: «Партия 1 (матч до 100)» как обычный текст — решение автора
+   2026-08-28 (капс съедал разницу регистров и кричал на карточке). */
 .match-round {
   text-align: center;
   color: var(--muted);
   font-size: 12.5px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   margin: 14px 0 0;
 }
 

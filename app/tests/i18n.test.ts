@@ -10,12 +10,15 @@ import { L, LOCALES, setLocale } from '../src/ui/i18n';
 afterEach(() => setLocale('ru'));
 
 describe('matchRoundLabel (фича 0015)', () => {
-  it('во всех языках несёт номер партии и цель матча', () => {
+  it('во всех языках несёт номер партии и цель матча — в этом порядке', () => {
     for (const { code } of LOCALES) {
       setLocale(code);
       const label = L().matchRoundLabel(10, 150);
       expect(label, code).toContain('10');
       expect(label, code).toContain('150');
+      // Порядок ловит перепутанные плейсхолдеры (`Партия ${target}…`):
+      // во всех семи формах номер партии стоит раньше цели.
+      expect(label.indexOf('10'), code).toBeLessThan(label.indexOf('150'));
     }
   });
 

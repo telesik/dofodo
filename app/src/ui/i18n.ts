@@ -125,8 +125,10 @@ const ru = {
   matchWin: (name: string) => `Победа в матче: ${name}!`,
   matchDraw: 'Ничья в матче — счёты равны (§10.5)',
   // Цель матча в скобках — параметр функции, а не склейка в UI: скобочная
-  // часть у языков разная («до 100», «to 100», «bis 100», у zh — своя форма).
-  matchRoundLabel: (n: number, target: number) => `Партия ${n} (до ${target})`,
+  // часть у языков разная. Скобка называет матч явно, словом из §1 правил
+  // своего языка (замечание автора 2026-08-28: «Партия 1 (до 100)» читалась
+  // как цель партии, а до 100 идёт матч; селектор говорит «Матч до»).
+  matchRoundLabel: (n: number, target: number) => `Партия ${n} (матч до ${target})`,
   resultTime: (round: string, total: string) => `Время партии ${round} · матча ${total}`,
   btnNextRound: 'Следующая партия',
   btnAbortMatch: 'Бросить матч',
@@ -314,7 +316,7 @@ const en: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Match victory: ${name}!`,
   matchDraw: 'Match drawn — equal totals (§10.5)',
-  matchRoundLabel: (n, target) => `Game ${n} (to ${target})`,
+  matchRoundLabel: (n, target) => `Game ${n} (match to ${target})`,
   resultTime: (round, total) => `Game time ${round} · match ${total}`,
   btnNextRound: 'Next game',
   btnAbortMatch: 'Abandon match',
@@ -495,7 +497,7 @@ const es: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `¡Victoria del encuentro: ${name}!`,
   matchDraw: 'Encuentro empatado — sumas iguales (§10.5)',
-  matchRoundLabel: (n, target) => `Juego ${n} (hasta ${target})`,
+  matchRoundLabel: (n, target) => `Juego ${n} (encuentro hasta ${target})`,
   resultTime: (round, total) => `Tiempo del juego ${round} · del encuentro ${total}`,
   btnNextRound: 'Siguiente juego',
   btnAbortMatch: 'Abandonar encuentro',
@@ -677,7 +679,7 @@ const de: Dict = {
   ptsShort: 'Pkt.',
   matchWin: (name) => `Matchsieg: ${name}!`,
   matchDraw: 'Match unentschieden — gleiche Summen (§10.5)',
-  matchRoundLabel: (n, target) => `Partie ${n} (bis ${target})`,
+  matchRoundLabel: (n, target) => `Partie ${n} (Match bis ${target})`,
   resultTime: (round, total) => `Partiedauer ${round} · Matchdauer ${total}`,
   btnNextRound: 'Nächste Partie',
   btnAbortMatch: 'Match abbrechen',
@@ -859,7 +861,7 @@ const pt: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Vitória da partida: ${name}!`,
   matchDraw: 'Partida empatada — somas iguais (§10.5)',
-  matchRoundLabel: (n, target) => `Jogo ${n} (até ${target})`,
+  matchRoundLabel: (n, target) => `Jogo ${n} (partida até ${target})`,
   resultTime: (round, total) => `Tempo do jogo ${round} · da partida ${total}`,
   btnNextRound: 'Próximo jogo',
   btnAbortMatch: 'Abandonar a partida',
@@ -1225,7 +1227,7 @@ const uk: Dict = {
   ptsShort: 'очк.',
   matchWin: (name) => `Перемога в матчі: ${name}!`,
   matchDraw: 'Нічия в матчі — рахунки рівні (§10.5)',
-  matchRoundLabel: (n, target) => `Партія ${n} (до ${target})`,
+  matchRoundLabel: (n, target) => `Партія ${n} (матч до ${target})`,
   resultTime: (round, total) => `Час партії ${round} · матчу ${total}`,
   btnNextRound: 'Наступна партія',
   btnAbortMatch: 'Покинути матч',

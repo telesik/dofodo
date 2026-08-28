@@ -528,10 +528,17 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       );
     }
 
-    // Призраки ходов выбранной кости.
+    // Призраки ходов выбранной кости. Урезанные тени — поверх полных:
+    // их кликабельная площадь и так одна дальняя клетка, и полное тело
+    // чужого конца, нарисованное позже, могло бы накрыть её целиком —
+    // ход остался бы без кликабельного места (тени занятость клеток не
+    // проверяют, перекрытия разрешает перекладка уже после хода).
+    // На приставную клетку полутень не претендует, так что адресат клика
+    // по ней от порядка не зависит.
     lastGhostCells = [];
     if (opts.selected !== null) {
       const farHalf = farHalfGhosts(opts.ghostMoves, opts.pending);
+      const halves: string[] = [];
       for (const m of opts.ghostMoves) {
         if (m.type === 'placeRoot') {
           // Как ляжет корень (§6.2): горизонтально, тупик с дальней от роста
@@ -543,11 +550,18 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
         } else if (m.type === 'place') {
           const geo = placementGeometry(game, m.tile, m.endId, m.mode, m.side);
           lastGhostCells.push(geo.cells[0], geo.cells[1]);
-          parts.push(
-            ghostSvg(game, m, [geo.cells[0], geo.cells[1]], m.mode, opts, farHalf.has(m)),
+          const svgPart = ghostSvg(
+            game,
+            m,
+            [geo.cells[0], geo.cells[1]],
+            m.mode,
+            opts,
+            farHalf.has(m),
           );
+          (farHalf.has(m) ? halves : parts).push(svgPart);
         }
       }
+      parts.push(...halves);
     }
 
     svg.innerHTML = parts.join('\n');

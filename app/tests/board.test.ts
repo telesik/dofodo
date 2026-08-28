@@ -19,6 +19,21 @@ function centerOf(tr: string): { x: number; y: number } {
   return { x: Number(m![1]), y: Number(m![2]) };
 }
 
+// Ходы в каноническом виде: TileId через дефис (tileId в tiles.ts),
+// поперёк кладётся только дубль (§7.1).
+const place = (
+  tile: string,
+  endId: number,
+  mode: 'straight' | 'turn' | 'cross',
+  side?: 0 | 1,
+): Move => ({
+  type: 'place',
+  tile,
+  endId,
+  mode,
+  ...(side !== undefined ? { side } : {}),
+});
+
 describe('зеркальный стол (§6.3 — только вид)', () => {
   it('sceneCell отражает x, не трогает y и обратим', () => {
     const c: Vec = { x: 3, y: -2 };
@@ -86,21 +101,6 @@ describe('зеркальный стол (§6.3 — только вид)', () => 
 });
 
 describe('подписи концов и тени (идея 0010)', () => {
-  // Ходы в каноническом виде: TileId через дефис (tileId в tiles.ts),
-  // поперёк кладётся только дубль (§7.1).
-  const place = (
-    tile: string,
-    endId: number,
-    mode: 'straight' | 'turn' | 'cross',
-    side?: 0 | 1,
-  ): Move => ({
-    type: 'place',
-    tile,
-    endId,
-    mode,
-    ...(side !== undefined ? { side } : {}),
-  });
-
   it('без выбранной кости не затенён ни один конец', () => {
     // Гейт по selected — защита контракта render: непустые ghostMoves
     // без выбранной кости не рисуются, значит и подписи не гасятся.
@@ -143,19 +143,6 @@ describe('подписи концов и тени (идея 0010)', () => {
 });
 
 describe('приставная половина теней конца (идея 0017)', () => {
-  const place = (
-    tile: string,
-    endId: number,
-    mode: 'straight' | 'turn' | 'cross',
-    side?: 0 | 1,
-  ): Move => ({
-    type: 'place',
-    tile,
-    endId,
-    mode,
-    ...(side !== undefined ? { side } : {}),
-  });
-
   it('рядом с прямой тенью повороты остаются без приставной половины', () => {
     const straight = place('6-4', 5, 'straight');
     const t0 = place('6-4', 5, 'turn', 0);
@@ -190,5 +177,24 @@ describe('приставная половина теней конца (идея 
   it('пара «прямо + поперёк» дубля не в счёт', () => {
     const far = farHalfGhosts([place('3-3', 2, 'straight'), place('3-3', 2, 'cross')]);
     expect(far.size).toBe(0);
+  });
+
+  it('черновик на прямой тени поворотов не возвращает', () => {
+    const straight = place('6-4', 5, 'straight');
+    const t0 = place('6-4', 5, 'turn', 0);
+    const far = farHalfGhosts([straight, t0], straight);
+    expect(far.has(t0)).toBe(true);
+    expect(far.has(straight)).toBe(false);
+  });
+
+  it('тень корня в расчёте не участвует', () => {
+    const root: Move = { type: 'placeRoot', tile: '6-6' };
+    const turn = place('6-4', 5, 'turn', 0);
+    expect(farHalfGhosts([root, place('6-4', 5, 'straight'), turn]).has(turn)).toBe(true);
+    expect(farHalfGhosts([root]).size).toBe(0);
+  });
+
+  it('пустой список — пустой ответ', () => {
+    expect(farHalfGhosts([]).size).toBe(0);
   });
 });
