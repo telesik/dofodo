@@ -29,3 +29,55 @@ describe('matchRoundLabel (фича 0015)', () => {
     }
   });
 });
+
+describe('словари целиком', () => {
+  it('переключение локали реально меняет словарь', () => {
+    const tag = (code: (typeof LOCALES)[number]['code']) => {
+      setLocale(code);
+      return L().tagline;
+    };
+    // Три разных семьи письма: скопированный словарь не спрячется.
+    expect(tag('ru')).not.toBe(tag('en'));
+    expect(tag('en')).not.toBe(tag('zh'));
+  });
+
+  it('каждая строка каждого словаря — непустая; каждая функция отрабатывает', () => {
+    // Числовые аргументы по арности: шаблоны интерполируют их без потери
+    // типа, а склонения (ruTiles/ukTiles) исполняют настоящие ветки.
+    // Ловит упавший шаблон и NaN/undefined в тексте во всех словарях разом.
+    const args = [2, 5, 7, 4] as const; // с запасом по арности словарных функций
+    for (const { code } of LOCALES) {
+      setLocale(code);
+      const dict = L() as unknown as Record<string, unknown>;
+      for (const [key, val] of Object.entries(dict)) {
+        if (typeof val === 'function') {
+          const out: unknown = (val as (...a: unknown[]) => unknown)(
+            ...args.slice(0, Math.max(1, (val as { length: number }).length)),
+          );
+          expect(typeof out, `${code}.${key}`).toBe('string');
+          expect((out as string).length, `${code}.${key}`).toBeGreaterThan(0);
+          expect(out, `${code}.${key}`).not.toContain('undefined');
+          expect(out, `${code}.${key}`).not.toContain('NaN');
+        } else {
+          expect(typeof val, `${code}.${key}`).toBe('string');
+          expect((val as string).length, `${code}.${key}`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('склонение счёта костей: русский и украинский по всем формам', () => {
+    // handMetaHidden(n) = «N кость/кости/костей · …» — единственная
+    // настоящая логика словарей; формы включают коварные 11 и 21.
+    const cases: Array<[string, number, string]> = [
+      ['ru', 1, 'кость'], ['ru', 2, 'кости'], ['ru', 5, 'костей'],
+      ['ru', 11, 'костей'], ['ru', 21, 'кость'], ['ru', 22, 'кости'],
+      ['uk', 1, 'кістка'], ['uk', 2, 'кістки'], ['uk', 5, 'кісток'],
+      ['uk', 11, 'кісток'], ['uk', 21, 'кістка'],
+    ];
+    for (const [code, n, word] of cases) {
+      setLocale(code as (typeof LOCALES)[number]['code']);
+      expect(L().handMetaHidden(n), `${code}:${n}`).toContain(`${n} ${word}`);
+    }
+  });
+});

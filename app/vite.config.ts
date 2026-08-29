@@ -32,11 +32,21 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       // Первый замер 28.08.2026: lines/stmts 46.54, branches 85.07,
       // functions 18.13 (движок 93.5%, UI юнитами почти не покрыт).
+      // Этап 29.08.2026 (тикет 0014): на чистом дереве lines/stmts 52.99,
+      // branches 90.79 — покрыты tile-svg, replay, rng, sound (разметка
+      // записей), словарные функции i18n, shuffleLayout. Вне юнитов остаются
+      // DOM-слои app.ts, board.ts (createBoard) и main.ts — они под
+      // интеграционным стендом мобильного. Пол branches — с зазором ~2 пп
+      // (запас на новые ветки движка). Пол functions НЕ поднят осознанно:
+      // v8 пишет неимпортированный app.ts как одну «покрытую» (empty-report)
+      // функцию, а 3/4 знаменателя — словарные стрелки i18n; факт 98.77 —
+      // артефакт метрики, и первый же юнит с импортом app.ts обрушил бы его
+      // до ~83. Вернуться к полу functions на DOM-этапе (jsdom-смоук initApp).
       thresholds: {
-        lines: 46,
-        statements: 46,
+        lines: 52,
+        statements: 52,
         functions: 18,
-        branches: 85,
+        branches: 88,
       },
     },
   },
