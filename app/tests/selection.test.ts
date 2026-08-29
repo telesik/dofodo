@@ -1,9 +1,14 @@
-// Политика выделения текста (баг 0022): долгое касание по столу — жест
-// прицеливания, а не выделение, iOS же выделял SVG-подписи стола (цифры
-// концов, бейдж базара) и поднимал меню Copy / Look Up поверх поля.
-// Лекарство — глобальный запрет на body плюс точечные разрешения тому,
-// что игрок копирует осознанно. Оба правила живут в style.css и легко
-// теряются при рефакторинге стилей — тест держит сам инвариант политики.
+// CSS-политики style.css. Здесь ДВЕ независимые политики на общем парсере:
+// 1) выделение текста (баг 0022): долгое касание по столу — жест
+//    прицеливания, а не выделение, iOS же выделял SVG-подписи стола (цифры
+//    концов, бейдж базара) и поднимал меню Copy / Look Up поверх поля.
+//    Лекарство — глобальный запрет на body плюс точечные разрешения тому,
+//    что игрок копирует осознанно;
+// 2) кегль фокусируемых контролов (баги 0005/0030): всё, что iOS зумит
+//    при фокусе (select/input/textarea), держит ≥16px; мелкий кегль —
+//    только по белому списку нефокусируемого.
+// Правила живут в style.css и легко теряются при рефакторинге стилей —
+// тесты держат сами инварианты политик.
 // Каскад браузера здесь не воспроизводится (jsdom в проекте нет) — живое
 // поведение проверено в браузере, протокол — в тикете 0022.
 import { readFileSync } from 'node:fs';
@@ -49,6 +54,36 @@ function topLevelRules(source: string): Rule[] {
 }
 
 const rules = topLevelRules(css);
+
+/** Листовые правила «селекторы { декларации }» по всему файлу, включая
+ *  внутренности @media: политика кегля (0005/0030) действует и там. */
+function leafRules(source: string): Rule[] {
+  const text = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const out: Rule[] = [];
+  let i = 0;
+  let headStart = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (ch === '{') {
+      const head = text.slice(headStart, i).trim();
+      if (head.startsWith('@')) {
+        headStart = i + 1; // войти внутрь @-блока, его правила тоже листовые
+      } else {
+        const close = text.indexOf('}', i + 1); // в листовом теле '{' не бывает
+        out.push({
+          selectors: head.split(',').map((s) => s.trim().replace(/\s+/g, ' ')),
+          decl: text.slice(i + 1, close < 0 ? text.length : close),
+        });
+        i = close < 0 ? text.length : close;
+        headStart = i + 1;
+      }
+    } else if (ch === '}') {
+      headStart = i + 1; // закрылся @-блок
+    }
+    i++;
+  }
+  return out;
+}
 const has = (decl: string, prop: string, value: string): boolean =>
   new RegExp(`(^|[;\\s])${prop.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')}\\s*:\\s*${value}\\b`).test(
     decl,
@@ -82,5 +117,73 @@ describe('политика выделения текста (баг 0022)', () =>
       expect(allow!.selectors, `в исключениях нет «${sel}»`).toContain(sel);
     }
     expect(has(allow!.decl, '-webkit-user-select', 'text')).toBe(true);
+  });
+});
+
+describe('политика кегля фокусируемых контролов (баги 0005/0030)', () => {
+  it('в одном блоке нет двух объявлений font-size — дубль всегда ошибка каскада', () => {
+    // Листовые тела блоков по всему файлу, включая внутренности @media:
+    // второе объявление молча побеждает первое — так 13px отменил
+    // 16px у селекта истории (баг 0030).
+    const bodies = css.replace(/\/\*[\s\S]*?\*\//g, '').match(/\{[^{}]*\}/g) ?? [];
+    const dups = bodies.filter((b) => (b.match(/font-size\s*:/g) ?? []).length > 1);
+    expect(dups, `блоки с дублем font-size:\n${dups.join('\n---\n')}`).toEqual([]);
+  });
+
+  it('кегль меньше 16px (или не px-литерал) — только по белому списку (баг 0005)', () => {
+    // Default-deny: контрол опознаётся не по тегу в селекторе (мимо регекса
+    // прошёл бы класс вроде .lang-select — три настоящих <select>, чья
+    // специфичность бьёт страховку `select { 16px }`), а наоборот — каждый
+    // мелкий кегль обязан быть в списке заведомо НЕфокусируемого. Новый
+    // селектор с < 16px требует явного решения здесь. Смотрятся все
+    // листовые правила файла, включая @media. Ограничение: только явные
+    // объявления — контрол без своего font-size, наследующий мелкий кегль
+    // контейнера, тест не ловит (живое поведение — за превью).
+    // Текст, бейджи, подписи и кнопки (<button> iOS при фокусе не зумит).
+    // Сюда НЕЛЬЗЯ вносить селекторы, накрывающие select/input/textarea.
+    const SMALL_OK = new Set<string>([
+      'body',
+      '.round-chip',
+      '.status-event',
+      '.status-prompt',
+      '.first-chip',
+      '.total-chip',
+      '.hand-sum',
+      '.hand-name',
+      '.replay-pos',
+      '.pile-count',
+      '#toast',
+      '#tutor-bar',
+      '#version-badge',
+      '.card .sub',
+      '.card .version-line',
+      '.field label',
+      '.check',
+      '.btn',
+      '.icon-btn',
+      '.confirm-q',
+      '.confirm-btn',
+      '.lot-side',
+      '.lot-result',
+      '.result-pts',
+      '.result-note',
+      '.match-round',
+      "[data-tip]:hover::after",
+    ]);
+    const bad: string[] = [];
+    for (const r of leafRules(css)) {
+      for (const m of r.decl.matchAll(/font-size\s*:\s*([^;}]+)/g)) {
+        const v = m[1]!.trim();
+        const px = /^([\d.]+)px$/.exec(v);
+        if (px && Number(px[1]) >= 16) continue; // ≥16px — всегда можно
+        for (const sel of r.selectors) {
+          if (!SMALL_OK.has(sel)) bad.push(`${sel} → font-size: ${v}`);
+        }
+      }
+    }
+    expect(
+      bad,
+      `мелкий или нестандартный кегль вне белого списка (фокусируемый контрол? — баг 0005):\n${bad.join('\n')}`,
+    ).toEqual([]);
   });
 });

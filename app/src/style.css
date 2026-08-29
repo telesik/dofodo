@@ -439,9 +439,10 @@ textarea,
   border: 1px solid rgba(201, 168, 106, 0.3);
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 16px; /* iOS-автозум фокуса (баг 0005) */
-  font-size: 13px;
-  max-width: 210px;
+  font-size: 16px; /* iOS-автозум фокуса (баг 0005); компактнее нельзя — 0030 */
+  /* Кэп под кегль 16px: при 210px (подгон под прежние 13px) метка партии
+     «Партия 10 — рыба, 100:100» резалась в 8 локалях из 10 (ревью 0030). */
+  max-width: 260px;
 }
 
 #replay-slider {
