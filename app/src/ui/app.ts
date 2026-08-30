@@ -284,7 +284,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
    */
   let mirrorBoard = false;
   let confirmOn = false;
-  let tutorOn = false;
+  // Обучение включено с первого запуска (решение автора 2026-08-30):
+  // новичок сразу видит подсказки, а после TUTOR_ENOUGH партий получает
+  // одноразовое предложение их убрать. Выключается явно — настройкой
+  // или тем предложением; сохранённый выбор уважается ниже.
+  let tutorOn = true;
   /** Сколько партий доиграно за всё время — по ним предлагаем убрать подсказки. */
   let roundsDone = 0;
   /** Предложение выключить обучение делается один раз и больше не возвращается. */
@@ -326,7 +330,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     handsVertical = prefs.handsVertical !== false;
     mirrorBoard = !!prefs.mirror;
     confirmOn = !!prefs.confirm;
-    tutorOn = !!prefs.tutor;
+    // «Включено, пока явно не выключили»: prefs.tutor пишется при каждом
+    // сохранении настроек, поэтому у игравших раньше там лежит их выбор
+    // (в т.ч. false), а дефолт ON достаётся только первому запуску.
+    tutorOn = prefs.tutor !== false;
     roundsDone = Math.max(0, Math.trunc(prefs.roundsDone ?? 0));
     tutorAsked = !!prefs.tutorAsked;
     const validOpp = [
