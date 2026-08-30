@@ -206,7 +206,7 @@ const ru = {
   tutorPlace:
     'Кликните тень — там встанет кость. Перечёркнутый кружок — мёртвый конец (§9.1).',
   tutorTurnSides:
-    'Поворот даёт развилку: две тени — две стороны изгиба. На правила выбор не влияет (§6.3).',
+    'Поворот даёт развилку: две тени — две стороны изгиба.',
   tutorCross: 'Поперёк дубль закрывает ветку навсегда (§7.1).',
   tutorFresh:
     'У свежего конца развилки первая кость ложится только прямо — ни поворота, ни закрытия дублем (§6.4), потому тень у него одна.',
@@ -390,7 +390,7 @@ const en: Dict = {
   tutorPlace:
     'Click a ghost — the tile goes there. A crossed-out circle is a dead end (§9.1).',
   tutorTurnSides:
-    'A turn creates a fork: two ghosts, two ways to bend the branch. The choice does not affect the rules (§6.3).',
+    'A turn creates a fork: two ghosts, two ways to bend the branch.',
   tutorCross: 'A double played crosswise closes the branch for good (§7.1).',
   tutorFresh:
     'A fresh end of a fork takes its first tile straight only — no turn, no closing double (§6.4), which is why it has just one ghost.',
@@ -572,7 +572,7 @@ const es: Dict = {
   tutorPlace:
     'Haga clic en una sombra: ahí irá la ficha. Un círculo tachado es un extremo muerto (§9.1).',
   tutorTurnSides:
-    'El giro crea una bifurcación: dos sombras, dos lados para doblar la rama. La elección no afecta a las reglas (§6.3).',
+    'El giro crea una bifurcación: dos sombras, dos lados para doblar la rama.',
   tutorCross: 'El doble atravesado cierra la rama para siempre (§7.1).',
   tutorFresh:
     'En un extremo fresco de una bifurcación la primera ficha va solo recta: ni giro ni cierre con doble (§6.4); por eso tiene una sola sombra.',
@@ -754,7 +754,7 @@ const de: Dict = {
   tutorPlace:
     'Klicken Sie einen Schatten an — dorthin kommt der Stein. Ein durchgestrichener Kreis ist ein totes Ende (§9.1).',
   tutorTurnSides:
-    'Der Abzweig erzeugt eine Gabelung: zwei Schatten, zwei Richtungen für den Zweig. Die Wahl berührt die Regeln nicht (§6.3).',
+    'Der Abzweig erzeugt eine Gabelung: zwei Schatten, zwei Richtungen für den Zweig.',
   tutorCross: 'Ein Pasch quer schließt den Zweig für immer (§7.1).',
   tutorFresh:
     'Auf ein frisches Ende einer Gabelung kommt der erste Stein nur gerade — kein Abzweig, kein Schließen mit Pasch (§6.4); darum hat es nur einen Schatten.',
@@ -935,7 +935,7 @@ const pt: Dict = {
   tutorPlace:
     'Clique numa sombra — é ali que a peça vai. Um círculo riscado é uma ponta morta (§9.1).',
   tutorTurnSides:
-    'A curva cria uma bifurcação: duas sombras, dois lados para dobrar o ramo. A escolha não afeta as regras (§6.3).',
+    'A curva cria uma bifurcação: duas sombras, dois lados para dobrar o ramo.',
   tutorCross: 'A dupla atravessada fecha o ramo para sempre (§7.1).',
   tutorFresh:
     'Numa ponta fresca de uma bifurcação a primeira peça vai só reta — sem curva e sem fechar com dupla (§6.4); por isso ela tem uma só sombra.',
@@ -1113,7 +1113,7 @@ const zh: Dict = {
   tutorPick: '点击手中亮起的牌，桌上会出现它的走法虚影（§6.3）。',
   tutorPlace: '点击虚影，牌就放在那里。划掉的圆圈是死端（§9.1）。',
   tutorTurnSides:
-    '转向形成分叉：两个虚影就是枝条弯曲的两个方向。选择不影响规则（§6.3）。',
+    '转向形成分叉：两个虚影就是枝条弯曲的两个方向。',
   tutorCross: '对子横放则永久封枝（§7.1）。',
   tutorFresh: '分叉的新端上第一张牌只能直放——不能转向，也不能用对子封枝（§6.4），所以它只有一个虚影。',
   tutorMustPlay: '从牌堆摸到的牌可用——必须打出它（§8.2）：点击其中一个虚影。',
@@ -1301,7 +1301,7 @@ const uk: Dict = {
   tutorPlace:
     'Клікніть тінь — там стане кістка. Перекреслене кружальце — мертвий кінець (§9.1).',
   tutorTurnSides:
-    'Поворот створює розвилку: дві тіні — два боки згину гілки. На правила вибір не впливає (§6.3).',
+    'Поворот створює розвилку: дві тіні — два боки згину гілки.',
   tutorCross: 'Упоперек дубль закриває гілку назавжди (§7.1).',
   tutorFresh:
     'На свіжому кінці розвилки перша кістка лягає лише прямо — ні повороту, ні закриття дублем (§6.4), тому тінь у нього одна.',
