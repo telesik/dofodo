@@ -907,14 +907,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         : [],
     );
 
-    // Последняя добранная и оставшаяся в руке кость подсвечивается, пока не
-    // случится следующее действие: иначе легко не заметить, что пришло из базара.
-    const lastLog = round.log[round.log.length - 1];
-    const freshlyDrawn =
-      lastLog?.kind === 'draw' && !lastLog.played && lastLog.player === player
-        ? lastLog.tile
-        : null;
-
     // Общий счёт матча — бейджем у имени (в шапке ему тесно на мобильных).
     const totalChip =
       !view && match
@@ -940,8 +932,14 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           playable.has(t) ? 'playable' : '',
           !view && isActive && !playable.has(t) && !hidden ? 'dimmed' : '',
           !view && selected === t && isActive ? 'selected' : '',
-          !view && round.mustPlay === t && isActive ? 'must' : '',
-          freshlyDrawn === t && !hidden ? 'drawn-new' : '',
+          // Пульс обязательной (вытянутой) кости — только на устройстве
+          // ходящего: наблюдателю чужого хода (бот думает, соперник по BLE
+          // ходит) чужая добранная кость не подсвечивается — решение автора
+          // 2026-08-30 (тикет 0024). Hot-seat не меняется: за одним экраном
+          // ходящий и есть смотрящий.
+          !view && round.mustPlay === t && isActive && !botsTurnNow() && !notMyTurn()
+            ? 'must'
+            : '',
         ]
           .filter(Boolean)
           .join(' ');

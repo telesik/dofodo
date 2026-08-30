@@ -370,24 +370,8 @@ textarea,
   animation: wiggle 0.3s ease;
 }
 
-/* Только что добранная из базара кость: вспышка и остаточное свечение,
-   пока не случится следующее действие. */
-.hand-tile.drawn-new {
-  filter: drop-shadow(0 0 10px rgba(201, 168, 106, 0.95))
-    drop-shadow(0 0 24px rgba(201, 168, 106, 0.55)) brightness(1.1);
-  animation: drawn-flash 1.7s ease-out;
-}
-
-@keyframes drawn-flash {
-  0% {
-    filter: drop-shadow(0 0 26px rgba(201, 168, 106, 1))
-      drop-shadow(0 0 48px rgba(201, 168, 106, 0.85)) brightness(1.45);
-  }
-  100% {
-    filter: drop-shadow(0 0 10px rgba(201, 168, 106, 0.95))
-      drop-shadow(0 0 24px rgba(201, 168, 106, 0.55)) brightness(1.1);
-  }
-}
+/* Подсветки добранной из базара кости больше нет — решение автора
+   2026-08-30 (тикет 0024). Не возвращать без нового решения. */
 
 /* Указатель «чей ход» — рука-манúкула слева от имени активного игрока. */
 .turn-mark {
