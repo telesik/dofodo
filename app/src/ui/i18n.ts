@@ -28,8 +28,10 @@ const ru = {
   // Стартовый экран
   tagline:
     'Домино по новым правилам: глубина шахмат и точно отмеренная случайность.',
-  linkRules: 'Правила игры',
   linkSupport: 'Поддержать авторов',
+  linkRules: 'Правила игры',
+  linkAppStore: 'Bonesai в App Store',
+  googlePlaySoon: 'Google Play — скоро',
   linkPrivacy: 'Политика конфиденциальности',
   fieldName: 'Имя игрока',
   fieldYourName: 'Ваше имя',
@@ -222,7 +224,7 @@ const ru = {
 
   // Бейдж версии
   versionWord: 'версия',
-  rulesWord: (v: string) => `правила ${v}`,
+  rulesWord: (v: string) => `правила игры ${v}`,
 };
 
 export type Dict = typeof ru;
@@ -230,8 +232,10 @@ export type Dict = typeof ru;
 const en: Dict = {
   tagline:
     'Dominoes with new rules: the depth of chess and precisely measured luck.',
-  linkRules: 'Game rules',
   linkSupport: 'Support the authors',
+  linkRules: 'Game rules',
+  linkAppStore: 'Bonesai on the App Store',
+  googlePlaySoon: 'Google Play — coming soon',
   linkPrivacy: 'Privacy policy',
   fieldName: 'Player name',
   fieldYourName: 'Your name',
@@ -405,14 +409,16 @@ const en: Dict = {
     'Check the selected move: place it with the button or by clicking the ghost again; changed your mind — cancel or pick another ghost.',
 
   versionWord: 'version',
-  rulesWord: (v) => `rules ${v}`,
+  rulesWord: (v) => `game rules ${v}`,
 };
 
 const es: Dict = {
   tagline:
     'Dominó con reglas nuevas: la profundidad del ajedrez y un azar bien medido.',
-  linkRules: 'Reglas del juego',
   linkSupport: 'Apoyar a los autores',
+  linkRules: 'Reglas del juego',
+  linkAppStore: 'Bonesai en App Store',
+  googlePlaySoon: 'Google Play — próximamente',
   linkPrivacy: 'Política de privacidad',
   fieldName: 'Nombre del jugador',
   fieldYourName: 'Tu nombre',
@@ -587,14 +593,16 @@ const es: Dict = {
     'Revise la jugada elegida: colóquela con el botón o con otro clic en la sombra; si cambia de idea — cancele o elija otra sombra.',
 
   versionWord: 'versión',
-  rulesWord: (v) => `reglas ${v}`,
+  rulesWord: (v) => `reglas del juego ${v}`,
 };
 
 const de: Dict = {
   tagline:
     'Domino mit neuen Regeln: die Tiefe des Schachs und genau dosierter Zufall.',
-  linkRules: 'Spielregeln',
   linkSupport: 'Die Autoren unterstützen',
+  linkRules: 'Spielregeln',
+  linkAppStore: 'Bonesai im App Store',
+  googlePlaySoon: 'Google Play — demnächst',
   linkPrivacy: 'Datenschutzerklärung',
   fieldName: 'Spielername',
   fieldYourName: 'Ihr Name',
@@ -769,14 +777,16 @@ const de: Dict = {
     'Prüfen Sie den gewählten Zug: legen — per Knopf oder erneutem Klick auf den Schatten; umentschieden — abbrechen oder einen anderen Schatten wählen.',
 
   versionWord: 'Version',
-  rulesWord: (v) => `Regeln ${v}`,
+  rulesWord: (v) => `Spielregeln ${v}`,
 };
 
 const pt: Dict = {
   tagline:
     'Dominó com regras novas: a profundidade do xadrez e um acaso bem medido.',
-  linkRules: 'Regras do jogo',
   linkSupport: 'Apoiar os autores',
+  linkRules: 'Regras do jogo',
+  linkAppStore: 'Bonesai na App Store',
+  googlePlaySoon: 'Google Play — em breve',
   linkPrivacy: 'Política de privacidade',
   fieldName: 'Nome do jogador',
   fieldYourName: 'Seu nome',
@@ -950,14 +960,16 @@ const pt: Dict = {
     'Revise a jogada escolhida: coloque com o botão ou com outro clique na sombra; mudou de ideia — cancele ou escolha outra sombra.',
 
   versionWord: 'versão',
-  rulesWord: (v) => `regras ${v}`,
+  rulesWord: (v) => `regras do jogo ${v}`,
 };
 
 const zh: Dict = {
   tagline:
     '规则全新的多米诺：如棋般深邃，运气恰到好处。',
-  linkRules: '游戏规则',
   linkSupport: '支持作者',
+  linkRules: '游戏规则',
+  linkAppStore: 'App Store 上的 Bonesai',
+  googlePlaySoon: 'Google Play — 即将推出',
   linkPrivacy: '隐私政策',
   fieldName: '玩家昵称',
   fieldYourName: '你的昵称',
@@ -1125,7 +1137,7 @@ const zh: Dict = {
   tutorPending: '请核对所选走法：按按钮或再次点击虚影放牌；想换——取消或点击其他虚影。',
 
   versionWord: '版本',
-  rulesWord: (v) => `规则 ${v}`,
+  rulesWord: (v) => `游戏规则 ${v}`,
 };
 
 
@@ -1141,8 +1153,10 @@ function ukTiles(n: number): string {
 const uk: Dict = {
   tagline:
     'Доміно за новими правилами: глибина шахів і точно відміряна випадковість.',
-  linkRules: 'Правила гри',
   linkSupport: 'Підтримати авторів',
+  linkRules: 'Правила гри',
+  linkAppStore: 'Bonesai в App Store',
+  googlePlaySoon: 'Google Play — незабаром',
   linkPrivacy: 'Політика конфіденційності',
   fieldName: 'Ім’я гравця',
   fieldYourName: 'Ваше ім’я',
@@ -1316,7 +1330,7 @@ const uk: Dict = {
     'Перевірте обраний хід: поставити — кнопкою або повторним кліком по тіні; передумали — скасуйте чи оберіть іншу тінь.',
 
   versionWord: 'версія',
-  rulesWord: (v) => `правила ${v}`,
+  rulesWord: (v) => `правила гри ${v}`,
 };
 
 const DICTS: Record<Locale, Dict> = { ru, en, es, de, pt, uk, zh };

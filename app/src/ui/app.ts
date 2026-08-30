@@ -121,6 +121,17 @@ export interface AppOptions {
    *  Задаёт только веб-версия; мобильные сборки опцию не передают:
    *  донат-ссылок в приложениях магазинов быть не должно (их правила). */
   supportUrl?: string;
+  /** Адрес страницы приложения в App Store — ссылка на стартовой карточке.
+   *  Задаёт только веб-версия; мобильные сборки опцию не передают:
+   *  ссылка «скачай приложение» внутри приложения не нужна, а ссылка
+   *  на чужой стор рискованна по правилам ревью (идея 0019). Чистый
+   *  href без campaign-параметров — трекинга не добавлять. */
+  appStoreUrl?: string;
+  /** Пометка «Google Play — скоро» в той же строке (текст, не ссылка:
+   *  приложение пока в закрытом треке, публичной страницы нет). Задаёт
+   *  только веб-версия; при production-выпуске заменить на опцию
+   *  с URL по образцу appStoreUrl (тикет 0019). */
+  googlePlaySoon?: boolean;
   /** Адрес политики конфиденциальности — ссылка на экране настроек.
    *  Задают только мобильные сборки: Apple требует ссылку внутри
    *  приложения (guideline 5.1.1(i)); веб-версия опцию не передаёт. */
@@ -203,17 +214,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // что за сборка, не начав партию, и может назвать её в отчёте о баге.
   // Версия целиком, включая суффикс фичи: во время разработки надо видеть,
   // какая ветка собрана (1.0.0-platform), а в релизе суффикса просто нет.
-  // На карточке ссылка на правила уже есть выше, поэтому там версия правил
-  // без ссылки: два одинаковых перехода в одной карточке ни к чему.
-  function versionLine(link: boolean): string {
-    const rules = link
-      ? `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().rulesWord(RULES_VERSION)}</a>`
-      : L().rulesWord(RULES_VERSION);
+  // Слово «правила» здесь — единственная ссылка на текст правил: отдельной
+  // строки «Правила игры» на карточке больше нет (решение автора 2026-08-28),
+  // два одинаковых перехода в одной карточке ни к чему.
+  function versionLine(): string {
+    const rules = `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().rulesWord(RULES_VERSION)}</a>`;
     return `${L().versionWord} ${__APP_VERSION__} (${rules}, ${__GIT_HASH__})`;
   }
 
   function updateBadge(): void {
-    badge.innerHTML = versionLine(true);
+    badge.innerHTML = versionLine();
   }
 
   // --- DOM ------------------------------------------------------------------
@@ -1403,6 +1413,24 @@ export function initApp(opts: AppOptions = {}): AppHandle {
             `${esc(saved.names[0])} ${saved.totals[0]}:${saved.totals[1]} ${esc(saved.names[1])}`,
           )}</button>`
         : '';
+    // Строка ссылок под слоганом: «Правила игры» — всегда и первой
+    // (решение автора 2026-08-30 после сравнения на телефонах: без неё
+    // мобильная карточка оставалась вовсе без строки; дубль со ссылкой
+    // в строке версии — осознанный, оба перехода ведут на RULES.xx.md).
+    // Остальное — только переданное входом приложения: веб задаёт донат
+    // и App Store, мобильные сборки не задают ничего.
+    const extLinks: string[] = [
+      `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>`,
+    ];
+    if (opts.supportUrl)
+      extLinks.push(
+        `<a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`,
+      );
+    if (opts.appStoreUrl)
+      extLinks.push(
+        `<a href="${opts.appStoreUrl}" target="_blank" rel="noopener">${L().linkAppStore}</a>`,
+      );
+    if (opts.googlePlaySoon) extLinks.push(`<span class="soon">${L().googlePlaySoon}</span>`);
     elOverlay.innerHTML = `
       <div class="card">
         <!-- Язык — прямо на карточке: игрок, не знающий текущего языка,
@@ -1414,11 +1442,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ).join('')}</select>
         <h1><span class="gold">B</span>onesai</h1>
         <p class="sub">${L().tagline}</p>
-        <p class="sub rules-line"><a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>${
-          opts.supportUrl
-            ? ` · <a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`
-            : ''
-        }</p>
+        ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
         <div class="field"><label for="inp-n0">${
           // Подписи полей — по выбранному сопернику, а не по позиции руки
           // на экране: «нижний/верхний» врали при развороте стола и ничего
@@ -1490,7 +1514,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           <button class="btn ghost-btn" data-action="load-protocol">${L().btnLoadProto}</button>
           <input id="inp-protocol" type="file" accept=".json,application/json" hidden>
         </div>
-        <p class="sub version-line">${versionLine(false)}</p>
+        <p class="sub version-line">${versionLine()}</p>
       </div>`;
     elOverlay.hidden = false;
   }

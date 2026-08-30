@@ -758,14 +758,21 @@ textarea,
   line-height: 1.45;
 }
 
-.card .rules-line {
+.card .links-line {
   margin-top: -12px;
 }
 
-.card .rules-line a {
+.card .links-line a {
   color: var(--gold);
   text-decoration: none;
   border-bottom: 1px dotted var(--gold-soft);
+  /* На узких экранах ссылки переносятся целиком, а не ломаются посередине. */
+  white-space: nowrap;
+}
+
+/* Пометка «Google Play — скоро»: не ссылка, остаётся цветом текста строки. */
+.card .links-line .soon {
+  white-space: nowrap;
 }
 
 /* Ссылка на политику конфиденциальности в настройках. Появляется только
@@ -788,8 +795,19 @@ textarea,
   margin: 16px 0 0;
   font-size: 10.5px;
   letter-spacing: 0.03em;
-  opacity: 0.6;
+  /* Приглушён только текст (значение --muted на 60%), а не вся строка через
+     opacity: ссылка «правила» должна оставаться полной яркости, как ссылки
+     под слоганом (решение автора 2026-08-28). rgba, а не color-mix — WebView
+     iOS 15 (минимум сторовой сборки) color-mix не знает. */
+  color: rgba(151, 160, 153, 0.6);
   text-align: center;
+}
+
+/* Слово «правила» в строке версии — ссылка на текст правил (как в бейдже). */
+.card .version-line a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gold-soft);
 }
 
 .field {
