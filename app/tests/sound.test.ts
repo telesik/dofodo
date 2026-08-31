@@ -335,3 +335,97 @@ describe('sound.ts — записи: разметка и сэмпловое пр
     expect(ctx.started).toHaveLength(0); // новый звук не запускается
   });
 });
+
+// ---------------------------------------------------------------------------
+// Платформенные фолбэки (31.08.2026): 0035 — на Mac (Designed for iPad)
+// WebKit не декодирует AAC, хотя файлы целы: жив только WAV; 0036 — после
+// беззвучного переключателя iPhone контекст застревает в 'interrupted'
+// и resume() его не будит — второй подряд застрявший звук обязан
+// пересоздать контекст (AudioBuffer-ы от контекста не зависят).
+// ---------------------------------------------------------------------------
+
+describe('sound.ts — платформенные фолбэки звука (баги 0035/0036)', () => {
+  const wavBufs = () => ({
+    'place-1-wav': makeBuf([[0.1, 0], [0.2, 0.5], [0.1, 0]]),
+    'place-2-wav': makeBuf([[0.05, 0], [0.15, 0.25], [0.05, 0]]),
+    'box-wav': makeBuf([[0.3, 0], [0.2, 0.6], [0.4, 0], [0.2, 0.5], [0.4, 0], [0.15, 0.4], [0.2, 0]]),
+    'shuffle-wav': makeBuf([[3, 0.3]]),
+  });
+
+  beforeEach(() => {
+    vi.resetModules();
+    FakeAudioContext.instances.length = 0;
+    gainLog.length = 0;
+    vi.stubGlobal('AudioContext', SampleAudioContext);
+    // Теги несут и имя, и формат: box.m4a → 'box-m4a', box.wav → 'box-wav'.
+    vi.stubGlobal('fetch', (url: string) => {
+      const name = ['place-1', 'place-2', 'box', 'shuffle'].find((t) => url.includes(t));
+      const ext = url.endsWith('.wav') || url.includes('.wav') ? 'wav' : 'm4a';
+      return Promise.resolve({ arrayBuffer: () => Promise.resolve(`${name}-${ext}`) });
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('AAC не декодится — записи приезжают WAV-набором, синтез не нужен (0035)', async () => {
+    // В декодере ЕСТЬ только wav-теги: любой m4a-буфер отвергается,
+    // как в WebKit «iOS-app на Mac».
+    SampleAudioContext.bufs = wavBufs();
+    const mod = await import('../src/ui/sound');
+    mod.setSoundEnabled(true);
+    await new Promise((r) => setTimeout(r, 0)); // волна m4a (все reject)
+    await new Promise((r) => setTimeout(r, 0)); // волна wav
+    const ctx = FakeAudioContext.instances[0] as SampleAudioContext;
+    mod.playPlace('straight');
+    expect(ctx.started.length).toBe(1); // играет ЗАПИСЬ
+    expect(ctx.oscillators).toBe(0); // а не синтез
+  });
+
+  it('оба формата не декодятся — честный синтез, как раньше', async () => {
+    SampleAudioContext.bufs = {}; // декодер отвергает всё
+    const mod = await import('../src/ui/sound');
+    mod.setSoundEnabled(true);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    const ctx = FakeAudioContext.instances[0] as SampleAudioContext;
+    mod.playPlace('straight');
+    // Синтез — осциллятор плюс шумовой щелчок (он тоже BufferSource,
+    // но из createBuffer, а не из декодированной записи).
+    expect(ctx.oscillators).toBe(1);
+    expect(ctx.started.every((s) => !(s.buffer instanceof FakeAudioBuffer))).toBe(true);
+  });
+
+  it('контекст застрял не-running и resume не будит — второй звук пересоздаёт (0036)', async () => {
+    SampleAudioContext.bufs = wavBufs();
+    const mod = await import('../src/ui/sound');
+    mod.setSoundEnabled(true);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    const first = FakeAudioContext.instances[0]!;
+    // Симуляция беззвучного переключателя: interrupted, resume бессилен.
+    first.state = 'interrupted';
+    first.resume = () => Promise.resolve(); // state НЕ меняется
+    mod.playPlace('straight'); // такт 1: попытка resume
+    expect(FakeAudioContext.instances).toHaveLength(1);
+    mod.playPlace('straight'); // такт 2: контекст признан мёртвым
+    expect(FakeAudioContext.instances).toHaveLength(2);
+    const second = FakeAudioContext.instances[1] as SampleAudioContext;
+    // Кэш записей пережил замену: играет запись в НОВОМ контексте.
+    expect(second.started.length).toBe(1);
+  });
+
+  it('живой running-контекст серией звуков не пересоздаётся', async () => {
+    SampleAudioContext.bufs = wavBufs();
+    const mod = await import('../src/ui/sound');
+    mod.setSoundEnabled(true);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    mod.playPlace('straight');
+    mod.playPlace('turn');
+    mod.playDraw();
+    expect(FakeAudioContext.instances).toHaveLength(1);
+  });
+});

@@ -8,6 +8,14 @@ import boxUrl from './sounds/box.m4a';
 import place1Url from './sounds/place-1.m4a';
 import place2Url from './sounds/place-2.m4a';
 import shuffleUrl from './sounds/shuffle.m4a';
+// Запасной несжатый набор (mono 24 kHz, afconvert из тех же записей):
+// WebKit в окружении «iOS-приложение на Mac» (Designed for iPad) не
+// декодирует AAC при целых файлах — жив только WAV (баг 0035). Набор
+// качается ТОЛЬКО после провала AAC: iPhone и браузеры его не видят.
+import boxWavUrl from './sounds/box.wav';
+import place1WavUrl from './sounds/place-1.wav';
+import place2WavUrl from './sounds/place-2.wav';
+import shuffleWavUrl from './sounds/shuffle.wav';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -26,14 +34,24 @@ interface Sample {
 let samples: { place: [Sample, Sample]; box: Sample; shuffle: Sample } | null = null;
 let samplesLoading = false;
 
+/** Счётчик подряд идущих звуков, заставших контекст не-running (баг 0036). */
+let ctxStuck = 0;
+
 function ensureCtx(): AudioContext | null {
   if (!enabled) return null;
   // 'closed' необратим (resume() из него не выводит) — например iOS закрывает
   // контекст WKWebView, пока поверх показан SFSafariViewController (баг 0010).
   // master привязан к старому ctx.destination, тоже пересоздаётся ниже в out().
-  if (ctx && ctx.state === 'closed') {
+  // Второй случай (баг 0036): после беззвучного переключателя iPhone контекст
+  // застревает в 'interrupted', и resume() его НЕ будит. Отличить «ещё не
+  // разбужен» от «застрял навсегда» заранее нельзя, поэтому два такта:
+  // первый не-running звук пробует resume(), второй подряд — признаёт
+  // контекст мёртвым и пересоздаёт. Декодированные записи (AudioBuffer)
+  // от контекста не зависят и переживают замену без перезагрузки.
+  if (ctx && (ctx.state === 'closed' || (ctx.state !== 'running' && ctxStuck >= 1))) {
     ctx = null;
     master = null;
+    ctxStuck = 0;
   }
   if (!ctx) {
     try {
@@ -44,7 +62,12 @@ function ensureCtx(): AudioContext | null {
   }
   // iOS после прерывания аудиосессии (звонок, Siri) оставляет контекст
   // в нестандартном состоянии 'interrupted' — поэтому не сравнивать с 'suspended'.
-  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  if (ctx.state !== 'running') {
+    ctxStuck++;
+    ctx.resume().catch(() => {});
+  } else {
+    ctxStuck = 0;
+  }
   return ctx;
 }
 
@@ -144,6 +167,12 @@ function findBursts(
   return bursts;
 }
 
+/** Наборы записей по убыванию предпочтения: AAC, затем WAV-фолбэк (0035). */
+const SAMPLE_SETS: Array<[string, string, string, string]> = [
+  [place1Url, place2Url, boxUrl, shuffleUrl],
+  [place1WavUrl, place2WavUrl, boxWavUrl, shuffleWavUrl],
+];
+
 /** Однократная фоновая загрузка и разметка записей. */
 function loadSamples(): void {
   if (samples || samplesLoading) return;
@@ -152,17 +181,22 @@ function loadSamples(): void {
   samplesLoading = true;
   const dec = async (url: string): Promise<AudioBuffer> =>
     ac.decodeAudioData(await (await fetch(url)).arrayBuffer());
-  Promise.all([dec(place1Url), dec(place2Url), dec(boxUrl), dec(shuffleUrl)])
-    .then(([p1, p2, box, shuffle]) => {
-      samples = {
-        place: [analyze(p1), analyze(p2)],
-        box: analyze(box, true),
-        shuffle: analyze(shuffle),
-      };
-    })
-    .catch(() => {
-      samplesLoading = false; // не вышло — остаёмся на синтезе
-    });
+  void (async () => {
+    for (const [p1u, p2u, boxU, shU] of SAMPLE_SETS) {
+      try {
+        const [p1, p2, box, shuffle] = await Promise.all([dec(p1u), dec(p2u), dec(boxU), dec(shU)]);
+        samples = {
+          place: [analyze(p1), analyze(p2)],
+          box: analyze(box, true),
+          shuffle: analyze(shuffle),
+        };
+        return;
+      } catch {
+        // формат не пошёл (Mac DFI режет AAC) — пробуем следующий набор
+      }
+    }
+    samplesLoading = false; // ни один набор не вышел — остаёмся на синтезе
+  })();
 }
 
 /**
