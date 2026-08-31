@@ -121,6 +121,17 @@ export interface AppOptions {
    *  Задаёт только веб-версия; мобильные сборки опцию не передают:
    *  донат-ссылок в приложениях магазинов быть не должно (их правила). */
   supportUrl?: string;
+  /** Адрес страницы приложения в App Store — ссылка на стартовой карточке.
+   *  Задаёт только веб-версия; мобильные сборки опцию не передают:
+   *  ссылка «скачай приложение» внутри приложения не нужна, а ссылка
+   *  на чужой стор рискованна по правилам ревью (идея 0019). Чистый
+   *  href без campaign-параметров — трекинга не добавлять. */
+  appStoreUrl?: string;
+  /** Пометка «Google Play — скоро» в той же строке (текст, не ссылка:
+   *  приложение пока в закрытом треке, публичной страницы нет). Задаёт
+   *  только веб-версия; при production-выпуске заменить на опцию
+   *  с URL по образцу appStoreUrl (тикет 0019). */
+  googlePlaySoon?: boolean;
   /** Адрес политики конфиденциальности — ссылка на экране настроек.
    *  Задают только мобильные сборки: Apple требует ссылку внутри
    *  приложения (guideline 5.1.1(i)); веб-версия опцию не передаёт. */
@@ -203,17 +214,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // что за сборка, не начав партию, и может назвать её в отчёте о баге.
   // Версия целиком, включая суффикс фичи: во время разработки надо видеть,
   // какая ветка собрана (1.0.0-platform), а в релизе суффикса просто нет.
-  // На карточке ссылка на правила уже есть выше, поэтому там версия правил
-  // без ссылки: два одинаковых перехода в одной карточке ни к чему.
-  function versionLine(link: boolean): string {
-    const rules = link
-      ? `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().rulesWord(RULES_VERSION)}</a>`
-      : L().rulesWord(RULES_VERSION);
-    return `${L().versionWord} ${__APP_VERSION__} (${rules}, hashCommit=${__GIT_HASH__})`;
+  // Слово «правила» здесь — единственная ссылка на текст правил: отдельной
+  // строки «Правила игры» на карточке больше нет (решение автора 2026-08-28),
+  // два одинаковых перехода в одной карточке ни к чему.
+  function versionLine(): string {
+    const rules = `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().rulesWord(RULES_VERSION)}</a>`;
+    return `${L().versionWord} ${__APP_VERSION__} (${rules}, ${__GIT_HASH__})`;
   }
 
   function updateBadge(): void {
-    badge.innerHTML = versionLine(true);
+    badge.innerHTML = versionLine();
   }
 
   // --- DOM ------------------------------------------------------------------
@@ -284,7 +294,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
    */
   let mirrorBoard = false;
   let confirmOn = false;
-  let tutorOn = false;
+  // Обучение включено с первого запуска (решение автора 2026-08-30):
+  // новичок сразу видит подсказки, а после TUTOR_ENOUGH партий получает
+  // одноразовое предложение их убрать. Выключается явно — настройкой
+  // или тем предложением; сохранённый выбор уважается ниже.
+  let tutorOn = true;
   /** Сколько партий доиграно за всё время — по ним предлагаем убрать подсказки. */
   let roundsDone = 0;
   /** Предложение выключить обучение делается один раз и больше не возвращается. */
@@ -326,7 +340,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     handsVertical = prefs.handsVertical !== false;
     mirrorBoard = !!prefs.mirror;
     confirmOn = !!prefs.confirm;
-    tutorOn = !!prefs.tutor;
+    // «Включено, пока явно не выключили»: prefs.tutor пишется при каждом
+    // сохранении настроек, поэтому у игравших раньше там лежит их выбор
+    // (в т.ч. false), а дефолт ON достаётся только первому запуску.
+    tutorOn = prefs.tutor !== false;
     roundsDone = Math.max(0, Math.trunc(prefs.roundsDone ?? 0));
     tutorAsked = !!prefs.tutorAsked;
     const validOpp = [
@@ -900,14 +917,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         : [],
     );
 
-    // Последняя добранная и оставшаяся в руке кость подсвечивается, пока не
-    // случится следующее действие: иначе легко не заметить, что пришло из базара.
-    const lastLog = round.log[round.log.length - 1];
-    const freshlyDrawn =
-      lastLog?.kind === 'draw' && !lastLog.played && lastLog.player === player
-        ? lastLog.tile
-        : null;
-
     // Общий счёт матча — бейджем у имени (в шапке ему тесно на мобильных).
     const totalChip =
       !view && match
@@ -933,8 +942,14 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           playable.has(t) ? 'playable' : '',
           !view && isActive && !playable.has(t) && !hidden ? 'dimmed' : '',
           !view && selected === t && isActive ? 'selected' : '',
-          !view && round.mustPlay === t && isActive ? 'must' : '',
-          freshlyDrawn === t && !hidden ? 'drawn-new' : '',
+          // Пульс обязательной (вытянутой) кости — только на устройстве
+          // ходящего: наблюдателю чужого хода (бот думает, соперник по BLE
+          // ходит) чужая добранная кость не подсвечивается — решение автора
+          // 2026-08-30 (тикет 0024). Hot-seat не меняется: за одним экраном
+          // ходящий и есть смотрящий.
+          !view && round.mustPlay === t && isActive && !botsTurnNow() && !notMyTurn()
+            ? 'must'
+            : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -1398,6 +1413,24 @@ export function initApp(opts: AppOptions = {}): AppHandle {
             `${esc(saved.names[0])} ${saved.totals[0]}:${saved.totals[1]} ${esc(saved.names[1])}`,
           )}</button>`
         : '';
+    // Строка ссылок под слоганом: «Правила игры» — всегда и первой
+    // (решение автора 2026-08-30 после сравнения на телефонах: без неё
+    // мобильная карточка оставалась вовсе без строки; дубль со ссылкой
+    // в строке версии — осознанный, оба перехода ведут на RULES.xx.md).
+    // Остальное — только переданное входом приложения: веб задаёт донат
+    // и App Store, мобильные сборки не задают ничего.
+    const extLinks: string[] = [
+      `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>`,
+    ];
+    if (opts.supportUrl)
+      extLinks.push(
+        `<a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`,
+      );
+    if (opts.appStoreUrl)
+      extLinks.push(
+        `<a href="${opts.appStoreUrl}" target="_blank" rel="noopener">${L().linkAppStore}</a>`,
+      );
+    if (opts.googlePlaySoon) extLinks.push(`<span class="soon">${L().googlePlaySoon}</span>`);
     elOverlay.innerHTML = `
       <div class="card">
         <!-- Язык — прямо на карточке: игрок, не знающий текущего языка,
@@ -1409,11 +1442,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ).join('')}</select>
         <h1><span class="gold">B</span>onesai</h1>
         <p class="sub">${L().tagline}</p>
-        <p class="sub rules-line"><a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>${
-          opts.supportUrl
-            ? ` · <a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`
-            : ''
-        }</p>
+        ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
         <div class="field"><label for="inp-n0">${
           // Подписи полей — по выбранному сопернику, а не по позиции руки
           // на экране: «нижний/верхний» врали при развороте стола и ничего
@@ -1485,7 +1514,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           <button class="btn ghost-btn" data-action="load-protocol">${L().btnLoadProto}</button>
           <input id="inp-protocol" type="file" accept=".json,application/json" hidden>
         </div>
-        <p class="sub version-line">${versionLine(false)}</p>
+        <p class="sub version-line">${versionLine()}</p>
       </div>`;
     elOverlay.hidden = false;
   }
@@ -1692,7 +1721,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <h2>${causeTitle}</h2>
         <p class="sub">${causeSub}${result.winner === null ? L().resultTieNote : ''}</p>
         <div class="result-grid">${rows}</div>
-        <div class="match-round">${L().matchRoundLabel(match.rounds.length)}</div>
+        <!-- Цель в скобках показывается всегда, и при канонических 100 тоже:
+             не заставлять игрока помнить дефолт (фича 0015). -->
+        <div class="match-round">${L().matchRoundLabel(match.rounds.length, matchTarget(match.variant))}</div>
         ${timeRow}
         <div class="match-score">${esc(nameOf(0))} ${match.totals[0]} : ${match.totals[1]} ${esc(
           nameOf(1),

@@ -28,8 +28,10 @@ const ru = {
   // Стартовый экран
   tagline:
     'Домино по новым правилам: глубина шахмат и точно отмеренная случайность.',
-  linkRules: 'Правила игры',
   linkSupport: 'Поддержать авторов',
+  linkRules: 'Правила игры',
+  linkAppStore: 'Bonesai в App Store',
+  googlePlaySoon: 'Google Play — скоро',
   linkPrivacy: 'Политика конфиденциальности',
   fieldName: 'Имя игрока',
   fieldYourName: 'Ваше имя',
@@ -124,7 +126,11 @@ const ru = {
   ptsShort: 'очк.',
   matchWin: (name: string) => `Победа в матче: ${name}!`,
   matchDraw: 'Ничья в матче — счёты равны (§10.5)',
-  matchRoundLabel: (n: number) => `Партия ${n}`,
+  // Цель матча в скобках — параметр функции, а не склейка в UI: скобочная
+  // часть у языков разная. Скобка называет матч явно, словом из §1 правил
+  // своего языка (замечание автора 2026-08-28: «Партия 1 (до 100)» читалась
+  // как цель партии, а до 100 идёт матч; селектор говорит «Матч до»).
+  matchRoundLabel: (n: number, target: number) => `Партия ${n} (матч до ${target})`,
   resultTime: (round: string, total: string) => `Время партии ${round} · матча ${total}`,
   btnNextRound: 'Следующая партия',
   btnAbortMatch: 'Бросить матч',
@@ -200,12 +206,12 @@ const ru = {
     'Вытянутый дубль обязан стать корнем (§5.3) — кликните след в центре стола.',
   tutorPick: 'Кликните светлую кость в руке — на столе появятся тени её ходов (§6.3).',
   tutorPlace:
-    'Кликните тень — там встанет кость. Цифры в кружках: открытый конец, перечёркнутый — мёртвый (§9.1).',
+    'Кликните тень — там встанет кость. Перечёркнутый кружок — мёртвый конец (§9.1).',
   tutorTurnSides:
-    'Поворот даёт развилку: две тени — две стороны изгиба. На правила выбор не влияет (§6.3).',
+    'Поворот даёт развилку: две тени — две стороны изгиба.',
   tutorCross: 'Поперёк дубль закрывает ветку навсегда (§7.1).',
   tutorFresh:
-    'У свежего конца (пунктирный кружок) первая кость ложится только прямо — ни поворота, ни закрытия дублем (§6.4).',
+    'У свежего конца развилки первая кость ложится только прямо — ни поворота, ни закрытия дублем (§6.4), потому тень у него одна.',
   tutorMustPlay:
     'Кость из базара подошла — обязаны сходить именно ею (§8.2): кликните одну из теней.',
   tutorDraw:
@@ -218,7 +224,7 @@ const ru = {
 
   // Бейдж версии
   versionWord: 'версия',
-  rulesWord: (v: string) => `правила ${v}`,
+  rulesWord: (v: string) => `правила игры ${v}`,
 };
 
 export type Dict = typeof ru;
@@ -226,8 +232,10 @@ export type Dict = typeof ru;
 const en: Dict = {
   tagline:
     'Dominoes with new rules: the depth of chess and precisely measured luck.',
-  linkRules: 'Game rules',
   linkSupport: 'Support the authors',
+  linkRules: 'Game rules',
+  linkAppStore: 'Bonesai on the App Store',
+  googlePlaySoon: 'Google Play — coming soon',
   linkPrivacy: 'Privacy policy',
   fieldName: 'Player name',
   fieldYourName: 'Your name',
@@ -246,9 +254,9 @@ const en: Dict = {
   btnContinue: (label) => `Resume match ${label}`,
   btnLoadProto: 'Load a protocol for review…',
 
-  roundChip: (n) => `game ${n}`,
-  viewChip: (i, n) => `review · game ${i} of ${n}`,
-  tipHistory: 'Move history: replay the games',
+  roundChip: (n) => `round ${n}`,
+  viewChip: (i, n) => `review · round ${i} of ${n}`,
+  tipHistory: 'Move history: replay the rounds',
   tipMark: 'Mark move ownership: first player’s tiles lighter, second’s darker',
   tipFit: 'Auto-zoom: keep the whole tree in view (double-click the table to enable)',
   tipOrient: 'Hand tiles: vertical or horizontal',
@@ -259,8 +267,8 @@ const en: Dict = {
   tipLang: 'Interface language',
   confirmNewMatch: 'Abandon the current match and start a new one?',
 
-  statusNewRound: 'New game',
-  statusRoundOver: 'Game over',
+  statusNewRound: 'New round',
+  statusRoundOver: 'Round over',
   promptRootHasDouble: (name) => `${name}: play a double — it becomes the root`,
   promptRootNoDouble: (name) => `${name}: no double — draw a tile from the boneyard`,
   promptRootDrawn: (name, tile) => `${name}: drew double ${tile} — it becomes the root`,
@@ -286,14 +294,14 @@ const en: Dict = {
   toastMustPlay: (tile) => `You must play the drawn tile ${tile} (§8.2)`,
   toastPassAuto: (name) => `${name} has no move — pass`,
   toastFirstOpen: (name) => `${name} moves first — the first hand is open from the deal (§2.4)`,
-  toastRoundStart: (n, name) => `Game ${n}: ${name} moves first`,
+  toastRoundStart: (n, name) => `Round ${n}: ${name} moves first`,
   toastMarkOwners: 'Move marking: first player’s tiles lighter, second’s darker',
   toastProtoSaved: 'Protocol saved as JSON',
   toastProtoChecked: 'Protocol verified by the engine: all moves are legal',
   toastProtoLoadFail: (err) => `Failed to load the protocol: ${err}`,
   toastProtoBroken: (err) => `The protocol does not replay: ${err}`,
   errNotProto: 'this is not a Bonesai protocol',
-  errRoundBad: (n, err) => `game ${n} does not replay (${err})`,
+  errRoundBad: (n, err) => `round ${n} does not replay (${err})`,
 
   firstChip: 'first',
   turnMarkTitle: 'To move',
@@ -312,31 +320,31 @@ const en: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Match victory: ${name}!`,
   matchDraw: 'Match drawn — equal totals (§10.5)',
-  matchRoundLabel: (n) => `Game ${n}`,
-  resultTime: (round, total) => `Game time ${round} · match ${total}`,
-  btnNextRound: 'Next game',
+  matchRoundLabel: (n, target) => `Round ${n} (match to ${target})`,
+  resultTime: (round, total) => `Round time ${round} · match ${total}`,
+  btnNextRound: 'Next round',
   btnAbortMatch: 'Abandon match',
   btnNewMatch: 'New match',
   btnHistory: 'Move history',
   btnDownloadProto: 'Download protocol',
   nextFirstNote: (name, why) => `${name} moves first — ${why} (§2.5).`,
-  whyWinner: 'winner of the game',
+  whyWinner: 'winner of the round',
   whySwap: 'roles swap after a tie',
 
   historyLive: 'Match move history',
   historyExternal: 'Reviewing a loaded protocol',
   historyDeal: (name) => `Deal — ${name} moves first`,
   historyPos: (k, m) => `move ${k}/${m}`,
-  roundOptDone: (n, cause, s0, s1) => `Game ${n} — ${cause}, ${s0}:${s1}`,
-  roundOptLive: (n) => `Game ${n} — in progress`,
+  roundOptDone: (n, cause, s0, s1) => `Round ${n} — ${cause}, ${s0}:${s1}`,
+  roundOptLive: (n) => `Round ${n} — in progress`,
   causeFishShort: 'blocked',
   causeOutShort: 'out',
   tipExitReplay: 'Back to the game',
-  tipRoundSelect: 'Choose a game of the match',
+  tipRoundSelect: 'Choose a round of the match',
   tipToDeal: 'To the deal',
   tipStepBack: 'One move back',
   tipStepFwd: 'One move forward',
-  tipToEnd: 'To the end of the game',
+  tipToEnd: 'To the end of the round',
   tipDownloadProto: 'Download the protocol (JSON)',
 
   ghostRoot: 'Root',
@@ -384,31 +392,33 @@ const en: Dict = {
     'The drawn double must become the root (§5.3) — click the outline at the centre of the table.',
   tutorPick: 'Click a lit tile in your hand — ghosts of its moves appear on the table (§6.3).',
   tutorPlace:
-    'Click a ghost — the tile goes there. Numbers in circles are open ends; crossed-out ones are dead (§9.1).',
+    'Click a ghost — the tile goes there. A crossed-out circle is a dead end (§9.1).',
   tutorTurnSides:
-    'A turn creates a fork: two ghosts, two ways to bend the branch. The choice does not affect the rules (§6.3).',
+    'A turn creates a fork: two ghosts, two ways to bend the branch.',
   tutorCross: 'A double played crosswise closes the branch for good (§7.1).',
   tutorFresh:
-    'A fresh end (dashed circle) takes its first tile straight only — no turn, no closing double (§6.4).',
+    'A fresh end of a fork takes its first tile straight only — no turn, no closing double (§6.4), which is why it has just one ghost.',
   tutorMustPlay:
     'The tile drawn from the boneyard fits — you must play it (§8.2): click one of the ghosts.',
   tutorDraw:
     'No move — click the boneyard pile (§8.2). If the drawn tile fits, you must play it; otherwise it stays in your hand and the turn passes.',
   tutorPass: 'No move and the boneyard is empty — the turn is passed automatically (§8.3).',
   tutorOver: (target) =>
-    `The game is over: points go to whoever holds more (§10.3). Whoever reaches ${target} loses the match (§10.5).`,
+    `The round is over: points go to whoever holds more (§10.3). Whoever reaches ${target} loses the match (§10.5).`,
   tutorPending:
     'Check the selected move: place it with the button or by clicking the ghost again; changed your mind — cancel or pick another ghost.',
 
   versionWord: 'version',
-  rulesWord: (v) => `rules ${v}`,
+  rulesWord: (v) => `game rules ${v}`,
 };
 
 const es: Dict = {
   tagline:
     'Dominó con reglas nuevas: la profundidad del ajedrez y un azar bien medido.',
-  linkRules: 'Reglas del juego',
   linkSupport: 'Apoyar a los autores',
+  linkRules: 'Reglas del juego',
+  linkAppStore: 'Bonesai en App Store',
+  googlePlaySoon: 'Google Play — próximamente',
   linkPrivacy: 'Política de privacidad',
   fieldName: 'Nombre del jugador',
   fieldYourName: 'Tu nombre',
@@ -493,7 +503,7 @@ const es: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `¡Victoria del encuentro: ${name}!`,
   matchDraw: 'Encuentro empatado — sumas iguales (§10.5)',
-  matchRoundLabel: (n) => `Juego ${n}`,
+  matchRoundLabel: (n, target) => `Juego ${n} (encuentro hasta ${target})`,
   resultTime: (round, total) => `Tiempo del juego ${round} · del encuentro ${total}`,
   btnNextRound: 'Siguiente juego',
   btnAbortMatch: 'Abandonar encuentro',
@@ -566,12 +576,12 @@ const es: Dict = {
   tutorPick:
     'Haga clic en una ficha iluminada de su mano: aparecerán las sombras de sus jugadas (§6.3).',
   tutorPlace:
-    'Haga clic en una sombra: ahí irá la ficha. Los números en círculos son extremos abiertos; los tachados, muertos (§9.1).',
+    'Haga clic en una sombra: ahí irá la ficha. Un círculo tachado es un extremo muerto (§9.1).',
   tutorTurnSides:
-    'El giro crea una bifurcación: dos sombras, dos lados para doblar la rama. La elección no afecta a las reglas (§6.3).',
+    'El giro crea una bifurcación: dos sombras, dos lados para doblar la rama.',
   tutorCross: 'El doble atravesado cierra la rama para siempre (§7.1).',
   tutorFresh:
-    'En un extremo fresco (círculo punteado) la primera ficha va solo recta: ni giro ni cierre con doble (§6.4).',
+    'En un extremo fresco de una bifurcación la primera ficha va solo recta: ni giro ni cierre con doble (§6.4); por eso tiene una sola sombra.',
   tutorMustPlay:
     'La ficha robada del pozo sirve — está obligado a jugarla (§8.2): haga clic en una de las sombras.',
   tutorDraw:
@@ -583,14 +593,16 @@ const es: Dict = {
     'Revise la jugada elegida: colóquela con el botón o con otro clic en la sombra; si cambia de idea — cancele o elija otra sombra.',
 
   versionWord: 'versión',
-  rulesWord: (v) => `reglas ${v}`,
+  rulesWord: (v) => `reglas del juego ${v}`,
 };
 
 const de: Dict = {
   tagline:
     'Domino mit neuen Regeln: die Tiefe des Schachs und genau dosierter Zufall.',
-  linkRules: 'Spielregeln',
   linkSupport: 'Die Autoren unterstützen',
+  linkRules: 'Spielregeln',
+  linkAppStore: 'Bonesai im App Store',
+  googlePlaySoon: 'Google Play — demnächst',
   linkPrivacy: 'Datenschutzerklärung',
   fieldName: 'Spielername',
   fieldYourName: 'Ihr Name',
@@ -675,7 +687,7 @@ const de: Dict = {
   ptsShort: 'Pkt.',
   matchWin: (name) => `Matchsieg: ${name}!`,
   matchDraw: 'Match unentschieden — gleiche Summen (§10.5)',
-  matchRoundLabel: (n) => `Partie ${n}`,
+  matchRoundLabel: (n, target) => `Partie ${n} (Match bis ${target})`,
   resultTime: (round, total) => `Partiedauer ${round} · Matchdauer ${total}`,
   btnNextRound: 'Nächste Partie',
   btnAbortMatch: 'Match abbrechen',
@@ -748,12 +760,12 @@ const de: Dict = {
   tutorPick:
     'Klicken Sie einen hellen Stein in Ihrer Hand an — auf dem Tisch erscheinen die Schatten seiner Züge (§6.3).',
   tutorPlace:
-    'Klicken Sie einen Schatten an — dorthin kommt der Stein. Zahlen in Kreisen sind offene Enden, durchgestrichene sind tot (§9.1).',
+    'Klicken Sie einen Schatten an — dorthin kommt der Stein. Ein durchgestrichener Kreis ist ein totes Ende (§9.1).',
   tutorTurnSides:
-    'Der Abzweig erzeugt eine Gabelung: zwei Schatten, zwei Richtungen für den Zweig. Die Wahl berührt die Regeln nicht (§6.3).',
+    'Der Abzweig erzeugt eine Gabelung: zwei Schatten, zwei Richtungen für den Zweig.',
   tutorCross: 'Ein Pasch quer schließt den Zweig für immer (§7.1).',
   tutorFresh:
-    'Auf ein frisches Ende (gestrichelter Kreis) kommt der erste Stein nur gerade — kein Abzweig, kein Schließen mit Pasch (§6.4).',
+    'Auf ein frisches Ende einer Gabelung kommt der erste Stein nur gerade — kein Abzweig, kein Schließen mit Pasch (§6.4); darum hat es nur einen Schatten.',
   tutorMustPlay:
     'Der vom Talon gezogene Stein passt — Sie müssen ihn legen (§8.2): klicken Sie einen der Schatten an.',
   tutorDraw:
@@ -765,14 +777,16 @@ const de: Dict = {
     'Prüfen Sie den gewählten Zug: legen — per Knopf oder erneutem Klick auf den Schatten; umentschieden — abbrechen oder einen anderen Schatten wählen.',
 
   versionWord: 'Version',
-  rulesWord: (v) => `Regeln ${v}`,
+  rulesWord: (v) => `Spielregeln ${v}`,
 };
 
 const pt: Dict = {
   tagline:
     'Dominó com regras novas: a profundidade do xadrez e um acaso bem medido.',
-  linkRules: 'Regras do jogo',
   linkSupport: 'Apoiar os autores',
+  linkRules: 'Regras do jogo',
+  linkAppStore: 'Bonesai na App Store',
+  googlePlaySoon: 'Google Play — em breve',
   linkPrivacy: 'Política de privacidade',
   fieldName: 'Nome do jogador',
   fieldYourName: 'Seu nome',
@@ -857,7 +871,7 @@ const pt: Dict = {
   ptsShort: 'pts',
   matchWin: (name) => `Vitória da partida: ${name}!`,
   matchDraw: 'Partida empatada — somas iguais (§10.5)',
-  matchRoundLabel: (n) => `Jogo ${n}`,
+  matchRoundLabel: (n, target) => `Jogo ${n} (partida até ${target})`,
   resultTime: (round, total) => `Tempo do jogo ${round} · da partida ${total}`,
   btnNextRound: 'Próximo jogo',
   btnAbortMatch: 'Abandonar a partida',
@@ -929,12 +943,12 @@ const pt: Dict = {
     'A dupla comprada deve ser a raiz (§5.3): clique na silhueta no centro da mesa.',
   tutorPick: 'Clique numa peça acesa da sua mão — as sombras das jogadas aparecem na mesa (§6.3).',
   tutorPlace:
-    'Clique numa sombra — é ali que a peça vai. Números em círculos são pontas abertas; riscados, mortas (§9.1).',
+    'Clique numa sombra — é ali que a peça vai. Um círculo riscado é uma ponta morta (§9.1).',
   tutorTurnSides:
-    'A curva cria uma bifurcação: duas sombras, dois lados para dobrar o ramo. A escolha não afeta as regras (§6.3).',
+    'A curva cria uma bifurcação: duas sombras, dois lados para dobrar o ramo.',
   tutorCross: 'A dupla atravessada fecha o ramo para sempre (§7.1).',
   tutorFresh:
-    'Numa ponta fresca (círculo pontilhado) a primeira peça vai só reta — sem curva e sem fechar com dupla (§6.4).',
+    'Numa ponta fresca de uma bifurcação a primeira peça vai só reta — sem curva e sem fechar com dupla (§6.4); por isso ela tem uma só sombra.',
   tutorMustPlay:
     'A peça comprada do dorme serve — você é obrigado a jogá-la (§8.2): clique numa das sombras.',
   tutorDraw:
@@ -946,14 +960,16 @@ const pt: Dict = {
     'Revise a jogada escolhida: coloque com o botão ou com outro clique na sombra; mudou de ideia — cancele ou escolha outra sombra.',
 
   versionWord: 'versão',
-  rulesWord: (v) => `regras ${v}`,
+  rulesWord: (v) => `regras do jogo ${v}`,
 };
 
 const zh: Dict = {
   tagline:
     '规则全新的多米诺：如棋般深邃，运气恰到好处。',
-  linkRules: '游戏规则',
   linkSupport: '支持作者',
+  linkRules: '游戏规则',
+  linkAppStore: 'App Store 上的 Bonesai',
+  googlePlaySoon: 'Google Play — 即将推出',
   linkPrivacy: '隐私政策',
   fieldName: '玩家昵称',
   fieldYourName: '你的昵称',
@@ -1037,7 +1053,7 @@ const zh: Dict = {
   ptsShort: '分',
   matchWin: (name) => `比赛获胜：${name}！`,
   matchDraw: '比赛平局——总分相同（§10.5）',
-  matchRoundLabel: (n) => `第 ${n} 局`,
+  matchRoundLabel: (n, target) => `第 ${n} 局（比赛至 ${target} 分）`,
   resultTime: (round, total) => `用时：本局 ${round}，全场 ${total}`,
   btnNextRound: '下一局',
   btnAbortMatch: '放弃比赛',
@@ -1107,11 +1123,11 @@ const zh: Dict = {
     '手中没有对子——点击牌堆摸一张牌（§5.3）。摸到对子后，它立刻成为根牌。',
   tutorRootMustPlay: '摸到的对子必须成为根牌（§5.3）——点击桌面中央的轮廓。',
   tutorPick: '点击手中亮起的牌，桌上会出现它的走法虚影（§6.3）。',
-  tutorPlace: '点击虚影，牌就放在那里。圆圈中的数字是开放端，划掉的是死端（§9.1）。',
+  tutorPlace: '点击虚影，牌就放在那里。划掉的圆圈是死端（§9.1）。',
   tutorTurnSides:
-    '转向形成分叉：两个虚影就是枝条弯曲的两个方向。选择不影响规则（§6.3）。',
+    '转向形成分叉：两个虚影就是枝条弯曲的两个方向。',
   tutorCross: '对子横放则永久封枝（§7.1）。',
-  tutorFresh: '新端（虚线圆圈）上的第一张牌只能直放——不能转向，也不能用对子封枝（§6.4）。',
+  tutorFresh: '分叉的新端上第一张牌只能直放——不能转向，也不能用对子封枝（§6.4），所以它只有一个虚影。',
   tutorMustPlay: '从牌堆摸到的牌可用——必须打出它（§8.2）：点击其中一个虚影。',
   tutorDraw:
     '无牌可出——点击牌堆（§8.2）。摸到的牌可用就必须打出；不可用则留在手中，轮到对方。',
@@ -1121,7 +1137,7 @@ const zh: Dict = {
   tutorPending: '请核对所选走法：按按钮或再次点击虚影放牌；想换——取消或点击其他虚影。',
 
   versionWord: '版本',
-  rulesWord: (v) => `规则 ${v}`,
+  rulesWord: (v) => `游戏规则 ${v}`,
 };
 
 
@@ -1137,8 +1153,10 @@ function ukTiles(n: number): string {
 const uk: Dict = {
   tagline:
     'Доміно за новими правилами: глибина шахів і точно відміряна випадковість.',
-  linkRules: 'Правила гри',
   linkSupport: 'Підтримати авторів',
+  linkRules: 'Правила гри',
+  linkAppStore: 'Bonesai в App Store',
+  googlePlaySoon: 'Google Play — незабаром',
   linkPrivacy: 'Політика конфіденційності',
   fieldName: 'Ім’я гравця',
   fieldYourName: 'Ваше ім’я',
@@ -1223,7 +1241,7 @@ const uk: Dict = {
   ptsShort: 'очк.',
   matchWin: (name) => `Перемога в матчі: ${name}!`,
   matchDraw: 'Нічия в матчі — рахунки рівні (§10.5)',
-  matchRoundLabel: (n) => `Партія ${n}`,
+  matchRoundLabel: (n, target) => `Партія ${n} (матч до ${target})`,
   resultTime: (round, total) => `Час партії ${round} · матчу ${total}`,
   btnNextRound: 'Наступна партія',
   btnAbortMatch: 'Покинути матч',
@@ -1295,12 +1313,12 @@ const uk: Dict = {
     'Витягнутий дубль мусить стати коренем (§5.3) — клікніть слід у центрі столу.',
   tutorPick: 'Клікніть світлу кістку в руці — на столі з’являться тіні її ходів (§6.3).',
   tutorPlace:
-    'Клікніть тінь — там стане кістка. Цифри в кружках: відкритий кінець, перекреслений — мертвий (§9.1).',
+    'Клікніть тінь — там стане кістка. Перекреслене кружальце — мертвий кінець (§9.1).',
   tutorTurnSides:
-    'Поворот створює розвилку: дві тіні — два боки згину гілки. На правила вибір не впливає (§6.3).',
+    'Поворот створює розвилку: дві тіні — два боки згину гілки.',
   tutorCross: 'Упоперек дубль закриває гілку назавжди (§7.1).',
   tutorFresh:
-    'На свіжому кінці (пунктирне кружальце) перша кістка лягає лише прямо — ні повороту, ні закриття дублем (§6.4).',
+    'На свіжому кінці розвилки перша кістка лягає лише прямо — ні повороту, ні закриття дублем (§6.4), тому тінь у нього одна.',
   tutorMustPlay:
     'Кістка з базару підійшла — зобов’язані сходити саме нею (§8.2): клікніть одну з тіней.',
   tutorDraw:
@@ -1312,7 +1330,7 @@ const uk: Dict = {
     'Перевірте обраний хід: поставити — кнопкою або повторним кліком по тіні; передумали — скасуйте чи оберіть іншу тінь.',
 
   versionWord: 'версія',
-  rulesWord: (v) => `правила ${v}`,
+  rulesWord: (v) => `правила гри ${v}`,
 };
 
 const DICTS: Record<Locale, Dict> = { ru, en, es, de, pt, uk, zh };

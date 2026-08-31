@@ -57,15 +57,14 @@ export function makeState(opts: {
   };
 }
 
-/** Разыграть партию случайной политикой до конца. Детерминировано по seed. */
-export function playout(
-  seed: number,
-  first: 0 | 1,
-  variant: Variant,
+/** Доиграть состояние случайной политикой до конца. Детерминировано по policySeed. */
+export function playFrom(
+  start: GameState,
+  policySeed: number,
   onStep?: (state: GameState, move: Move) => void,
 ): GameState {
-  let state = newRound({ seed, first, variant });
-  let rng = (seed ^ 0x9e3779b9) >>> 0;
+  let state = start;
+  let rng = (policySeed ^ 0x9e3779b9) >>> 0;
   const rand = () => {
     // Отдельный маленький PRNG для выбора политики, чтобы не трогать rng движка.
     rng = (Math.imul(rng, 1664525) + 1013904223) >>> 0;
@@ -85,4 +84,14 @@ export function playout(
     state = applyMove(state, move);
   }
   return state;
+}
+
+/** Разыграть партию с нуля той же политикой. Детерминировано по seed. */
+export function playout(
+  seed: number,
+  first: 0 | 1,
+  variant: Variant,
+  onStep?: (state: GameState, move: Move) => void,
+): GameState {
+  return playFrom(newRound({ seed, first, variant }), seed, onStep);
 }

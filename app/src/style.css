@@ -36,6 +36,29 @@ body {
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  /* Игровой интерфейс — не текст: на touch-устройстве долгое касание — жест
+     прицеливания, и без запрета iOS выделяет подписи стола (цифры концов,
+     бейдж базара) и вешает поверх поля меню Copy / Look Up (баг 0022).
+     Что игрок копирует осознанно, разрешено отдельным блоком ниже. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Исключения из запрета выделения. Поля ввода — обязательно явно: iOS
+   с user-select: none на предке не даёт в самом поле ни курсора, ни
+   выделения. Остальное — то, что копируют: строка версии с хэшем сборки
+   (карточка и бейдж — по ним сообщают о багах), тексты настроек, счётчик
+   позиции в истории ходов (кнопки перемотки — тоже текст-глифы, им
+   выделение вернуло бы ровно тот артефакт, от которого запрет). */
+input,
+textarea,
+#version-badge,
+.card .version-line,
+#settings .card,
+#history-bar .replay-pos {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 #app {
@@ -347,24 +370,8 @@ body {
   animation: wiggle 0.3s ease;
 }
 
-/* Только что добранная из базара кость: вспышка и остаточное свечение,
-   пока не случится следующее действие. */
-.hand-tile.drawn-new {
-  filter: drop-shadow(0 0 10px rgba(201, 168, 106, 0.95))
-    drop-shadow(0 0 24px rgba(201, 168, 106, 0.55)) brightness(1.1);
-  animation: drawn-flash 1.7s ease-out;
-}
-
-@keyframes drawn-flash {
-  0% {
-    filter: drop-shadow(0 0 26px rgba(201, 168, 106, 1))
-      drop-shadow(0 0 48px rgba(201, 168, 106, 0.85)) brightness(1.45);
-  }
-  100% {
-    filter: drop-shadow(0 0 10px rgba(201, 168, 106, 0.95))
-      drop-shadow(0 0 24px rgba(201, 168, 106, 0.55)) brightness(1.1);
-  }
-}
+/* Подсветки добранной из базара кости больше нет — решение автора
+   2026-08-30 (тикет 0024). Не возвращать без нового решения. */
 
 /* Указатель «чей ход» — рука-манúкула слева от имени активного игрока. */
 .turn-mark {
@@ -416,9 +423,10 @@ body {
   border: 1px solid rgba(201, 168, 106, 0.3);
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 16px; /* iOS-автозум фокуса (баг 0005) */
-  font-size: 13px;
-  max-width: 210px;
+  font-size: 16px; /* iOS-автозум фокуса (баг 0005); компактнее нельзя — 0030 */
+  /* Кэп под кегль 16px: при 210px (подгон под прежние 13px) метка партии
+     «Партия 10 — рыба, 100:100» резалась в 8 локалях из 10 (ревью 0030). */
+  max-width: 260px;
 }
 
 #replay-slider {
@@ -496,14 +504,6 @@ body {
 
 .end-marker.fresh .end-ring {
   stroke-dasharray: 3.5 3;
-}
-
-.end-num {
-  fill: rgba(239, 230, 208, 0.85);
-  font-size: 13px;
-  font-weight: 600;
-  text-anchor: middle;
-  font-family: Georgia, serif;
 }
 
 .end-marker.dead .end-ring {
@@ -758,14 +758,21 @@ body {
   line-height: 1.45;
 }
 
-.card .rules-line {
+.card .links-line {
   margin-top: -12px;
 }
 
-.card .rules-line a {
+.card .links-line a {
   color: var(--gold);
   text-decoration: none;
   border-bottom: 1px dotted var(--gold-soft);
+  /* На узких экранах ссылки переносятся целиком, а не ломаются посередине. */
+  white-space: nowrap;
+}
+
+/* Пометка «Google Play — скоро»: не ссылка, остаётся цветом текста строки. */
+.card .links-line .soon {
+  white-space: nowrap;
 }
 
 /* Ссылка на политику конфиденциальности в настройках. Появляется только
@@ -788,8 +795,19 @@ body {
   margin: 16px 0 0;
   font-size: 10.5px;
   letter-spacing: 0.03em;
-  opacity: 0.6;
+  /* Приглушён только текст (значение --muted на 60%), а не вся строка через
+     opacity: ссылка «правила» должна оставаться полной яркости, как ссылки
+     под слоганом (решение автора 2026-08-28). rgba, а не color-mix — WebView
+     iOS 15 (минимум сторовой сборки) color-mix не знает. */
+  color: rgba(151, 160, 153, 0.6);
   text-align: center;
+}
+
+/* Слово «правила» в строке версии — ссылка на текст правил (как в бейдже). */
+.card .version-line a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gold-soft);
 }
 
 .field {
@@ -1068,12 +1086,13 @@ body {
   line-height: 1.45;
 }
 
+/* Без капса: «Партия 1 (матч до 100)» как обычный текст — решение автора
+   2026-08-28 (капс съедал разницу регистров и кричал на карточке). */
 .match-round {
   text-align: center;
   color: var(--muted);
   font-size: 12.5px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   margin: 14px 0 0;
 }
 

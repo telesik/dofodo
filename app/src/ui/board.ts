@@ -56,6 +56,58 @@ export function samePlacement(a: Move, b: Move): boolean {
   return false;
 }
 
+/**
+ * Концы, на которые в этом рендере лягут тени ходов: их подписи номиналов
+ * не рисуются — тень накрывает кружок и путает (идея 0010), а оставшиеся
+ * при выбранной кости цифры читаются как «сюда она не идёт». Гейт по
+ * selected повторяет условие отрисовки призраков: без выбранной кости
+ * теней нет и стол подписан целиком. На черновике хода подписи остаются
+ * погашенными сами собой: pending живёт, только пока выбрана его кость
+ * (см. deriveSelection в app.ts), а значит, тени продолжают рисоваться.
+ */
+export function shadedEndIds(
+  ghostMoves: readonly Move[],
+  selected: TileId | null,
+): ReadonlySet<number> {
+  const ids = new Set<number>();
+  if (selected === null) return ids;
+  for (const m of ghostMoves) {
+    if (m.type === 'place') ids.add(m.endId);
+  }
+  return ids;
+}
+
+/**
+ * Тени, которым рисуется только дальняя половина (идея 0017). Приставная
+ * половина у теней одного конца несёт один номинал, но прямая и повёрнутая
+ * ориентации ложатся друг на друга, а раскладки пипсов 2, 3 и 6 к повороту
+ * на 90° не симметричны — объединение читается как другое число («2» ∪ «2»
+ * выглядит четвёркой). Правило: есть на конце прямая тень — приставную
+ * половину рисует только она, поворотам остаётся дальняя. Исключения:
+ * черновик хода (pending) рисуется полным — он показывает, как кость
+ * ляжет на самом деле; конец из одних поворотов не трогаем — их приставки
+ * отличаются на 180°, а все раскладки 180°-симметричны; пара «прямо +
+ * поперёк» (дубль) не в счёт — тень поперёк перекрывает приставку лишь
+ * частично и другого числа не образует.
+ */
+export function farHalfGhosts(
+  ghostMoves: readonly Move[],
+  pending?: Move | null,
+): ReadonlySet<Move> {
+  const straightEnds = new Set<number>();
+  for (const m of ghostMoves) {
+    if (m.type === 'place' && m.mode === 'straight') straightEnds.add(m.endId);
+  }
+  const far = new Set<Move>();
+  for (const m of ghostMoves) {
+    if (m.type !== 'place' || m.mode !== 'turn') continue;
+    if (!straightEnds.has(m.endId)) continue;
+    if (pending && samePlacement(m, pending)) continue;
+    far.add(m);
+  }
+  return far;
+}
+
 const MIN_W = CELL * 5;
 const MAX_W = CELL * 44;
 /**
@@ -446,9 +498,14 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       );
     }
 
-    // Маркеры открытых концов.
+    // Маркеры открытых концов. Затенённые концы остаются без подписи
+    // (идея 0010): подпись именно не рисуется, а не прячется под тень.
+    // Крестики мёртвых концов под гашение не попадают сами собой:
+    // на мёртвый конец легального хода не существует, тени туда не лечь.
     const dead = deadValues(game);
+    const shaded = shadedEndIds(opts.ghostMoves, opts.selected);
     for (const e of game.ends) {
+      if (shaded.has(e.id)) continue;
       const a = scene(e.attach);
       const x = a.x * CELL;
       const y = a.y * CELL;
@@ -459,22 +516,29 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
         : e.fresh
           ? L().endFresh(e.value)
           : L().endOpen(e.value);
+      // Живой конец — пустой кружок без цифры (идея 0016): якорь «здесь
+      // открытый конец» остаётся, а номинал читается по самой кости — цифра
+      // добавляла мелкий шум. Значение осталось в <title>-подсказке.
       parts.push(
         `<g class="${cls}" transform="translate(${x} ${y})">
           <title>${hint}</title>
           <circle r="13" class="end-ring"/>
-          ${
-            isDead
-              ? `<path d="M -5 -5 L 5 5 M 5 -5 L -5 5" class="end-x"/>`
-              : `<text class="end-num" dy="0.36em">${e.value}</text>`
-          }
+          ${isDead ? `<path d="M -5 -5 L 5 5 M 5 -5 L -5 5" class="end-x"/>` : ''}
         </g>`,
       );
     }
 
-    // Призраки ходов выбранной кости.
+    // Призраки ходов выбранной кости. Урезанные тени — поверх полных:
+    // их кликабельная площадь и так одна дальняя клетка, и полное тело
+    // чужого конца, нарисованное позже, могло бы накрыть её целиком —
+    // ход остался бы без кликабельного места (тени занятость клеток не
+    // проверяют, перекрытия разрешает перекладка уже после хода).
+    // На приставную клетку полутень не претендует, так что адресат клика
+    // по ней от порядка не зависит.
     lastGhostCells = [];
     if (opts.selected !== null) {
+      const farHalf = farHalfGhosts(opts.ghostMoves, opts.pending);
+      const halves: string[] = [];
       for (const m of opts.ghostMoves) {
         if (m.type === 'placeRoot') {
           // Как ляжет корень (§6.2): горизонтально, тупик с дальней от роста
@@ -486,9 +550,18 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
         } else if (m.type === 'place') {
           const geo = placementGeometry(game, m.tile, m.endId, m.mode, m.side);
           lastGhostCells.push(geo.cells[0], geo.cells[1]);
-          parts.push(ghostSvg(game, m, [geo.cells[0], geo.cells[1]], m.mode, opts));
+          const svgPart = ghostSvg(
+            game,
+            m,
+            [geo.cells[0], geo.cells[1]],
+            m.mode,
+            opts,
+            farHalf.has(m),
+          );
+          (farHalf.has(m) ? halves : parts).push(svgPart);
         }
       }
+      parts.push(...halves);
     }
 
     svg.innerHTML = parts.join('\n');
@@ -517,6 +590,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     cells: readonly [Vec, Vec],
     mode: string,
     opts: BoardRenderOptions,
+    farHalfOnly = false,
   ): string {
     const values: [number, number] =
       move.type === 'place'
@@ -532,14 +606,26 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       ? `data-move='${JSON.stringify(move).replace(/'/g, '&#39;')}'`
       : '';
     const pending = opts.pending && samePlacement(move, opts.pending) ? ' pending' : '';
+    // Приставная половина (cells[0], локально слева) у такой тени не рисуется
+    // вовсе (идея 0017): её рисует прямая тень того же конца. Полутело —
+    // скругление только наружных углов, разделитель остаётся общей кромкой.
+    const body = farHalfOnly
+      ? `<path d="M 0 ${-TILE_W / 2} H ${TILE_L / 2 - TILE_R}
+          A ${TILE_R} ${TILE_R} 0 0 1 ${TILE_L / 2} ${-TILE_W / 2 + TILE_R}
+          V ${TILE_W / 2 - TILE_R}
+          A ${TILE_R} ${TILE_R} 0 0 1 ${TILE_L / 2 - TILE_R} ${TILE_W / 2}
+          H 0 Z" class="ghost-body"/>`
+      : `<rect x="${-TILE_L / 2}" y="${-TILE_W / 2}" width="${TILE_L}" height="${TILE_W}"
+        rx="${TILE_R}" class="ghost-body"/>`;
     // Пипсы призрака — реальные значения кости после выставления.
     return `
-    <g transform="${tileTr(cells[0], cells[1])}" class="ghost ghost-${mode}${pending}" ${dataMove}>
+    <g transform="${tileTr(cells[0], cells[1])}" class="ghost ghost-${mode}${
+      farHalfOnly ? ' ghost-half' : ''
+    }${pending}" ${dataMove}>
       <title>${modeLabel(mode)}</title>
-      <rect x="${-TILE_L / 2}" y="${-TILE_W / 2}" width="${TILE_L}" height="${TILE_W}"
-        rx="${TILE_R}" class="ghost-body"/>
+      ${body}
       <line x1="0" y1="${-TILE_W / 2 + 7}" x2="0" y2="${TILE_W / 2 - 7}" class="ghost-divider"/>
-      ${ghostPips(values[0], -CELL / 2)}
+      ${farHalfOnly ? '' : ghostPips(values[0], -CELL / 2)}
       ${ghostPips(values[1], CELL / 2)}
     </g>`;
   }

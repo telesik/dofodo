@@ -4,12 +4,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyMove,
+  cellKey,
   DIR,
+  legalMoves,
+  newRound,
   placementGeometry,
+  shuffleLayout,
   simulateLayout,
   type Move,
 } from '../src/engine';
-import { makeState } from './helpers';
+import { BASE, makeState, playout } from './helpers';
 
 type PlaceMove = Extract<Move, { type: 'place' } | { type: 'placeRoot' }>;
 
@@ -120,5 +124,65 @@ describe('перекладка веток при наложении', () => {
       if (alt && JSON.stringify(alt.cells) !== JSON.stringify(base.cells)) different = true;
     }
     expect(different).toBe(true);
+  });
+});
+
+describe('shuffleLayout — ручная перекладка (кнопка ↺)', () => {
+  it('другая геометрия при неизменной топологии: клетки согласованы, концы те же', () => {
+    // Ищем сыгранную партию, где другая раскладка существует; детерминировано.
+    const topo = (ends: readonly { id: number; value: number; fresh: boolean; fromSeq: number }[]) =>
+      ends.map((e) => `${e.id}:${e.value}:${e.fresh}:${e.fromSeq}`).sort();
+    let found = '';
+    for (let seed = 1; seed <= 30 && !found; seed++) {
+      const state = playout(seed, 0, BASE);
+      for (let salt = 1; salt <= 8; salt++) {
+        const next = shuffleLayout(state, salt);
+        if (!next) continue;
+        found = `seed=${seed} salt=${salt}`;
+        // Перекладка обязана дать другую геометрию хотя бы одной кости…
+        expect(JSON.stringify(next.placed.map((p) => p.cells)), found).not.toBe(
+          JSON.stringify(state.placed.map((p) => p.cells)),
+        );
+        // …без наложений: у каждой кости две клетки, все уникальны.
+        const cells = next.placed.flatMap((p) => p.cells);
+        expect(cells, found).toHaveLength(next.placed.length * 2);
+        const keys = cells.map((c) => cellKey(c));
+        expect(new Set(keys).size, found).toBe(keys.length);
+        // occupied — без дублей и того же размера, что до перекладки
+        // (поперечный дубль хранит в cells две полуклетки, а занимает три
+        // целых, поэтому сверяется размер, а не поимённый состав).
+        expect(new Set(next.occupied).size, found).toBe(next.occupied.length);
+        expect(next.occupied.length, found).toBe(state.occupied.length);
+        // Кости с целыми клетками лежат ровно на занятых клетках.
+        for (const p of next.placed) {
+          for (const c of p.cells) {
+            if (Number.isInteger(c.x) && Number.isInteger(c.y)) {
+              expect(next.occupied, found).toContain(cellKey(c));
+            }
+          }
+        }
+        // Топология концов неизменна (§6.3): id/value/fresh/fromSeq те же.
+        expect(topo(next.ends), found).toEqual(topo(state.ends));
+        break;
+      }
+    }
+    expect(found, '30 плейаутов × 8 солей не дали ни одной перекладки — регрессия?').toBeTruthy();
+  });
+
+  it('дерево из одного корня: другой раскладки нет — null', () => {
+    // Настоящий стол с одной костью: первый ход placeRoot через движок.
+    let rooted: ReturnType<typeof applyMove> | null = null;
+    for (let seed = 1; seed <= 10 && !rooted; seed++) {
+      const st = newRound({ seed, first: 0, variant: BASE });
+      const root = legalMoves(st).find((m) => m.type === 'placeRoot');
+      if (root) rooted = applyMove(st, root);
+    }
+    expect(rooted, 'ни в одной раздаче 1..10 у первого игрока нет дубля?').not.toBeNull();
+    expect(rooted!.placed).toHaveLength(1);
+    for (let salt = 1; salt <= 8; salt++) expect(shuffleLayout(rooted!, salt)).toBeNull();
+  });
+
+  it('пустая история (вырожденный вход) — null, защитная ветка', () => {
+    expect(shuffleLayout(makeState({ hands: [['6-6'], ['1-2']] }), 3)).toBeNull();
   });
 });
