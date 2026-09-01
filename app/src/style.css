@@ -782,10 +782,17 @@ textarea,
   margin: 14px 0 0;
 }
 
-.card .privacy-line a {
+/* Строка-действие платформы (extraActions) выглядит как остальные
+   ссылки карточки, а не как синяя ссылка браузера. */
+.card .privacy-line a,
+.card .action-line a {
   color: var(--gold);
   text-decoration: none;
   border-bottom: 1px dotted var(--gold-soft);
+}
+
+.card .action-line {
+  margin: 14px 0 0;
 }
 
 /* Версия внизу карточки: бейдж в углу экрана стартовая карточка накрывает

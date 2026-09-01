@@ -105,6 +105,19 @@ export interface ExtraToggle {
   onChange(on: boolean): void;
 }
 
+/**
+ * Пункт-действие платформы на экране настроек: строка-ссылка без
+ * состояния (в отличие от ExtraToggle). Что происходит по нажатию —
+ * знает надстройка; настройки перед вызовом закрываются, чтобы её
+ * экран лёг на чистый стол.
+ */
+export interface ExtraAction {
+  id: string;
+  /** Локализованная подпись: надстройка переводит сама. */
+  label: () => string;
+  onSelect(): void;
+}
+
 /** Параметры старта матча, собранные стартовым экраном. */
 export interface StartSetup {
   names: [string, string];
@@ -144,6 +157,8 @@ export interface AppOptions {
   opponentOptions?: readonly OpponentOption[];
   /** Дополнительные переключатели настроек от платформы. */
   extraToggles?: readonly ExtraToggle[];
+  /** Дополнительные пункты-действия платформы на экране настроек. */
+  extraActions?: readonly ExtraAction[];
   /** Старт матча с дополнительным пунктом селектора: стандартный старт не
    *  выполняется, матч запускает надстройка (например, через своё лобби). */
   onOpponentStart?: (id: string, setup: StartSetup) => void;
@@ -195,6 +210,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // старта: пункт без onOpponentStart делал бы кнопку старта молча мёртвой.
   const extraOpponents = opts.onOpponentStart ? (opts.opponentOptions ?? []) : [];
   const extraToggles = opts.extraToggles ?? [];
+  const extraActions = opts.extraActions ?? [];
   /** Состояния переключателей платформы; ключ — id переключателя. */
   const toggleState = new Map<string, boolean>();
   // Общие SVG-определения (градиенты, тени) — один раз на документ:
@@ -438,7 +454,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     match?.names[p] ?? (p === 0 ? L().defaultP1 : L().defaultP2);
   const tileLabel = (t: TileId): string => t.replace('-', ':');
   const esc = (s: string): string =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
   function persist(): void {
     try {
@@ -2171,6 +2192,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ${extraToggles
           .map((t) => row(`x:${t.id}`, toggleState.get(t.id) === true, esc(t.label())))
           .join('')}
+        ${extraActions
+          .map(
+            (a) =>
+              `<p class="sub action-line"><a href="#" data-action="x-act:${esc(a.id)}">${esc(a.label())}</a></p>`,
+          )
+          .join('')}
         ${
           opts.privacyUrl
             ? `<p class="sub privacy-line"><a href="${opts.privacyUrl}" target="_blank" rel="noopener">${L().linkPrivacy}</a></p>`
@@ -2228,7 +2255,15 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   elSettings.addEventListener('click', (ev) => {
     const el = (ev.target as HTMLElement).closest<HTMLElement>('[data-action]');
-    if (el?.dataset.action === 'settings-close') openSettings(false);
+    if (!el?.dataset.action) return;
+    if (el.dataset.action === 'settings-close') openSettings(false);
+    if (el.dataset.action.startsWith('x-act:')) {
+      ev.preventDefault();
+      const act = extraActions.find((a) => a.id === el.dataset.action?.slice(6));
+      if (!act) return;
+      openSettings(false);
+      act.onSelect();
+    }
   });
 
   $('#btn-settings').addEventListener('click', () => openSettings(elSettings.hidden));
