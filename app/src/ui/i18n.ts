@@ -48,7 +48,6 @@ const ru = {
   btnLot: 'Бросить жребий',
   btnStart: 'Начать матч',
   btnContinue: (label: string) => `Продолжить матч ${label}`,
-  btnLoadProto: 'Загрузить протокол для разбора…',
 
   // Шапка
   roundChip: (n: number) => `партия ${n}`,
@@ -100,11 +99,7 @@ const ru = {
   toastRoundStart: (n: number, name: string) => `Партия ${n}: первым ходит ${name}`,
   toastMarkOwners: 'Разметка ходов: кости первого игрока светлее, второго — темнее',
   toastProtoSaved: 'Протокол сохранён файлом JSON',
-  toastProtoChecked: 'Протокол проверен движком: все ходы легальны',
-  toastProtoLoadFail: (err: string) => `Не удалось загрузить протокол: ${err}`,
   toastProtoBroken: (err: string) => `Протокол не воспроизводится: ${err}`,
-  errNotProto: 'это не протокол Bonesai',
-  errRoundBad: (n: number, err: string) => `партия ${n} не воспроизводится (${err})`,
 
   // Руки
   firstChip: 'первый',
@@ -252,7 +247,6 @@ const en: Dict = {
   btnLot: 'Draw lots',
   btnStart: 'Start match',
   btnContinue: (label) => `Resume match ${label}`,
-  btnLoadProto: 'Load a protocol for review…',
 
   roundChip: (n) => `round ${n}`,
   viewChip: (i, n) => `review · round ${i} of ${n}`,
@@ -297,11 +291,7 @@ const en: Dict = {
   toastRoundStart: (n, name) => `Round ${n}: ${name} moves first`,
   toastMarkOwners: 'Move marking: first player’s tiles lighter, second’s darker',
   toastProtoSaved: 'Protocol saved as JSON',
-  toastProtoChecked: 'Protocol verified by the engine: all moves are legal',
-  toastProtoLoadFail: (err) => `Failed to load the protocol: ${err}`,
   toastProtoBroken: (err) => `The protocol does not replay: ${err}`,
-  errNotProto: 'this is not a Bonesai protocol',
-  errRoundBad: (n, err) => `round ${n} does not replay (${err})`,
 
   firstChip: 'first',
   turnMarkTitle: 'To move',
@@ -435,7 +425,6 @@ const es: Dict = {
   btnLot: 'Echar a suertes',
   btnStart: 'Empezar partida',
   btnContinue: (label) => `Continuar el encuentro ${label}`,
-  btnLoadProto: 'Cargar un protocolo para análisis…',
 
   roundChip: (n) => `juego ${n}`,
   viewChip: (i, n) => `revisión · juego ${i} de ${n}`,
@@ -480,11 +469,7 @@ const es: Dict = {
   toastRoundStart: (n, name) => `Juego ${n}: sale primero ${name}`,
   toastMarkOwners: 'Marcado: fichas del primero más claras, del segundo más oscuras',
   toastProtoSaved: 'Protocolo guardado como JSON',
-  toastProtoChecked: 'Protocolo verificado por el motor: todas las jugadas son legales',
-  toastProtoLoadFail: (err) => `No se pudo cargar el protocolo: ${err}`,
   toastProtoBroken: (err) => `El protocolo no se reproduce: ${err}`,
-  errNotProto: 'esto no es un protocolo de Bonesai',
-  errRoundBad: (n, err) => `el juego ${n} no se reproduce (${err})`,
 
   firstChip: 'primero',
   turnMarkTitle: 'Le toca',
@@ -619,7 +604,6 @@ const de: Dict = {
   btnLot: 'Los werfen',
   btnStart: 'Match starten',
   btnContinue: (label) => `Match fortsetzen ${label}`,
-  btnLoadProto: 'Protokoll zur Analyse laden…',
 
   roundChip: (n) => `Partie ${n}`,
   viewChip: (i, n) => `Ansicht · Partie ${i} von ${n}`,
@@ -664,11 +648,7 @@ const de: Dict = {
   toastRoundStart: (n, name) => `Partie ${n}: ${name} zieht zuerst`,
   toastMarkOwners: 'Markierung: Steine des Ersten heller, des Zweiten dunkler',
   toastProtoSaved: 'Protokoll als JSON gespeichert',
-  toastProtoChecked: 'Protokoll von der Engine geprüft: alle Züge sind legal',
-  toastProtoLoadFail: (err) => `Protokoll konnte nicht geladen werden: ${err}`,
   toastProtoBroken: (err) => `Das Protokoll lässt sich nicht abspielen: ${err}`,
-  errNotProto: 'das ist kein Bonesai-Protokoll',
-  errRoundBad: (n, err) => `Partie ${n} lässt sich nicht abspielen (${err})`,
 
   firstChip: 'erster',
   turnMarkTitle: 'Am Zug',
@@ -803,7 +783,6 @@ const pt: Dict = {
   btnLot: 'Sortear',
   btnStart: 'Começar a partida',
   btnContinue: (label) => `Continuar a partida ${label}`,
-  btnLoadProto: 'Carregar um protocolo para análise…',
 
   roundChip: (n) => `jogo ${n}`,
   viewChip: (i, n) => `revisão · jogo ${i} de ${n}`,
@@ -848,11 +827,7 @@ const pt: Dict = {
   toastRoundStart: (n, name) => `Jogo ${n}: ${name} joga primeiro`,
   toastMarkOwners: 'Marcação: peças do primeiro mais claras, do segundo mais escuras',
   toastProtoSaved: 'Protocolo salvo como JSON',
-  toastProtoChecked: 'Protocolo verificado pelo motor: todas as jogadas são legais',
-  toastProtoLoadFail: (err) => `Não foi possível carregar o protocolo: ${err}`,
   toastProtoBroken: (err) => `O protocolo não se reproduz: ${err}`,
-  errNotProto: 'isto não é um protocolo do Bonesai',
-  errRoundBad: (n, err) => `o jogo ${n} não se reproduz (${err})`,
 
   firstChip: 'primeiro',
   turnMarkTitle: 'É a vez de',
@@ -985,7 +960,6 @@ const zh: Dict = {
   btnLot: '抽签',
   btnStart: '开始比赛',
   btnContinue: (label) => `继续比赛 ${label}`,
-  btnLoadProto: '加载对局记录进行复盘…',
 
   roundChip: (n) => `第 ${n} 局`,
   viewChip: (i, n) => `复盘 · 第 ${i}/${n} 局`,
@@ -1030,11 +1004,7 @@ const zh: Dict = {
   toastRoundStart: (n, name) => `第 ${n} 局：${name} 先行`,
   toastMarkOwners: '归属标记：先手的牌更亮，后手的更暗',
   toastProtoSaved: '对局记录已保存为 JSON',
-  toastProtoChecked: '记录已由引擎校验：所有着法均合法',
-  toastProtoLoadFail: (err) => `无法加载记录：${err}`,
   toastProtoBroken: (err) => `记录无法回放：${err}`,
-  errNotProto: '这不是 Bonesai 的对局记录',
-  errRoundBad: (n, err) => `第 ${n} 局无法回放（${err}）`,
 
   firstChip: '先手',
   turnMarkTitle: '行棋方',
@@ -1173,7 +1143,6 @@ const uk: Dict = {
   btnLot: 'Кинути жереб',
   btnStart: 'Почати матч',
   btnContinue: (label) => `Продовжити матч ${label}`,
-  btnLoadProto: 'Завантажити протокол для розбору…',
 
   roundChip: (n) => `партія ${n}`,
   viewChip: (i, n) => `перегляд · партія ${i} з ${n}`,
@@ -1218,11 +1187,7 @@ const uk: Dict = {
   toastRoundStart: (n, name) => `Партія ${n}: першим ходить ${name}`,
   toastMarkOwners: 'Позначення ходів: кістки першого гравця світліші, другого — темніші',
   toastProtoSaved: 'Протокол збережено файлом JSON',
-  toastProtoChecked: 'Протокол перевірено рушієм: усі ходи легальні',
-  toastProtoLoadFail: (err) => `Не вдалося завантажити протокол: ${err}`,
   toastProtoBroken: (err) => `Протокол не відтворюється: ${err}`,
-  errNotProto: 'це не протокол Bonesai',
-  errRoundBad: (n, err) => `партія ${n} не відтворюється (${err})`,
 
   firstChip: 'перший',
   turnMarkTitle: 'Ходить',
