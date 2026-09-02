@@ -1,7 +1,7 @@
 {
   "name": "bonesai-app",
   "private": true,
-  "version": "1.4.2-rc",
+  "version": "1.4.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
