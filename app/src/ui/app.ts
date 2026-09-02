@@ -9,7 +9,6 @@ import {
   isDouble,
   chooseBotMove,
   legalMoves,
-  matchProtocol,
   moveEquals,
   shuffleLayout,
   nextRound,
@@ -21,7 +20,6 @@ import {
   startMatch,
   type GameState,
   type LogEntry,
-  type MatchProtocol,
   type MatchState,
   type BotLevel,
   type Move,
@@ -174,11 +172,6 @@ export interface AppOptions {
   /** Пользователь сбросил матч (новый матч поверх текущего): надстройке
    *  пора закрыть свои ресурсы (например, сетевую сессию). */
   onMatchReset?: () => void;
-  /** Сохранение файла вместо скачивания через <a download> — в WebView
-   *  оно не работает, мобильная надстройка отдаёт файл системному
-   *  share-листу. Резолв — файл передан (показываем «сохранено»),
-   *  реджект — пользователь отказался или не вышло (молчим). */
-  saveFile?: (name: string, mime: string, text: string) => Promise<void>;
 }
 
 /** Управление приложением снаружи: вход внешних ходов и чтение состояния. */
@@ -1331,49 +1324,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <input type="range" id="replay-slider" min="0" max="${total}" step="1" value="${rp.step}">
         <button class="icon-btn" data-action="replay-next" data-tip="${L().tipStepFwd}">▶</button>
         <button class="icon-btn" data-action="replay-last" data-tip="${L().tipToEnd}">⏭</button>
-        <span id="replay-pos" class="replay-pos"></span>
-        <button class="icon-btn" data-action="download-protocol" data-tip="${L().tipDownloadProto}">⭳</button>`;
+        <span id="replay-pos" class="replay-pos"></span>`;
     }
     const slider = document.querySelector<HTMLInputElement>('#replay-slider');
     if (slider && slider.value !== String(rp.step)) slider.value = String(rp.step);
     const pos = document.querySelector<HTMLElement>('#replay-pos');
     if (pos) pos.textContent = L().historyPos(rp.step, total);
-  }
-
-  /** Скачать протокол матча (или открытый внешний протокол) файлом JSON. */
-  function downloadProtocol(): void {
-    let proto: MatchProtocol | null = null;
-    if (replay?.data.external) {
-      proto = {
-        format: 'bonesai-protocol',
-        v: 1,
-        names: replay.data.names,
-        variant: replay.data.variant,
-        rounds: replay.data.rounds,
-      };
-    } else if (match) {
-      proto = matchProtocol(match);
-    }
-    if (!proto) return;
-    const json = JSON.stringify(proto, null, 2);
-    const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-    const name = `bonesai-${stamp}.json`;
-    if (opts.saveFile) {
-      // Отказ (реджект) — это «пользователь закрыл share-лист», не ошибка.
-      void opts.saveFile(name, 'application/json', json).then(
-        () => toast(L().toastProtoSaved),
-        () => {},
-      );
-      return;
-    }
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(L().toastProtoSaved);
   }
 
   // --- Экраны (оверлей) -----------------------------------------------------------
@@ -1658,7 +1614,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const reviewRow = `
         <div class="btn-row">
           <button class="btn ghost-btn" data-action="history">${L().btnHistory}</button>
-          <button class="btn ghost-btn" data-action="download-protocol">${L().btnDownloadProto}</button>
         </div>`;
     if (outcome) {
       const title =
@@ -1974,8 +1929,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       } else if (action === 'history') {
         showRoundOver = false;
         openHistory();
-      } else if (action === 'download-protocol') {
-        downloadProtocol();
       } else if (action === 'replay-exit') {
         exitReplay();
       } else if (replay && action === 'replay-first') {

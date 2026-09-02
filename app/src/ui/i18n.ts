@@ -98,7 +98,6 @@ const ru = {
     `Первым ходит ${name} — руки первого открыты с раздачи (§2.4)`,
   toastRoundStart: (n: number, name: string) => `Партия ${n}: первым ходит ${name}`,
   toastMarkOwners: 'Разметка ходов: кости первого игрока светлее, второго — темнее',
-  toastProtoSaved: 'Протокол сохранён файлом JSON',
   toastProtoBroken: (err: string) => `Протокол не воспроизводится: ${err}`,
 
   // Руки
@@ -131,7 +130,6 @@ const ru = {
   btnAbortMatch: 'Бросить матч',
   btnNewMatch: 'Новый матч',
   btnHistory: 'История ходов',
-  btnDownloadProto: 'Скачать протокол',
   nextFirstNote: (name: string, why: string) => `Первым ходит ${name} — ${why} (§2.5).`,
   whyWinner: 'победитель партии',
   whySwap: 'после ничьей роли меняются',
@@ -152,7 +150,6 @@ const ru = {
   tipStepBack: 'Ход назад',
   tipStepFwd: 'Ход вперёд',
   tipToEnd: 'К концу партии',
-  tipDownloadProto: 'Скачать протокол партий (JSON)',
 
   // Стол
   ghostRoot: 'Корень',
@@ -290,7 +287,6 @@ const en: Dict = {
   toastFirstOpen: (name) => `${name} moves first — the first hand is open from the deal (§2.4)`,
   toastRoundStart: (n, name) => `Round ${n}: ${name} moves first`,
   toastMarkOwners: 'Move marking: first player’s tiles lighter, second’s darker',
-  toastProtoSaved: 'Protocol saved as JSON',
   toastProtoBroken: (err) => `The protocol does not replay: ${err}`,
 
   firstChip: 'first',
@@ -316,7 +312,6 @@ const en: Dict = {
   btnAbortMatch: 'Abandon match',
   btnNewMatch: 'New match',
   btnHistory: 'Move history',
-  btnDownloadProto: 'Download protocol',
   nextFirstNote: (name, why) => `${name} moves first — ${why} (§2.5).`,
   whyWinner: 'winner of the round',
   whySwap: 'roles swap after a tie',
@@ -335,7 +330,6 @@ const en: Dict = {
   tipStepBack: 'One move back',
   tipStepFwd: 'One move forward',
   tipToEnd: 'To the end of the round',
-  tipDownloadProto: 'Download the protocol (JSON)',
 
   ghostRoot: 'Root',
   ghostStraight: 'Straight',
@@ -468,7 +462,6 @@ const es: Dict = {
   toastFirstOpen: (name) => `Sale primero ${name} — su mano está abierta desde el reparto (§2.4)`,
   toastRoundStart: (n, name) => `Juego ${n}: sale primero ${name}`,
   toastMarkOwners: 'Marcado: fichas del primero más claras, del segundo más oscuras',
-  toastProtoSaved: 'Protocolo guardado como JSON',
   toastProtoBroken: (err) => `El protocolo no se reproduce: ${err}`,
 
   firstChip: 'primero',
@@ -494,7 +487,6 @@ const es: Dict = {
   btnAbortMatch: 'Abandonar encuentro',
   btnNewMatch: 'Nuevo encuentro',
   btnHistory: 'Historial de jugadas',
-  btnDownloadProto: 'Descargar protocolo',
   nextFirstNote: (name, why) => `Sale primero ${name} — ${why} (§2.5).`,
   whyWinner: 'ganador del juego',
   whySwap: 'tras el empate se intercambian los roles',
@@ -513,7 +505,6 @@ const es: Dict = {
   tipStepBack: 'Jugada atrás',
   tipStepFwd: 'Jugada adelante',
   tipToEnd: 'Al final del juego',
-  tipDownloadProto: 'Descargar el protocolo (JSON)',
 
   ghostRoot: 'Raíz',
   ghostStraight: 'Recto',
@@ -647,7 +638,6 @@ const de: Dict = {
   toastFirstOpen: (name) => `${name} zieht zuerst — die erste Hand liegt ab Beginn offen (§2.4)`,
   toastRoundStart: (n, name) => `Partie ${n}: ${name} zieht zuerst`,
   toastMarkOwners: 'Markierung: Steine des Ersten heller, des Zweiten dunkler',
-  toastProtoSaved: 'Protokoll als JSON gespeichert',
   toastProtoBroken: (err) => `Das Protokoll lässt sich nicht abspielen: ${err}`,
 
   firstChip: 'erster',
@@ -673,7 +663,6 @@ const de: Dict = {
   btnAbortMatch: 'Match abbrechen',
   btnNewMatch: 'Neues Match',
   btnHistory: 'Zugverlauf',
-  btnDownloadProto: 'Protokoll herunterladen',
   nextFirstNote: (name, why) => `${name} zieht zuerst — ${why} (§2.5).`,
   whyWinner: 'Sieger der Partie',
   whySwap: 'nach dem Remis wechseln die Rollen',
@@ -692,7 +681,6 @@ const de: Dict = {
   tipStepBack: 'Ein Zug zurück',
   tipStepFwd: 'Ein Zug vor',
   tipToEnd: 'Zum Ende der Partie',
-  tipDownloadProto: 'Protokoll herunterladen (JSON)',
 
   ghostRoot: 'Wurzel',
   ghostStraight: 'Gerade',
@@ -826,7 +814,6 @@ const pt: Dict = {
   toastFirstOpen: (name) => `${name} joga primeiro — sua mão fica aberta desde a distribuição (§2.4)`,
   toastRoundStart: (n, name) => `Jogo ${n}: ${name} joga primeiro`,
   toastMarkOwners: 'Marcação: peças do primeiro mais claras, do segundo mais escuras',
-  toastProtoSaved: 'Protocolo salvo como JSON',
   toastProtoBroken: (err) => `O protocolo não se reproduz: ${err}`,
 
   firstChip: 'primeiro',
@@ -852,7 +839,6 @@ const pt: Dict = {
   btnAbortMatch: 'Abandonar a partida',
   btnNewMatch: 'Nova partida',
   btnHistory: 'Histórico de jogadas',
-  btnDownloadProto: 'Baixar protocolo',
   nextFirstNote: (name, why) => `${name} joga primeiro — ${why} (§2.5).`,
   whyWinner: 'vencedor do jogo',
   whySwap: 'após o empate os papéis se invertem',
@@ -871,7 +857,6 @@ const pt: Dict = {
   tipStepBack: 'Jogada atrás',
   tipStepFwd: 'Jogada adiante',
   tipToEnd: 'Ao fim do jogo',
-  tipDownloadProto: 'Baixar o protocolo (JSON)',
 
   ghostRoot: 'Raiz',
   ghostStraight: 'Reto',
@@ -1003,7 +988,6 @@ const zh: Dict = {
   toastFirstOpen: (name) => `${name} 先行——先手的手牌自发牌起公开（§2.4）`,
   toastRoundStart: (n, name) => `第 ${n} 局：${name} 先行`,
   toastMarkOwners: '归属标记：先手的牌更亮，后手的更暗',
-  toastProtoSaved: '对局记录已保存为 JSON',
   toastProtoBroken: (err) => `记录无法回放：${err}`,
 
   firstChip: '先手',
@@ -1029,7 +1013,6 @@ const zh: Dict = {
   btnAbortMatch: '放弃比赛',
   btnNewMatch: '新比赛',
   btnHistory: '走子历史',
-  btnDownloadProto: '下载对局记录',
   nextFirstNote: (name, why) => `${name} 先行——${why}（§2.5）。`,
   whyWinner: '本局胜者',
   whySwap: '平局后交换先后手',
@@ -1048,7 +1031,6 @@ const zh: Dict = {
   tipStepBack: '后退一着',
   tipStepFwd: '前进一着',
   tipToEnd: '到本局结尾',
-  tipDownloadProto: '下载对局记录（JSON）',
 
   ghostRoot: '根牌',
   ghostStraight: '直放',
@@ -1186,7 +1168,6 @@ const uk: Dict = {
   toastFirstOpen: (name) => `Першим ходить ${name} — руки першого відкриті з роздачі (§2.4)`,
   toastRoundStart: (n, name) => `Партія ${n}: першим ходить ${name}`,
   toastMarkOwners: 'Позначення ходів: кістки першого гравця світліші, другого — темніші',
-  toastProtoSaved: 'Протокол збережено файлом JSON',
   toastProtoBroken: (err) => `Протокол не відтворюється: ${err}`,
 
   firstChip: 'перший',
@@ -1212,7 +1193,6 @@ const uk: Dict = {
   btnAbortMatch: 'Покинути матч',
   btnNewMatch: 'Новий матч',
   btnHistory: 'Історія ходів',
-  btnDownloadProto: 'Зберегти протокол',
   nextFirstNote: (name, why) => `Першим ходить ${name} — ${why} (§2.5).`,
   whyWinner: 'переможець партії',
   whySwap: 'після нічиєї ролі міняються',
@@ -1231,7 +1211,6 @@ const uk: Dict = {
   tipStepBack: 'Хід назад',
   tipStepFwd: 'Хід уперед',
   tipToEnd: 'До кінця партії',
-  tipDownloadProto: 'Зберегти протокол партій (JSON)',
 
   ghostRoot: 'Корінь',
   ghostStraight: 'Прямо',
