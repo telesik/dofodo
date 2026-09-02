@@ -9,7 +9,6 @@ import {
   isDouble,
   chooseBotMove,
   legalMoves,
-  matchProtocol,
   moveEquals,
   shuffleLayout,
   nextRound,
@@ -19,10 +18,8 @@ import {
   seedFromCrypto,
   matchTarget,
   startMatch,
-  validateProtocol,
   type GameState,
   type LogEntry,
-  type MatchProtocol,
   type MatchState,
   type BotLevel,
   type Move,
@@ -105,6 +102,25 @@ export interface ExtraToggle {
   onChange(on: boolean): void;
 }
 
+/**
+ * Пункт-действие платформы на экране настроек: строка-ссылка без
+ * состояния (в отличие от ExtraToggle). Что происходит по нажатию —
+ * знает надстройка; настройки перед вызовом закрываются, чтобы её
+ * экран лёг на чистый стол.
+ */
+export interface ExtraAction {
+  id: string;
+  /** Локализованная подпись: надстройка переводит сама. */
+  label: () => string;
+  /** Продублировать пункт на стартовой карточке — второстепенной
+   *  (ghost) кнопкой во всю ширину внизу карточки, над строкой версии
+   *  (решение автора 2026-09-02 после сравнения шести мест). Пункт
+   *  в настройках при этом остаётся: вход должен быть заметен до партии,
+   *  но не соседствовать с кнопками партии. */
+  startCard?: boolean;
+  onSelect(): void;
+}
+
 /** Параметры старта матча, собранные стартовым экраном. */
 export interface StartSetup {
   names: [string, string];
@@ -144,6 +160,9 @@ export interface AppOptions {
   opponentOptions?: readonly OpponentOption[];
   /** Дополнительные переключатели настроек от платформы. */
   extraToggles?: readonly ExtraToggle[];
+  /** Дополнительные пункты-действия платформы на экране настроек
+   *  (и, по флагу startCard, на стартовой карточке). */
+  extraActions?: readonly ExtraAction[];
   /** Старт матча с дополнительным пунктом селектора: стандартный старт не
    *  выполняется, матч запускает надстройка (например, через своё лобби). */
   onOpponentStart?: (id: string, setup: StartSetup) => void;
@@ -153,11 +172,6 @@ export interface AppOptions {
   /** Пользователь сбросил матч (новый матч поверх текущего): надстройке
    *  пора закрыть свои ресурсы (например, сетевую сессию). */
   onMatchReset?: () => void;
-  /** Сохранение файла вместо скачивания через <a download> — в WebView
-   *  оно не работает, мобильная надстройка отдаёт файл системному
-   *  share-листу. Резолв — файл передан (показываем «сохранено»),
-   *  реджект — пользователь отказался или не вышло (молчим). */
-  saveFile?: (name: string, mime: string, text: string) => Promise<void>;
 }
 
 /** Управление приложением снаружи: вход внешних ходов и чтение состояния. */
@@ -195,6 +209,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // старта: пункт без onOpponentStart делал бы кнопку старта молча мёртвой.
   const extraOpponents = opts.onOpponentStart ? (opts.opponentOptions ?? []) : [];
   const extraToggles = opts.extraToggles ?? [];
+  const extraActions = opts.extraActions ?? [];
+  const startCardActions = extraActions.filter((a) => a.startCard);
   /** Состояния переключателей платформы; ключ — id переключателя. */
   const toggleState = new Map<string, boolean>();
   // Общие SVG-определения (градиенты, тени) — один раз на документ:
@@ -438,7 +454,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     match?.names[p] ?? (p === 0 ? L().defaultP1 : L().defaultP2);
   const tileLabel = (t: TileId): string => t.replace('-', ':');
   const esc = (s: string): string =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
   function persist(): void {
     try {
@@ -1303,92 +1324,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <input type="range" id="replay-slider" min="0" max="${total}" step="1" value="${rp.step}">
         <button class="icon-btn" data-action="replay-next" data-tip="${L().tipStepFwd}">▶</button>
         <button class="icon-btn" data-action="replay-last" data-tip="${L().tipToEnd}">⏭</button>
-        <span id="replay-pos" class="replay-pos"></span>
-        <button class="icon-btn" data-action="download-protocol" data-tip="${L().tipDownloadProto}">⭳</button>`;
+        <span id="replay-pos" class="replay-pos"></span>`;
     }
     const slider = document.querySelector<HTMLInputElement>('#replay-slider');
     if (slider && slider.value !== String(rp.step)) slider.value = String(rp.step);
     const pos = document.querySelector<HTMLElement>('#replay-pos');
     if (pos) pos.textContent = L().historyPos(rp.step, total);
-  }
-
-  /** Скачать протокол матча (или открытый внешний протокол) файлом JSON. */
-  function downloadProtocol(): void {
-    let proto: MatchProtocol | null = null;
-    if (replay?.data.external) {
-      proto = {
-        format: 'bonesai-protocol',
-        v: 1,
-        names: replay.data.names,
-        variant: replay.data.variant,
-        rounds: replay.data.rounds,
-      };
-    } else if (match) {
-      proto = matchProtocol(match);
-    }
-    if (!proto) return;
-    const json = JSON.stringify(proto, null, 2);
-    const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-    const name = `bonesai-${stamp}.json`;
-    if (opts.saveFile) {
-      // Отказ (реджект) — это «пользователь закрыл share-лист», не ошибка.
-      void opts.saveFile(name, 'application/json', json).then(
-        () => toast(L().toastProtoSaved),
-        () => {},
-      );
-      return;
-    }
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(L().toastProtoSaved);
-  }
-
-  /** Загрузить протокол из файла: проверить воспроизведением и открыть просмотр. */
-  async function importProtocol(file: File): Promise<void> {
-    try {
-      const data = JSON.parse(await file.text()) as MatchProtocol;
-      if (
-        data?.format !== 'bonesai-protocol' ||
-        data.v !== 1 ||
-        !Array.isArray(data.rounds) ||
-        data.rounds.length === 0
-      ) {
-        throw new Error(L().errNotProto);
-      }
-      const importedTarget = data.variant?.target;
-      const variant: Variant = {
-        doubleOnlyCloses: !!data.variant?.doubleOnlyCloses,
-        ...(typeof importedTarget === 'number' && targetOk(importedTarget)
-          ? { target: importedTarget }
-          : {}),
-      };
-      const check = validateProtocol({ ...data, variant });
-      if (!check.ok) {
-        throw new Error(L().errRoundBad(check.round + 1, check.error));
-      }
-      replay = {
-        data: {
-          names: [
-            String(data.names?.[0] ?? L().defaultP1),
-            String(data.names?.[1] ?? L().defaultP2),
-          ],
-          variant,
-          rounds: data.rounds,
-          external: true,
-        },
-        roundIdx: 0,
-        step: 0,
-      };
-      renderAll();
-      toast(L().toastProtoChecked);
-    } catch (err) {
-      toast(L().toastProtoLoadFail((err as Error).message), true);
-    }
   }
 
   // --- Экраны (оверлей) -----------------------------------------------------------
@@ -1494,7 +1435,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <div class="lot-row" id="lot-row"></div>`
             : ''
         }
-        <div class="btn-row">
+        <div class="btn-row start-row">
           ${wantLots ? `<button class="btn" data-action="lot">${L().btnLot}</button>` : ''}
           <button class="btn" data-action="start" ${wantLots ? 'disabled' : ''} id="btn-start">${
             esc(curExtra?.startLabel?.() ?? '') || L().btnStart
@@ -1511,9 +1452,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
               <path d="M10.07 5.27 L10.37 2.74 A 9.40 9.40 0 0 1 13.63 2.74 L13.93 5.27 A 7.00 7.00 0 0 1 15.39 5.88 L15.39 5.88 L17.39 4.30 A 9.40 9.40 0 0 1 19.70 6.61 L18.12 8.61 A 7.00 7.00 0 0 1 18.73 10.07 L18.73 10.07 L21.26 10.37 A 9.40 9.40 0 0 1 21.26 13.63 L18.73 13.93 A 7.00 7.00 0 0 1 18.12 15.39 L18.12 15.39 L19.70 17.39 A 9.40 9.40 0 0 1 17.39 19.70 L15.39 18.12 A 7.00 7.00 0 0 1 13.93 18.73 L13.93 18.73 L13.63 21.26 A 9.40 9.40 0 0 1 10.37 21.26 L10.07 18.73 A 7.00 7.00 0 0 1 8.61 18.12 L8.61 18.12 L6.61 19.70 A 9.40 9.40 0 0 1 4.30 17.39 L5.88 15.39 A 7.00 7.00 0 0 1 5.27 13.93 L5.27 13.93 L2.74 13.63 A 9.40 9.40 0 0 1 2.74 10.37 L5.27 10.07 A 7.00 7.00 0 0 1 5.88 8.61 L5.88 8.61 L4.30 6.61 A 9.40 9.40 0 0 1 6.61 4.30 L8.61 5.88 A 7.00 7.00 0 0 1 10.07 5.27 Z" />
               <circle cx="12" cy="12" r="3.1" />
             </svg>${L().settingsTitle}</button>
-          <button class="btn ghost-btn" data-action="load-protocol">${L().btnLoadProto}</button>
-          <input id="inp-protocol" type="file" accept=".json,application/json" hidden>
         </div>
+        ${
+          startCardActions.length
+            ? `<div class="btn-row action-row">${startCardActions
+                .map(
+                  (a) =>
+                    `<button class="btn ghost-btn" data-action="x-act:${esc(a.id)}">${esc(a.label())}</button>`,
+                )
+                .join('')}</div>`
+            : ''
+        }
         <p class="sub version-line">${versionLine()}</p>
       </div>`;
     elOverlay.hidden = false;
@@ -1665,7 +1614,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const reviewRow = `
         <div class="btn-row">
           <button class="btn ghost-btn" data-action="history">${L().btnHistory}</button>
-          <button class="btn ghost-btn" data-action="download-protocol">${L().btnDownloadProto}</button>
         </div>`;
     if (outcome) {
       const title =
@@ -1923,7 +1871,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       const action = actionEl.dataset.action!;
       if (action === 'lot') rollLot();
       else if (action === 'start') startNewMatch();
-      else if (action === 'continue') {
+      else if (action.startsWith('x-act:')) {
+        // Пункт-действие платформы на стартовой карточке: та же цель,
+        // что у строки в настройках; карточка остаётся на месте.
+        extraActions.find((a) => a.id === action.slice(6))?.onSelect();
+      } else if (action === 'continue') {
         const saved = loadSaved();
         if (saved) {
           match = saved;
@@ -1977,10 +1929,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       } else if (action === 'history') {
         showRoundOver = false;
         openHistory();
-      } else if (action === 'download-protocol') {
-        downloadProtocol();
-      } else if (action === 'load-protocol') {
-        document.querySelector<HTMLInputElement>('#inp-protocol')?.click();
       } else if (action === 'replay-exit') {
         exitReplay();
       } else if (replay && action === 'replay-first') {
@@ -2027,9 +1975,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       replay.roundIdx = Number(t.value);
       replay.step = 0;
       renderAll();
-    } else if (t.id === 'inp-protocol' && t.files?.[0]) {
-      void importProtocol(t.files[0]);
-      t.value = '';
     } else if (t.name === 'match-target') {
       // Радио строятся из MATCH_TARGETS — чужих значений тут не бывает.
       targetPref = Number(t.value);
@@ -2171,6 +2116,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ${extraToggles
           .map((t) => row(`x:${t.id}`, toggleState.get(t.id) === true, esc(t.label())))
           .join('')}
+        ${extraActions
+          .map(
+            (a) =>
+              `<p class="sub action-line"><a href="#" data-action="x-act:${esc(a.id)}">${esc(a.label())}</a></p>`,
+          )
+          .join('')}
         ${
           opts.privacyUrl
             ? `<p class="sub privacy-line"><a href="${opts.privacyUrl}" target="_blank" rel="noopener">${L().linkPrivacy}</a></p>`
@@ -2228,7 +2179,15 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   elSettings.addEventListener('click', (ev) => {
     const el = (ev.target as HTMLElement).closest<HTMLElement>('[data-action]');
-    if (el?.dataset.action === 'settings-close') openSettings(false);
+    if (!el?.dataset.action) return;
+    if (el.dataset.action === 'settings-close') openSettings(false);
+    if (el.dataset.action.startsWith('x-act:')) {
+      ev.preventDefault();
+      const act = extraActions.find((a) => a.id === el.dataset.action?.slice(6));
+      if (!act) return;
+      openSettings(false);
+      act.onSelect();
+    }
   });
 
   $('#btn-settings').addEventListener('click', () => openSettings(elSettings.hidden));

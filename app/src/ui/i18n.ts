@@ -48,7 +48,6 @@ const ru = {
   btnLot: 'Бросить жребий',
   btnStart: 'Начать матч',
   btnContinue: (label: string) => `Продолжить матч ${label}`,
-  btnLoadProto: 'Загрузить протокол для разбора…',
 
   // Шапка
   roundChip: (n: number) => `партия ${n}`,
@@ -99,12 +98,7 @@ const ru = {
     `Первым ходит ${name} — руки первого открыты с раздачи (§2.4)`,
   toastRoundStart: (n: number, name: string) => `Партия ${n}: первым ходит ${name}`,
   toastMarkOwners: 'Разметка ходов: кости первого игрока светлее, второго — темнее',
-  toastProtoSaved: 'Протокол сохранён файлом JSON',
-  toastProtoChecked: 'Протокол проверен движком: все ходы легальны',
-  toastProtoLoadFail: (err: string) => `Не удалось загрузить протокол: ${err}`,
   toastProtoBroken: (err: string) => `Протокол не воспроизводится: ${err}`,
-  errNotProto: 'это не протокол Bonesai',
-  errRoundBad: (n: number, err: string) => `партия ${n} не воспроизводится (${err})`,
 
   // Руки
   firstChip: 'первый',
@@ -136,7 +130,6 @@ const ru = {
   btnAbortMatch: 'Бросить матч',
   btnNewMatch: 'Новый матч',
   btnHistory: 'История ходов',
-  btnDownloadProto: 'Скачать протокол',
   nextFirstNote: (name: string, why: string) => `Первым ходит ${name} — ${why} (§2.5).`,
   whyWinner: 'победитель партии',
   whySwap: 'после ничьей роли меняются',
@@ -157,7 +150,6 @@ const ru = {
   tipStepBack: 'Ход назад',
   tipStepFwd: 'Ход вперёд',
   tipToEnd: 'К концу партии',
-  tipDownloadProto: 'Скачать протокол партий (JSON)',
 
   // Стол
   ghostRoot: 'Корень',
@@ -252,7 +244,6 @@ const en: Dict = {
   btnLot: 'Draw lots',
   btnStart: 'Start match',
   btnContinue: (label) => `Resume match ${label}`,
-  btnLoadProto: 'Load a protocol for review…',
 
   roundChip: (n) => `round ${n}`,
   viewChip: (i, n) => `review · round ${i} of ${n}`,
@@ -296,12 +287,7 @@ const en: Dict = {
   toastFirstOpen: (name) => `${name} moves first — the first hand is open from the deal (§2.4)`,
   toastRoundStart: (n, name) => `Round ${n}: ${name} moves first`,
   toastMarkOwners: 'Move marking: first player’s tiles lighter, second’s darker',
-  toastProtoSaved: 'Protocol saved as JSON',
-  toastProtoChecked: 'Protocol verified by the engine: all moves are legal',
-  toastProtoLoadFail: (err) => `Failed to load the protocol: ${err}`,
   toastProtoBroken: (err) => `The protocol does not replay: ${err}`,
-  errNotProto: 'this is not a Bonesai protocol',
-  errRoundBad: (n, err) => `round ${n} does not replay (${err})`,
 
   firstChip: 'first',
   turnMarkTitle: 'To move',
@@ -326,7 +312,6 @@ const en: Dict = {
   btnAbortMatch: 'Abandon match',
   btnNewMatch: 'New match',
   btnHistory: 'Move history',
-  btnDownloadProto: 'Download protocol',
   nextFirstNote: (name, why) => `${name} moves first — ${why} (§2.5).`,
   whyWinner: 'winner of the round',
   whySwap: 'roles swap after a tie',
@@ -345,7 +330,6 @@ const en: Dict = {
   tipStepBack: 'One move back',
   tipStepFwd: 'One move forward',
   tipToEnd: 'To the end of the round',
-  tipDownloadProto: 'Download the protocol (JSON)',
 
   ghostRoot: 'Root',
   ghostStraight: 'Straight',
@@ -435,7 +419,6 @@ const es: Dict = {
   btnLot: 'Echar a suertes',
   btnStart: 'Empezar partida',
   btnContinue: (label) => `Continuar el encuentro ${label}`,
-  btnLoadProto: 'Cargar un protocolo para análisis…',
 
   roundChip: (n) => `juego ${n}`,
   viewChip: (i, n) => `revisión · juego ${i} de ${n}`,
@@ -479,12 +462,7 @@ const es: Dict = {
   toastFirstOpen: (name) => `Sale primero ${name} — su mano está abierta desde el reparto (§2.4)`,
   toastRoundStart: (n, name) => `Juego ${n}: sale primero ${name}`,
   toastMarkOwners: 'Marcado: fichas del primero más claras, del segundo más oscuras',
-  toastProtoSaved: 'Protocolo guardado como JSON',
-  toastProtoChecked: 'Protocolo verificado por el motor: todas las jugadas son legales',
-  toastProtoLoadFail: (err) => `No se pudo cargar el protocolo: ${err}`,
   toastProtoBroken: (err) => `El protocolo no se reproduce: ${err}`,
-  errNotProto: 'esto no es un protocolo de Bonesai',
-  errRoundBad: (n, err) => `el juego ${n} no se reproduce (${err})`,
 
   firstChip: 'primero',
   turnMarkTitle: 'Le toca',
@@ -509,7 +487,6 @@ const es: Dict = {
   btnAbortMatch: 'Abandonar encuentro',
   btnNewMatch: 'Nuevo encuentro',
   btnHistory: 'Historial de jugadas',
-  btnDownloadProto: 'Descargar protocolo',
   nextFirstNote: (name, why) => `Sale primero ${name} — ${why} (§2.5).`,
   whyWinner: 'ganador del juego',
   whySwap: 'tras el empate se intercambian los roles',
@@ -528,7 +505,6 @@ const es: Dict = {
   tipStepBack: 'Jugada atrás',
   tipStepFwd: 'Jugada adelante',
   tipToEnd: 'Al final del juego',
-  tipDownloadProto: 'Descargar el protocolo (JSON)',
 
   ghostRoot: 'Raíz',
   ghostStraight: 'Recto',
@@ -619,7 +595,6 @@ const de: Dict = {
   btnLot: 'Los werfen',
   btnStart: 'Match starten',
   btnContinue: (label) => `Match fortsetzen ${label}`,
-  btnLoadProto: 'Protokoll zur Analyse laden…',
 
   roundChip: (n) => `Partie ${n}`,
   viewChip: (i, n) => `Ansicht · Partie ${i} von ${n}`,
@@ -663,12 +638,7 @@ const de: Dict = {
   toastFirstOpen: (name) => `${name} zieht zuerst — die erste Hand liegt ab Beginn offen (§2.4)`,
   toastRoundStart: (n, name) => `Partie ${n}: ${name} zieht zuerst`,
   toastMarkOwners: 'Markierung: Steine des Ersten heller, des Zweiten dunkler',
-  toastProtoSaved: 'Protokoll als JSON gespeichert',
-  toastProtoChecked: 'Protokoll von der Engine geprüft: alle Züge sind legal',
-  toastProtoLoadFail: (err) => `Protokoll konnte nicht geladen werden: ${err}`,
   toastProtoBroken: (err) => `Das Protokoll lässt sich nicht abspielen: ${err}`,
-  errNotProto: 'das ist kein Bonesai-Protokoll',
-  errRoundBad: (n, err) => `Partie ${n} lässt sich nicht abspielen (${err})`,
 
   firstChip: 'erster',
   turnMarkTitle: 'Am Zug',
@@ -693,7 +663,6 @@ const de: Dict = {
   btnAbortMatch: 'Match abbrechen',
   btnNewMatch: 'Neues Match',
   btnHistory: 'Zugverlauf',
-  btnDownloadProto: 'Protokoll herunterladen',
   nextFirstNote: (name, why) => `${name} zieht zuerst — ${why} (§2.5).`,
   whyWinner: 'Sieger der Partie',
   whySwap: 'nach dem Remis wechseln die Rollen',
@@ -712,7 +681,6 @@ const de: Dict = {
   tipStepBack: 'Ein Zug zurück',
   tipStepFwd: 'Ein Zug vor',
   tipToEnd: 'Zum Ende der Partie',
-  tipDownloadProto: 'Protokoll herunterladen (JSON)',
 
   ghostRoot: 'Wurzel',
   ghostStraight: 'Gerade',
@@ -803,7 +771,6 @@ const pt: Dict = {
   btnLot: 'Sortear',
   btnStart: 'Começar a partida',
   btnContinue: (label) => `Continuar a partida ${label}`,
-  btnLoadProto: 'Carregar um protocolo para análise…',
 
   roundChip: (n) => `jogo ${n}`,
   viewChip: (i, n) => `revisão · jogo ${i} de ${n}`,
@@ -847,12 +814,7 @@ const pt: Dict = {
   toastFirstOpen: (name) => `${name} joga primeiro — sua mão fica aberta desde a distribuição (§2.4)`,
   toastRoundStart: (n, name) => `Jogo ${n}: ${name} joga primeiro`,
   toastMarkOwners: 'Marcação: peças do primeiro mais claras, do segundo mais escuras',
-  toastProtoSaved: 'Protocolo salvo como JSON',
-  toastProtoChecked: 'Protocolo verificado pelo motor: todas as jogadas são legais',
-  toastProtoLoadFail: (err) => `Não foi possível carregar o protocolo: ${err}`,
   toastProtoBroken: (err) => `O protocolo não se reproduz: ${err}`,
-  errNotProto: 'isto não é um protocolo do Bonesai',
-  errRoundBad: (n, err) => `o jogo ${n} não se reproduz (${err})`,
 
   firstChip: 'primeiro',
   turnMarkTitle: 'É a vez de',
@@ -877,7 +839,6 @@ const pt: Dict = {
   btnAbortMatch: 'Abandonar a partida',
   btnNewMatch: 'Nova partida',
   btnHistory: 'Histórico de jogadas',
-  btnDownloadProto: 'Baixar protocolo',
   nextFirstNote: (name, why) => `${name} joga primeiro — ${why} (§2.5).`,
   whyWinner: 'vencedor do jogo',
   whySwap: 'após o empate os papéis se invertem',
@@ -896,7 +857,6 @@ const pt: Dict = {
   tipStepBack: 'Jogada atrás',
   tipStepFwd: 'Jogada adiante',
   tipToEnd: 'Ao fim do jogo',
-  tipDownloadProto: 'Baixar o protocolo (JSON)',
 
   ghostRoot: 'Raiz',
   ghostStraight: 'Reto',
@@ -985,7 +945,6 @@ const zh: Dict = {
   btnLot: '抽签',
   btnStart: '开始比赛',
   btnContinue: (label) => `继续比赛 ${label}`,
-  btnLoadProto: '加载对局记录进行复盘…',
 
   roundChip: (n) => `第 ${n} 局`,
   viewChip: (i, n) => `复盘 · 第 ${i}/${n} 局`,
@@ -1029,12 +988,7 @@ const zh: Dict = {
   toastFirstOpen: (name) => `${name} 先行——先手的手牌自发牌起公开（§2.4）`,
   toastRoundStart: (n, name) => `第 ${n} 局：${name} 先行`,
   toastMarkOwners: '归属标记：先手的牌更亮，后手的更暗',
-  toastProtoSaved: '对局记录已保存为 JSON',
-  toastProtoChecked: '记录已由引擎校验：所有着法均合法',
-  toastProtoLoadFail: (err) => `无法加载记录：${err}`,
   toastProtoBroken: (err) => `记录无法回放：${err}`,
-  errNotProto: '这不是 Bonesai 的对局记录',
-  errRoundBad: (n, err) => `第 ${n} 局无法回放（${err}）`,
 
   firstChip: '先手',
   turnMarkTitle: '行棋方',
@@ -1059,7 +1013,6 @@ const zh: Dict = {
   btnAbortMatch: '放弃比赛',
   btnNewMatch: '新比赛',
   btnHistory: '走子历史',
-  btnDownloadProto: '下载对局记录',
   nextFirstNote: (name, why) => `${name} 先行——${why}（§2.5）。`,
   whyWinner: '本局胜者',
   whySwap: '平局后交换先后手',
@@ -1078,7 +1031,6 @@ const zh: Dict = {
   tipStepBack: '后退一着',
   tipStepFwd: '前进一着',
   tipToEnd: '到本局结尾',
-  tipDownloadProto: '下载对局记录（JSON）',
 
   ghostRoot: '根牌',
   ghostStraight: '直放',
@@ -1173,7 +1125,6 @@ const uk: Dict = {
   btnLot: 'Кинути жереб',
   btnStart: 'Почати матч',
   btnContinue: (label) => `Продовжити матч ${label}`,
-  btnLoadProto: 'Завантажити протокол для розбору…',
 
   roundChip: (n) => `партія ${n}`,
   viewChip: (i, n) => `перегляд · партія ${i} з ${n}`,
@@ -1217,12 +1168,7 @@ const uk: Dict = {
   toastFirstOpen: (name) => `Першим ходить ${name} — руки першого відкриті з роздачі (§2.4)`,
   toastRoundStart: (n, name) => `Партія ${n}: першим ходить ${name}`,
   toastMarkOwners: 'Позначення ходів: кістки першого гравця світліші, другого — темніші',
-  toastProtoSaved: 'Протокол збережено файлом JSON',
-  toastProtoChecked: 'Протокол перевірено рушієм: усі ходи легальні',
-  toastProtoLoadFail: (err) => `Не вдалося завантажити протокол: ${err}`,
   toastProtoBroken: (err) => `Протокол не відтворюється: ${err}`,
-  errNotProto: 'це не протокол Bonesai',
-  errRoundBad: (n, err) => `партія ${n} не відтворюється (${err})`,
 
   firstChip: 'перший',
   turnMarkTitle: 'Ходить',
@@ -1247,7 +1193,6 @@ const uk: Dict = {
   btnAbortMatch: 'Покинути матч',
   btnNewMatch: 'Новий матч',
   btnHistory: 'Історія ходів',
-  btnDownloadProto: 'Зберегти протокол',
   nextFirstNote: (name, why) => `Першим ходить ${name} — ${why} (§2.5).`,
   whyWinner: 'переможець партії',
   whySwap: 'після нічиєї ролі міняються',
@@ -1266,7 +1211,6 @@ const uk: Dict = {
   tipStepBack: 'Хід назад',
   tipStepFwd: 'Хід уперед',
   tipToEnd: 'До кінця партії',
-  tipDownloadProto: 'Зберегти протокол партій (JSON)',
 
   ghostRoot: 'Корінь',
   ghostStraight: 'Прямо',
