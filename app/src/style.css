@@ -220,6 +220,21 @@ textarea,
   border-color: var(--gold);
 }
 
+/* Выбор соперника на стартовой карточке — выделен как кнопка «Бросить
+   жребий»: при первом запуске его не замечали (решение автора 2026-09-03). */
+.opp-select {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(201, 168, 106, 0.22), rgba(201, 168, 106, 0.1));
+  color: var(--ivory);
+  transition: all 0.15s ease;
+}
+
+.opp-select:hover {
+  color: var(--ivory);
+  background: linear-gradient(180deg, rgba(201, 168, 106, 0.34), rgba(201, 168, 106, 0.16));
+  box-shadow: 0 0 14px rgba(201, 168, 106, 0.25);
+}
+
 /* Селект языка в углу стартовой карточки (дубль настройки из ⚙):
    язык должен находиться и без чтения текста. */
 .lang-corner {

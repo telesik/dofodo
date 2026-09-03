@@ -181,7 +181,7 @@ const ru = {
   rootDeadTitle: 'Тупик корня — с этой стороны кости не ставятся (§6.2)',
   fieldOpponent: 'Соперник',
   fieldTarget: 'Матч до',
-  oppHuman: 'человек',
+  oppHuman: 'человек — за одним экраном',
   oppBotEasy: 'бот — лёгкий',
   oppBotNormal: 'бот — обычный',
   oppBotStrong: 'бот — сильный',
@@ -189,7 +189,7 @@ const ru = {
   botNameNormal: 'Обычный бот',
   botNameStrong: 'Сильный бот',
   tutorStart:
-    'Введите имена и бросьте жребий — первым ходит тот, у кого меньше сумма на вытянутой кости (§2.5). Потом «Начать матч»: по 7 костей в руки, 14 — в закрытый базар (§2.3). Дальше подсказки поведут по ходу партии.',
+    'Бросьте жребий — первым ходит тот, у кого меньше сумма на вытянутой кости (§2.5). Потом «Начать матч»: по 7 костей в руки, 14 — в закрытый базар (§2.3). Дальше подсказки поведут по ходу партии.',
   tutorRootHasDouble:
     'Кликните дубль в руке, затем пунктирный след в центре стола. Дубль обязан стать корнем — от него растёт дерево (§5.2, §6.2).',
   tutorRootNoDouble:
@@ -359,7 +359,7 @@ const en: Dict = {
   rootDeadTitle: 'Root dead end — no tiles on this side (§6.2)',
   fieldOpponent: 'Opponent',
   fieldTarget: 'Play to',
-  oppHuman: 'human',
+  oppHuman: 'human — same screen',
   oppBotEasy: 'bot — easy',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — strong',
@@ -367,7 +367,7 @@ const en: Dict = {
   botNameNormal: 'Normal bot',
   botNameStrong: 'Strong bot',
   tutorStart:
-    'Enter the names and draw lots — whoever draws the tile with the lower total moves first (§2.5). Then “Start match”: 7 tiles per hand, 14 go to the face-down boneyard (§2.3). From there the hints will guide you through the game.',
+    'Draw lots — whoever draws the tile with the lower total moves first (§2.5). Then “Start match”: 7 tiles per hand, 14 go to the face-down boneyard (§2.3). From there the hints will guide you through the game.',
   tutorRootHasDouble:
     'Click a double in your hand, then the dashed outline at the centre of the table. A double must become the root — the tree grows from it (§5.2, §6.2).',
   tutorRootNoDouble:
@@ -534,7 +534,7 @@ const es: Dict = {
   rootDeadTitle: 'Extremo ciego de la raíz: por este lado no se colocan fichas (§6.2)',
   fieldOpponent: 'Rival',
   fieldTarget: 'Jugar hasta',
-  oppHuman: 'humano',
+  oppHuman: 'humano — misma pantalla',
   oppBotEasy: 'bot — fácil',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — fuerte',
@@ -542,7 +542,7 @@ const es: Dict = {
   botNameNormal: 'Bot normal',
   botNameStrong: 'Bot fuerte',
   tutorStart:
-    'Escriba los nombres y echen a suertes: mueve primero quien saca la ficha de menor suma (§2.5). Luego «Empezar partida»: 7 fichas por mano y 14 al pozo boca abajo (§2.3). Después las pistas le guiarán durante el juego.',
+    'Echen a suertes: mueve primero quien saca la ficha de menor suma (§2.5). Luego «Empezar partida»: 7 fichas por mano y 14 al pozo boca abajo (§2.3). Después las pistas le guiarán durante el juego.',
   tutorRootHasDouble:
     'Haga clic en un doble de su mano y luego en la silueta punteada del centro de la mesa. El doble debe ser la raíz: de ella crece el árbol (§5.2, §6.2).',
   tutorRootNoDouble:
@@ -710,7 +710,7 @@ const de: Dict = {
   rootDeadTitle: 'Sackgasse der Wurzel — an dieser Seite wird nicht angelegt (§6.2)',
   fieldOpponent: 'Gegner',
   fieldTarget: 'Match bis',
-  oppHuman: 'Mensch',
+  oppHuman: 'Mensch — ein Bildschirm',
   oppBotEasy: 'Bot — leicht',
   oppBotNormal: 'Bot — normal',
   oppBotStrong: 'Bot — stark',
@@ -718,7 +718,7 @@ const de: Dict = {
   botNameNormal: 'Normaler Bot',
   botNameStrong: 'Starker Bot',
   tutorStart:
-    'Namen eingeben und losen — wer den Stein mit der kleineren Summe zieht, beginnt (§2.5). Dann „Match starten“: je 7 Steine auf die Hand, 14 in den verdeckten Talon (§2.3). Danach führen die Hinweise durch die Partie.',
+    'Losen — wer den Stein mit der kleineren Summe zieht, beginnt (§2.5). Dann „Match starten“: je 7 Steine auf die Hand, 14 in den verdeckten Talon (§2.3). Danach führen die Hinweise durch die Partie.',
   tutorRootHasDouble:
     'Klicken Sie einen Pasch in Ihrer Hand an, dann die gestrichelte Silhouette in der Tischmitte. Der Pasch muss die Wurzel werden — aus ihr wächst der Baum (§5.2, §6.2).',
   tutorRootNoDouble:
@@ -886,7 +886,7 @@ const pt: Dict = {
   rootDeadTitle: 'Beco da raiz — deste lado não se joga (§6.2)',
   fieldOpponent: 'Adversário',
   fieldTarget: 'Jogar até',
-  oppHuman: 'humano',
+  oppHuman: 'humano — mesma tela',
   oppBotEasy: 'bot — fácil',
   oppBotNormal: 'bot — normal',
   oppBotStrong: 'bot — forte',
@@ -894,7 +894,7 @@ const pt: Dict = {
   botNameNormal: 'Bot normal',
   botNameStrong: 'Bot forte',
   tutorStart:
-    'Digite os nomes e sorteiem — começa quem tira a peça de menor soma (§2.5). Depois «Começar a partida»: 7 peças por mão, 14 vão ao dorme fechado (§2.3). Daí em diante as dicas guiam você pelo jogo.',
+    'Sorteiem — começa quem tira a peça de menor soma (§2.5). Depois «Começar a partida»: 7 peças por mão, 14 vão ao dorme fechado (§2.3). Daí em diante as dicas guiam você pelo jogo.',
   tutorRootHasDouble:
     'Clique numa dupla da sua mão e depois na silhueta pontilhada no centro da mesa. A dupla deve ser a raiz — dela cresce a árvore (§5.2, §6.2).',
   tutorRootNoDouble:
@@ -1060,7 +1060,7 @@ const zh: Dict = {
   rootDeadTitle: '根牌死端——此侧不能接牌（§6.2）',
   fieldOpponent: '对手',
   fieldTarget: '比赛至（分）',
-  oppHuman: '真人',
+  oppHuman: '真人——同屏',
   oppBotEasy: '电脑——简单',
   oppBotNormal: '电脑——普通',
   oppBotStrong: '电脑——强',
@@ -1068,7 +1068,7 @@ const zh: Dict = {
   botNameNormal: '普通电脑',
   botNameStrong: '强力电脑',
   tutorStart:
-    '输入玩家名并抽签——摸到点数和较小的牌者先行（§2.5）。然后「开始比赛」：每人 7 张牌，14 张进入盖放的牌堆（§2.3）。之后提示会引导您完成对局。',
+    '抽签——摸到点数和较小的牌者先行（§2.5）。然后「开始比赛」：每人 7 张牌，14 张进入盖放的牌堆（§2.3）。之后提示会引导您完成对局。',
   tutorRootHasDouble:
     '点击手中的对子，再点击桌面中央的虚线轮廓。对子必须成为根牌——整棵树由它长出（§5.2、§6.2）。',
   tutorRootNoDouble:
@@ -1240,7 +1240,7 @@ const uk: Dict = {
   rootDeadTitle: 'Глухий кут кореня — з цього боку кістки не ставляться (§6.2)',
   fieldOpponent: 'Суперник',
   fieldTarget: 'Матч до',
-  oppHuman: 'людина',
+  oppHuman: 'людина — за одним екраном',
   oppBotEasy: 'бот — легкий',
   oppBotNormal: 'бот — звичайний',
   oppBotStrong: 'бот — сильний',
@@ -1248,7 +1248,7 @@ const uk: Dict = {
   botNameNormal: 'Звичайний бот',
   botNameStrong: 'Сильний бот',
   tutorStart:
-    'Введіть імена і киньте жереб — першим ходить той, у кого менша сума на витягнутій кістці (§2.5). Потім «Почати матч»: по 7 кісток у руки, 14 — у закритий базар (§2.3). Далі підказки вестимуть по ходу партії.',
+    'Киньте жереб — першим ходить той, у кого менша сума на витягнутій кістці (§2.5). Потім «Почати матч»: по 7 кісток у руки, 14 — у закритий базар (§2.3). Далі підказки вестимуть по ходу партії.',
   tutorRootHasDouble:
     'Клікніть дубль у руці, потім пунктирний слід у центрі столу. Дубль мусить стати коренем — з нього росте дерево (§5.2, §6.2).',
   tutorRootNoDouble:

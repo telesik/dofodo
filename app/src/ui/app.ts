@@ -323,7 +323,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   const TUTOR_ENOUGH = 3;
   // Помимо встроенных значений допускает id пунктов из opts.opponentOptions.
   type OpponentPref = 'human' | BotLevel | (string & {});
-  let opponentPref: OpponentPref = 'human';
+  // Первый запуск — против лёгкого бота (решение автора 2026-09-03):
+  // игру можно попробовать сразу, без второго человека; выбор запоминается.
+  let opponentPref: OpponentPref = 'easy';
   /** Цель матча (§10.5): к выбору предлагаются эти значения, канон — 100. */
   const MATCH_TARGETS: readonly number[] = [50, 100, 150, 200];
   let targetPref = 100;
@@ -1399,7 +1401,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
             : ''
         }
         <div class="field"><label for="inp-opp">${L().fieldOpponent}</label>
-          <select id="inp-opp" class="lang-select">
+          <select id="inp-opp" class="lang-select opp-select">
             ${(
               [
                 ['human', L().oppHuman],
