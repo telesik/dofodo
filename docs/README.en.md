@@ -1,12 +1,12 @@
 **English** · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Português (BR)](README.pt-BR.md) · [Українська](README.uk.md) · [中文](README.zh.md)
 
-# Bonesai
+# Dofodo
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
 
-The game is listed on BoardGameGeek: [Bonesai (2026)](https://boardgamegeek.com/boardgame/476432/bonesai).
+The game is listed on BoardGameGeek: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 
-Play in the browser: <https://telesik.github.io/bonesai/> — two players at one screen or against the bot.
+Play in the browser: <https://telesik.github.io/dofodo/> — two players at one screen or against the bot.
 
 A board game played with an **ordinary domino set** (28 tiles, double-six) — but under completely
 different rules. This is not conventional dominoes: matching halves into a single chain, the

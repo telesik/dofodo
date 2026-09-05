@@ -1,12 +1,12 @@
 [English](README.en.md) · [Русский](README.ru.md) · [Español](README.es.md) · **Deutsch** · [Português (BR)](README.pt-BR.md) · [Українська](README.uk.md) · [中文](README.zh.md)
 
-# Bonesai
+# Dofodo
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
 
-Das Spiel ist in der BoardGameGeek-Datenbank eingetragen: [Bonesai (2026)](https://boardgamegeek.com/boardgame/476432/bonesai).
+Das Spiel ist in der BoardGameGeek-Datenbank eingetragen: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 
-Im Browser spielen: <https://telesik.github.io/bonesai/> — zu zweit an einem Bildschirm oder gegen den Bot.
+Im Browser spielen: <https://telesik.github.io/dofodo/> — zu zweit an einem Bildschirm oder gegen den Bot.
 
 Ein Brettspiel mit einem **gewöhnlichen Dominosatz** (28 Steine, Doppelsechs) — aber mit völlig
 anderen Regeln. Kein klassisches Domino: Die Kette über gleiche Hälften, das traditionelle

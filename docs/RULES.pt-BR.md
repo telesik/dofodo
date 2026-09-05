@@ -1,10 +1,8 @@
-# Bonesai — regras do jogo
+# Dofodo — regras do jogo
 
 > **Status em 2026-08-01.** As regras do jogo a dois estão descritas por completo; não restam
 > questões em aberto. O jogo foi inventado na noite de 31 de julho de 2026, e naquela mesma noite
 > foram disputados muitos jogos a dois (§14). O que ficou adiado está no §12.
-> “Bonesai” é um nome provisório: no TMview há marcas próximas “Bonsai” na classe de jogos,
-> por isso o nome comercial ainda não foi escolhido.
 >
 > Esta é uma tradução. O texto russo de [RULES.ru.md](RULES.ru.md) é a versão primária;
 > em caso de divergência, prevalece o russo.

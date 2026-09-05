@@ -1,12 +1,12 @@
 [English](README.en.md) · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Português (BR)** · [Українська](README.uk.md) · [中文](README.zh.md)
 
-# Bonesai
+# Dofodo
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
 
-O jogo está registrado no BoardGameGeek: [Bonesai (2026)](https://boardgamegeek.com/boardgame/476432/bonesai).
+O jogo está registrado no BoardGameGeek: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 
-Jogar no navegador: <https://telesik.github.io/bonesai/> — a dois na mesma tela ou contra o bot.
+Jogar no navegador: <https://telesik.github.io/dofodo/> — a dois na mesma tela ou contra o bot.
 
 Um jogo de tabuleiro com um **dominó padrão comum** (28 peças, dupla seis) — mas com regras
 completamente diferentes. Não é o dominó clássico: a corrente de metades iguais, o tradicional

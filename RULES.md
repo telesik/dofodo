@@ -1,4 +1,4 @@
-# Bonesai — Rules · Правила
+# Dofodo — Rules · Правила
 
 The complete rules of the game, in seven languages.
 Полный свод правил игры на семи языках.
