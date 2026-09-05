@@ -1,4 +1,4 @@
-Bonesai — правила игры и документация
+Dofodo — правила игры и документация
 Copyright (c) 2026 Алексей Киселёв, Ольга Попова
                    (Alexey Kiselyov, Olga Popova)
 

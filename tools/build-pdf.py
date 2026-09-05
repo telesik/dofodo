@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Собирает PDF правил Bonesai из docs/RULES.ru.md и docs/RULES.en.md.
+"""Собирает PDF правил Dofodo из docs/RULES.ru.md и docs/RULES.en.md.
 
 Использование:
     python3 tools/build-pdf.py          — собрать обе версии
     python3 tools/build-pdf.py ru       — только русскую
     python3 tools/build-pdf.py en       — только английскую
 
-Результат: build/bonesai-rules.pdf и build/bonesai-rules-en.pdf
+Результат: build/dofodo-rules.pdf и build/dofodo-rules-en.pdf
 
 Требуется установленный Google Chrome (используется headless-печать).
 Markdown конвертируется встроенным конвертером — внешних зависимостей нет.
@@ -23,13 +23,13 @@ DOCS = ROOT / "docs"  # исходники правил и картинки ле
 OUT_DIR = ROOT / "build"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-TITLE = "Bonesai"
+TITLE = "Dofodo"
 LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/"
 
 # --- Метаданные публикации по языкам -----------------------------------------
 
 ABSTRACT_RU = """
-**Bonesai** — настольная игра для двоих на обычном наборе домино (28 костей, дубль-шесть).
+**Dofodo** — настольная игра для двоих на обычном наборе домино (28 костей, дубль-шесть).
 Дополнительных компонентов не требуется.
 
 Правила не имеют отношения к классическому домино. Партия начинается с дубля — **корня**, от
@@ -47,7 +47,7 @@ ABSTRACT_RU = """
 """
 
 ABSTRACT_EN = """
-**Bonesai** is a two-player board game played with an ordinary domino set (28 tiles, double-six).
+**Dofodo** is a two-player board game played with an ordinary domino set (28 tiles, double-six).
 Nothing else is needed.
 
 The rules have nothing to do with conventional dominoes. A round begins with a double — the
@@ -67,11 +67,11 @@ chess. The only source of chance is the face-down boneyard.
 APPENDIX_RU = """
 ## Приложение. Место в семействе домино-игр
 
-Bonesai принадлежит к семейству ветвящихся домино-игр — Pagat относит их к категории *tree games*.
-Ниже перечислены известные прецеденты для каждой механики и отличия Bonesai от них. Ни одна из
-перечисленных игр не совпадает с Bonesai целиком: оригинальна не отдельная механика, а их сочетание.
+Dofodo принадлежит к семейству ветвящихся домино-игр — Pagat относит их к категории *tree games*.
+Ниже перечислены известные прецеденты для каждой механики и отличия Dofodo от них. Ни одна из
+перечисленных игр не совпадает с Dofodo целиком: оригинальна не отдельная механика, а их сочетание.
 
-| Механика | Прецедент | Отличие Bonesai |
+| Механика | Прецедент | Отличие Dofodo |
 |---|---|---|
 | Ветвление, «деревья» | Chicken Foot, Cross Dominoes, Sebastopol, Double Nine Cross, Mexican Train с ветвлением | Там ветку создаёт **дубль** (spinner). Здесь наоборот: развилку делает **обычная кость** под 90°, а дубль ветку **закрывает** |
 | Закрытие ветки дублем | Русская «закрывашка»: выставивший дубль вправе перевернуть его лицом вниз, с этой стороны ставить нельзя | Здесь это не привилегия, а штатный способ постановки (поперёк), плюс ограничение свежего конца |
@@ -79,7 +79,7 @@ Bonesai принадлежит к семейству ветвящихся дом
 | Счёт до порога, проигрывает набравший | Русский «Козёл» — до 101 | Здесь до 100; очки получает тот, у кого сумма **больше**, а не победитель получает сумму соперника; при равных суммах платят оба |
 | Дорогой дубль 0:0 | Chicken Foot — кость 0-0 всегда стоит 50 очков | Здесь 25 и только когда она осталась **единственной** костью на руке |
 
-Своим в Bonesai выглядит следующее сочетание: развилку создаёт обычная кость, а дубль её закрывает
+Своим в Dofodo выглядит следующее сочетание: развилку создаёт обычная кость, а дубль её закрывает
 (в известных tree-играх ветвящим элементом служит как раз дубль); свежий конец защищён от
 немедленного закрытия и повторного поворота; и вытекающая отсюда борьба за длину партии между
 поворотом и закрытием.
@@ -93,14 +93,14 @@ Bonesai принадлежит к семейству ветвящихся дом
 """
 
 APPENDIX_EN = """
-## Appendix. Where Bonesai sits among domino games
+## Appendix. Where Dofodo sits among domino games
 
-Bonesai belongs to the family of branching domino games that Pagat classifies as *tree games*.
-Listed below are the known precedents for each mechanic and how Bonesai differs from them. None of
-these games matches Bonesai as a whole: what is original is not any single mechanic but the
+Dofodo belongs to the family of branching domino games that Pagat classifies as *tree games*.
+Listed below are the known precedents for each mechanic and how Dofodo differs from them. None of
+these games matches Dofodo as a whole: what is original is not any single mechanic but the
 combination.
 
-| Mechanic | Precedent | How Bonesai differs |
+| Mechanic | Precedent | How Dofodo differs |
 |---|---|---|
 | Branching, “trees” | Chicken Foot, Cross Dominoes, Sebastopol, Double Nine Cross, Mexican Train with branching | There it is the **double** (the spinner) that creates a branch. Here it is the other way round: an **ordinary tile** at 90° makes the fork, and the double **closes** the branch |
 | Closing a branch with a double | The Russian *zakryvashka*: whoever plays a double may turn it face down, after which nothing may be played on that side | Here this is not a privilege but a standard way of placing the tile (crosswise), plus the fresh-end restriction |
@@ -108,7 +108,7 @@ combination.
 | Playing to a threshold, whoever reaches it loses | The Russian *Kozyol* — played to 101 | Here it is 100; points go to the player with the **higher** total rather than the winner collecting the opponent’s; on equal totals both pay |
 | An expensive 0:0 | Chicken Foot — the 0-0 tile is always worth 50 points | Here it is 25, and only when it is the **last remaining** tile in hand |
 
-What looks original in Bonesai is this combination: an ordinary tile makes the fork while the double
+What looks original in Dofodo is this combination: an ordinary tile makes the fork while the double
 closes it (in the known tree games the branching element is the double); a fresh end is protected
 from being closed or forked again immediately; and the resulting fight over the length of the round,
 fork against closure.
@@ -124,7 +124,7 @@ fork against closure.
 LANGS = {
     "ru": {
         "src": "docs/RULES.ru.md",
-        "out": "bonesai-rules.pdf",
+        "out": "dofodo-rules.pdf",
         "html_lang": "ru",
         "subtitle": "Настольная игра на обычном наборе домино",
         "tagline": "Правила игры вдвоём",
@@ -133,7 +133,7 @@ LANGS = {
         "date": "1 августа 2026",
         "version": "Версия 1.0",
         "license_line": "Лицензия",
-        "heading": "Bonesai — правила игры вдвоём",
+        "heading": "Dofodo — правила игры вдвоём",
         "abstract_heading": "Аннотация",
         "abstract": ABSTRACT_RU,
         "appendix": APPENDIX_RU,
@@ -143,7 +143,7 @@ LANGS = {
     },
     "en": {
         "src": "docs/RULES.en.md",
-        "out": "bonesai-rules-en.pdf",
+        "out": "dofodo-rules-en.pdf",
         "html_lang": "en",
         "subtitle": "A board game played with an ordinary domino set",
         "tagline": "Two-player rules",
@@ -152,7 +152,7 @@ LANGS = {
         "date": "1 August 2026",
         "version": "Version 1.0",
         "license_line": "Licence",
-        "heading": "Bonesai — Two-player rules",
+        "heading": "Dofodo — Two-player rules",
         "abstract_heading": "Abstract",
         "abstract": ABSTRACT_EN,
         "appendix": APPENDIX_EN,

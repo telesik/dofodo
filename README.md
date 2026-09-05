@@ -1,13 +1,13 @@
-# Bonesai
+# Dofodo
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
 
 A board game played with an ordinary domino set — under completely different rules.
 Настольная игра на обычном наборе домино — с совершенно другими правилами.
 
-**Play in the browser / играть в браузере: <https://telesik.github.io/bonesai/>**
+**Play in the browser / играть в браузере: <https://telesik.github.io/dofodo/>**
 
-BoardGameGeek: [Bonesai (2026)](https://boardgamegeek.com/boardgame/476432/bonesai)
+BoardGameGeek: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432)
 
 ## Read in your language · Выберите язык
 

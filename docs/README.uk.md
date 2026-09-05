@@ -1,12 +1,12 @@
 [English](README.en.md) · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Português (BR)](README.pt-BR.md) · **Українська** · [中文](README.zh.md)
 
-# Bonesai
+# Dofodo
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
 
-Гра в базі BoardGameGeek: [Bonesai (2026)](https://boardgamegeek.com/boardgame/476432/bonesai).
+Гра в базі BoardGameGeek: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 
-Грати в браузері: <https://telesik.github.io/bonesai/> — удвох за одним екраном або проти бота.
+Грати в браузері: <https://telesik.github.io/dofodo/> — удвох за одним екраном або проти бота.
 
 Настільна гра на **звичайному наборі доміно** (28 кісток, дубль-шість) — але із зовсім іншими
 правилами. Не класичне доміно: ланцюжок за збіжними половинками, «козел» і підрахунок за

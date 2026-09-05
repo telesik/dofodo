@@ -51,7 +51,7 @@ const RULES_DOC_LANG: Record<Locale, string> = {
 };
 
 function rulesDocUrl(): string {
-  return `https://github.com/telesik/bonesai/blob/main/docs/RULES.${RULES_DOC_LANG[getLocale()]}.md`;
+  return `https://github.com/telesik/dofodo/blob/main/docs/RULES.${RULES_DOC_LANG[getLocale()]}.md`;
 }
 
 interface PileSprite {
@@ -1383,7 +1383,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           ({ code, label }) =>
             `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
         ).join('')}</select>
-        <h1><span class="gold">B</span>onesai</h1>
+        <h1><span class="gold">D</span>ofodo</h1>
         <p class="sub">${L().tagline}</p>
         ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
         <div class="field"><label for="inp-n0">${
