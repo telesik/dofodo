@@ -180,6 +180,14 @@ export interface AppOptions {
   onMatchOver?: (match: MatchState) => void;
 }
 
+/** Ожидание договора о следующей партии в матче с внешним игроком:
+ *  waiting — наш «Следующая партия» уже нажат, ждём соперника;
+ *  peerReady — соперник уже нажал. Ядро только рисует состояние. */
+export interface NextRoundWait {
+  waiting: boolean;
+  peerReady: boolean;
+}
+
 /** Управление приложением снаружи: вход внешних ходов и чтение состояния. */
 export interface AppHandle {
   /** Применить ход (например, пришедший от удалённого игрока).
@@ -201,6 +209,10 @@ export interface AppHandle {
   }): void;
   /** Следующая партия с заданным seed (для синхронного перехода сторон). */
   nextRoundWith(seed: number): void;
+  /** Состояние договора о следующей партии — кнопка и подпись на экране
+   *  итога партии (идея 0030 штаба). null — обычный вид. Сбрасывается
+   *  ядром само при переходе к партии, сбросе матча и снятии внешнего места. */
+  setNextRoundWait(state: NextRoundWait | null): void;
   render(): void;
 }
 
@@ -578,6 +590,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   /** Место, управляемое извне (setRemoteSeat): его ходы приходят через
    *  handle.dispatch, локальный ввод в его ход заблокирован. */
   let remoteSeat: 0 | 1 | null = null;
+  /** Договор о следующей партии с внешним игроком (см. AppHandle). */
+  let nextRoundWait: NextRoundWait | null = null;
 
   /**
    * Чья рука внизу экрана. В игре на двоих за одним экраном это всегда
@@ -1539,6 +1553,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (lotFirst === null) return;
     const bot = botLevel ? { player: 1 as const, level: botLevel } : null;
     remoteSeat = null;
+    nextRoundWait = null;
     opts.onMatchReset?.();
     match = startMatch({ names: [n0, n1], first: lotFirst, variant, bot });
     // Новый матч — новый отсчёт времени хода, каким бы ни был сид (0003).
@@ -1638,10 +1653,21 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } else {
       const nextFirst = lastRound.winner ?? ((1 - lastRound.first) as 0 | 1);
       const why = lastRound.winner !== null ? L().whyWinner : L().whySwap;
+      // Матч с внешним игроком (идея 0030 штаба): состояние договора —
+      // на самой кнопке. Нажали мы — кнопка гаснет: «Ждём подтверждения
+      // от соперника»; нажал он первым — кнопка активна и зовёт:
+      // «Соперник готов и ждёт вас». Без имён — ни рода, ни падежа.
+      const wait = remoteSeat === null ? null : nextRoundWait;
+      const nextBtn = wait?.waiting
+        ? `<button class="btn waiting" data-action="next-round" disabled>${L().btnWaiting}</button>`
+        : wait?.peerReady
+          ? `<button class="btn peer-ready" data-action="next-round">${L().btnPeerReady}</button>`
+          : `<button class="btn" data-action="next-round">${L().btnNextRound}</button>`;
+      const notes = `<span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>`;
       footer = `
         <div class="btn-row">
-          <button class="btn" data-action="next-round">${L().btnNextRound}</button>
-          <span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>
+          ${nextBtn}
+          ${notes}
         </div>${reviewRow}
         <div class="btn-row">
           <button class="btn ghost-btn" data-action="abort-match">${L().btnAbortMatch}</button>
@@ -1924,6 +1950,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         replay = null;
         pending = null;
         remoteSeat = null;
+        nextRoundWait = null;
         store.remove(LS_KEY);
         opts.onMatchReset?.();
         renderAll();
@@ -2210,6 +2237,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     replay = null;
     pending = null;
     remoteSeat = null;
+    nextRoundWait = null;
     store.remove(LS_KEY);
     opts.onMatchReset?.();
     renderAll();
@@ -2286,6 +2314,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     nextRoundWith(seed) {
       if (!match || match.outcome) return;
       match = nextRound(match, seed);
+      nextRoundWait = null;
       turnKey = '';
       selected = null;
       pending = null;
@@ -2296,6 +2325,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       renderAll();
       playShuffle();
       toast(L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)));
+    },
+    setNextRoundWait(state) {
+      nextRoundWait = state;
+      renderAll();
     },
     render: renderAll,
   };
