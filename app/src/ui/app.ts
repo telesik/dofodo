@@ -29,6 +29,7 @@ import {
 } from '../engine';
 import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
+import { nextRoundButton } from './next-round-button';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
 import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
 
@@ -1657,12 +1658,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       // на самой кнопке. Нажали мы — кнопка гаснет: «Ждём подтверждения
       // от соперника»; нажал он первым — кнопка активна и зовёт:
       // «Соперник готов и ждёт вас». Без имён — ни рода, ни падежа.
-      const wait = remoteSeat === null ? null : nextRoundWait;
-      const nextBtn = wait?.waiting
-        ? `<button class="btn waiting" data-action="next-round" disabled>${L().btnWaiting}</button>`
-        : wait?.peerReady
-          ? `<button class="btn peer-ready" data-action="next-round">${L().btnPeerReady}</button>`
-          : `<button class="btn" data-action="next-round">${L().btnNextRound}</button>`;
+      const nextBtn = nextRoundButton(nextRoundWait, remoteSeat !== null, L());
       const notes = `<span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>`;
       footer = `
         <div class="btn-row">
