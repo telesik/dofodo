@@ -30,6 +30,7 @@ import {
 import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
 import { nextRoundButton } from './next-round-button';
+import { openHowTo } from './howto';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
 import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
 
@@ -1384,9 +1385,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // в строке версии — осознанный, оба перехода ведут на RULES.xx.md).
     // Остальное — только переданное входом приложения: веб задаёт донат
     // и App Store, мобильные сборки не задают ничего.
-    const extLinks: string[] = [
-      `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>`,
-    ];
+    // С идеи 0032 штаба первой идут слайды «Как играть» (полный текст —
+    // с последнего слайда и из строки версии); переход на RULES.xx.md
+    // с карточки убран по решению автора 06.09.2026.
+    const extLinks: string[] = [`<a class="howto-link" data-action="howto">${L().howtoLink}</a>`];
     if (opts.supportUrl)
       extLinks.push(
         `<a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`,
@@ -1950,6 +1952,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         store.remove(LS_KEY);
         opts.onMatchReset?.();
         renderAll();
+      } else if (action === 'howto') {
+        openHowTo({ rulesUrl: rulesDocUrl() });
       } else if (action === 'settings-open') {
         openSettings(true);
       } else if (action === 'tutor-off' || action === 'tutor-keep') {
