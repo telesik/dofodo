@@ -1,16 +1,19 @@
 # Dofodo — Spielregeln
 
-> **Stand 2026-08-01.** Die Regeln für das Spiel zu zweit sind vollständig beschrieben, offene
+> **Stand 2026-09-06.** Die Regeln für das Spiel zu zweit sind vollständig beschrieben, offene
 > Fragen gibt es nicht. Das Spiel wurde am Abend des 31. Juli 2026 erfunden; noch am selben Abend
 > wurden viele Partien zu zweit gespielt (§14). Zurückgestelltes — §12.
 >
 > Dies ist eine Übersetzung. Der russische Text in [RULES.ru.md](RULES.ru.md) ist die Primärfassung;
 > bei Abweichungen gilt der russische.
 >
-> Veröffentlichte Version 1.0 mit permanentem Identifikator:
-> [10.5281/zenodo.21745035](https://doi.org/10.5281/zenodo.21745035). Bitte auf diese verweisen.
-> Der Text im Repository kann ihr vorauslaufen — dann geht er in die nächste Version des
-> Eintrags ein.
+> **Ausgabe 1.1** (September 2026): Das Spiel heißt jetzt Dofodo (bis 05.09.2026 — Bonesai); in §6.3
+> ist die Anordnung des gedrehten Steins präzisiert — der **erzwungene Knick** (§1) wird eingeführt,
+> ein praktischer Kniff für das Spiel mit echten Steinen auf dem Tisch. Die Regeln selbst sind
+> unverändert. Ausgabe 1.0 erschien am 1. August 2026.
+>
+> Veröffentlichte Version 1.1 mit permanentem Identifikator:
+> [10.5281/zenodo.22512610](https://doi.org/10.5281/zenodo.22512610). Bitte auf diese verweisen.
 
 ## 1. Terminologie
 
@@ -31,6 +34,7 @@
 | **Totes Ende** | Ein Ende, an das kein Stein mehr angelegt werden kann: Alle 7 Steine mit dieser Zahl liegen bereits auf dem Tisch. |
 | **Gerade** | Eine Art, den Stein zu legen: Fortsetzung ohne Verzweigung. |
 | **Als Abzweig** | Eine Art, den Stein zu legen: Es entsteht eine Verzweigung. |
+| **Erzwungener Knick** | Der Stein wird von der Seite, gleich seitlich, an das Ende angelegt. Nach den Regeln ist das „gerade“: Es entsteht keine Verzweigung, der Zweig ändert nur seine Richtung auf dem Tisch (§6.3). (Ein rein praktischer Kniff für einen engen Tisch, auf dem sich ein Zweig nirgendwohin verlängern lässt; die Regeln selbst berührt er nicht.) |
 | **Quer** | Die Art, einen Pasch zu legen, die das Ende schließt. |
 | **Blockade** | Der Zustand, in dem niemand einen Stein legen kann (§9.1). Im russischen Original *ryba*, „Fisch“, genannt. |
 | **Domino** | Ein Spieler hat den letzten Stein von der Hand gelegt (§9.2). |
@@ -161,20 +165,33 @@ nachher: … ── [3|5] ──→ gerades Ende „5“
 *Der Abzweig verbraucht das alte Ende nicht, sondern **fügt** ein neues **hinzu**: Die Zahl der
 offenen Enden wächst um 1.*
 
-**Wie der abgezweigte Stein auf den Tisch gelegt wird.** Physisch lässt er sich auf zwei Arten
-andocken: so, dass die angelegte Hälfte in Richtung des geraden Zweiges verläuft, oder gleich
-seitlich versetzt. Auf die Regeln hat das keinen Einfluss — in beiden Fällen entstehen dieselben
-zwei Enden, das gerade und das Abzweig-Ende. Wählen Sie nach dem Platz auf dem Tisch, damit die
-Zweige einander nicht in die Quere kommen.
+**Wie der Stein auf den Tisch kommt: Verzweigung oder erzwungener Knick.** Physisch lässt sich ein
+um 90° gedrehter Stein auf zwei Arten an ein Ende andocken, und seit Ausgabe 1.1 bedeuten sie
+Verschiedenes.
+
+- **Art 1 — bündig mit der Reihe: eine echte Verzweigung.** Die angelegte Hälfte liegt in Richtung
+  des geraden Zweiges, die freie Hälfte ragt seitlich heraus. Das ist der Zug „als Abzweig“: Es gibt
+  nun zwei Enden — das gerade und das Abzweig-Ende —, beide lebendig. So legt auch die App den Stein.
+- **Art 2 — gleich seitlich: ein erzwungener Knick.** Der Stein wird von der Seite an das
+  Ende angelegt; seine angelegte Hälfte setzt die Reihe nicht fort, sondern steht neben ihr. Nach den
+  Regeln ist das ein Zug **„gerade“**: Das alte Ende ist geschlossen, das neue ist die freie Hälfte
+  des Steins, die Zahl der offenen Enden ändert sich nicht. Der Zweig ändert nur seine Richtung auf
+  dem Tisch. Es gelten alle Regeln des geraden Zuges: Der erzwungene Knick ist auch an einem frischen
+  Ende erlaubt (§6.4), und der nächste Stein an diesem Ende hat wieder die freie Wahl — gerade, als
+  Abzweig oder ein Pasch quer.
+
+Wozu das gut ist. Vor allem für den Platz: Auf einem kleinen Tisch lässt sich ein Zweig oft
+nirgendwohin verlängern, und ohne den erzwungenen Knick müsste man ihn ganz neu legen. Zweitens für
+die Lesbarkeit: Ein gleich seitlich angelegter Stein wirkt auf das Auge wie eine Biegung der Reihe,
+nicht wie eine Verzweigung; die Vereinbarung hält fest, was man ohnehin sieht.
 
 ![Der abgezweigte Stein 6:1, bündig mit der Reihe angelegt](img/turn-inline.jpg)
 
-*Möglichkeit 1: Der Stein 6:1 ist bündig mit der Reihe angelegt — seine Hälfte „6“ verläuft in
-Richtung des geraden Zweiges.*
+*Art 1: Der Stein 6:1 ist bündig mit der Reihe angelegt — seine Hälfte „6“ verläuft in Richtung des geraden Zweiges. Eine Verzweigung: das gerade Ende „6“ rechts und das Abzweig-Ende „1“ unten.*
 
-![Derselbe Stein 6:1, seitlich angelegt und nach unten versetzt](img/turn-sideways.jpg)
+![Derselbe Stein 6:1, gleich seitlich angelegt](img/turn-sideways.jpg)
 
-*Möglichkeit 2: Derselbe Stein 6:1 ist nach unten versetzt und gleich seitlich angelegt. Der Zug ist derselbe und die Enden sind dieselben — nur die Anordnung auf dem Tisch unterscheidet sich.*
+*Art 2: Derselbe Stein 6:1 ist gleich seitlich angelegt — ein erzwungener Knick. Nach den Regeln ist das dasselbe, als würde 6:1 gerade gelegt: Das Ende „6“ ist geschlossen, der Zweig geht mit dem Ende „1“ nach unten weiter.*
 
 Auf beiden Aufnahmen ist oben auch ein **geschlossenes Ende** zu sehen: Der senkrechte Zweig läuft
 gegen den Pasch 1:1, der quer zu ihm gelegt ist (§7.1).

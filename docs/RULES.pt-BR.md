@@ -1,16 +1,19 @@
 # Dofodo — regras do jogo
 
-> **Status em 2026-08-01.** As regras do jogo a dois estão descritas por completo; não restam
+> **Status em 2026-09-06.** As regras do jogo a dois estão descritas por completo; não restam
 > questões em aberto. O jogo foi inventado na noite de 31 de julho de 2026, e naquela mesma noite
 > foram disputados muitos jogos a dois (§14). O que ficou adiado está no §12.
 >
 > Esta é uma tradução. O texto russo de [RULES.ru.md](RULES.ru.md) é a versão primária;
 > em caso de divergência, prevalece o russo.
 >
-> Versão publicada 1.0 com identificador permanente:
-> [10.5281/zenodo.21745035](https://doi.org/10.5281/zenodo.21745035). Cite essa versão.
-> O texto do repositório pode estar mais adiantado — nesse caso, ele entrará na próxima versão
-> do registro.
+> **Edição 1.1** (setembro de 2026): o jogo agora se chama Dofodo (Bonesai até 05.09.2026); no §6.3
+> foi precisada a disposição da peça girada — introduz-se a **curva forçada** (§1), um recurso
+> prático para jogar com peças de verdade na mesa. As regras em si não mudaram.
+> A edição 1.0 foi publicada em 1º de agosto de 2026.
+>
+> Versão publicada 1.1 com identificador permanente:
+> [10.5281/zenodo.22512610](https://doi.org/10.5281/zenodo.22512610). Cite essa versão.
 
 ## 1. Terminologia
 
@@ -31,6 +34,7 @@
 | **Ponta morta** | Ponta à qual nenhuma peça pode ser encaixada: as 7 peças com esse número já estão na mesa. |
 | **Reto** | Modo de colocar uma peça: continuação sem ramificar. |
 | **Em curva** | Modo de colocar uma peça: formando uma bifurcação. |
+| **Curva forçada** | A peça é encaixada na ponta pela lateral, já de lado. Pelas regras é “reto”: não há bifurcação, o ramo apenas muda de direção na mesa (§6.3). (Recurso puramente prático para uma mesa apertada, onde o ramo não tem mais para onde crescer; não afeta as regras em si.) |
 | **Atravessado** | Modo de colocar uma dupla que fecha a ponta. |
 | **Tranca** | Estado em que ninguém consegue colocar uma peça (§9.1). |
 | **Batida** | Um jogador colocou a última peça da mão (§9.2). |
@@ -160,18 +164,31 @@ depois:   … ── [3|5] ──→ ponta reta “5”
 *A curva não consome a ponta velha — ela **acrescenta** uma nova: o número de pontas abertas
 cresce em 1.*
 
-**Como pôr a peça girada na mesa.** Fisicamente ela pode ser encaixada de duas maneiras: de modo
-que a metade encaixada siga a direção do ramo reto, ou já desviada para o lado. Isso não afeta as
-regras — nos dois casos resultam as mesmas duas pontas, a reta e a da curva. Escolha conforme o
-espaço na mesa, para que os ramos não atrapalhem uns aos outros.
+**Como pôr a peça na mesa: bifurcação ou curva forçada.** Fisicamente, uma peça girada 90° pode ser
+encaixada numa ponta de duas maneiras, e desde a edição 1.1 elas significam coisas diferentes.
+
+- **Modo 1 — rente à fileira: uma bifurcação de verdade.** A metade encaixada segue a direção do
+  ramo reto e a metade livre se projeta para o lado. Esta é a jogada “em curva”: agora há duas
+  pontas — a reta e a da curva —, ambas vivas. É assim que o aplicativo também coloca a peça.
+- **Modo 2 — já de lado: uma curva forçada.** A peça é encaixada na ponta pela lateral;
+  sua metade encaixada não continua a fileira, e sim fica ao lado dela. Pelas regras é uma jogada
+  **“reto”**: a ponta velha fica fechada, a nova é a metade livre da peça e o número de pontas
+  abertas não muda. O ramo apenas muda de direção na mesa. Valem todas as regras da jogada “reto”:
+  a curva forçada é permitida até numa ponta fresca (§6.4), e a próxima peça nessa ponta volta a
+  ser livre para ir reto, em curva ou como dupla atravessada.
+
+Para que serve. O principal é o espaço: numa mesa pequena muitas vezes não há para onde prolongar
+o ramo, e sem a curva forçada seria preciso reorganizá-lo inteiro. O segundo é a legibilidade: uma
+peça encaixada já de lado é percebida pelo olho como uma curva da fileira, não como uma bifurcação;
+a convenção fixa o que o olho já vê.
 
 ![A peça girada 6:1 encaixada rente à fileira](img/turn-inline.jpg)
 
-*Modo 1: a peça 6:1 encaixada rente à fileira — sua metade “6” segue a direção do ramo reto.*
+*Modo 1: a peça 6:1 encaixada rente à fileira — sua metade “6” segue a direção do ramo reto. Uma bifurcação: a ponta reta “6” à direita e a ponta da curva “1” embaixo.*
 
-![A mesma peça 6:1 encaixada de lado, deslocada para baixo](img/turn-sideways.jpg)
+![A mesma peça 6:1 encaixada já de lado](img/turn-sideways.jpg)
 
-*Modo 2: a mesma peça 6:1 deslocada para baixo e encaixada já de lado. A jogada é a mesma e as pontas são as mesmas — só muda a disposição na mesa.*
+*Modo 2: a mesma peça 6:1 encaixada já de lado — uma curva forçada. Pelas regras é o mesmo que colocar a 6:1 reto: a ponta “6” fica fechada e o ramo continua para baixo com a ponta “1”.*
 
 Nas duas fotos vê-se, no alto, também uma **ponta fechada**: o ramo vertical esbarra na dupla 1:1
 colocada atravessada no seu caminho (§7.1).

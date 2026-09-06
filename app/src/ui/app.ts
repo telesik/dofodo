@@ -35,9 +35,9 @@ import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
 const LS_KEY = 'bonesai-match-v1';
 const LS_UI_KEY = 'bonesai-ui-v1';
 
-/** Версия правил, которую реализует прототип (опубликована на Zenodo,
- *  DOI 10.5281/zenodo.21745035). */
-const RULES_VERSION = '1.0';
+/** Версия правил, которую реализует прототип (редакция 1.1 опубликована на Zenodo,
+ *  DOI 10.5281/zenodo.22512610; редакция 1.0 — 10.5281/zenodo.21745035). */
+const RULES_VERSION = '1.1';
 
 /** Полный текст правил по языку интерфейса. */
 const RULES_DOC_LANG: Record<Locale, string> = {

@@ -2,7 +2,7 @@
 
 # Dofodo
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22512610.svg)](https://doi.org/10.5281/zenodo.22512610)
 
 Das Spiel ist in der BoardGameGeek-Datenbank eingetragen: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 

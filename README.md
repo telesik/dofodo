@@ -1,6 +1,6 @@
 # Dofodo
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22512610.svg)](https://doi.org/10.5281/zenodo.22512610)
 
 A board game played with an ordinary domino set — under completely different rules.
 Настольная игра на обычном наборе домино — с совершенно другими правилами.
