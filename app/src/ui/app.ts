@@ -172,6 +172,12 @@ export interface AppOptions {
   /** Пользователь сбросил матч (новый матч поверх текущего): надстройке
    *  пора закрыть свои ресурсы (например, сетевую сессию). */
   onMatchReset?: () => void;
+  /** Матч завершён: исход определён завершающим ходом партии (§10.5).
+   *  Вызывается один раз на матч, после onMove того же хода; при
+   *  восстановлении уже завершённого матча из хранилища не вызывается.
+   *  Платформа вправе отметить событие (например, локальный счётчик
+   *  сыгранных матчей) — ядро ничего не ждёт в ответ. */
+  onMatchOver?: (match: MatchState) => void;
 }
 
 /** Управление приложением снаружи: вход внешних ходов и чтение состояния. */
@@ -746,6 +752,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (placedSeq !== null && flyFrom) flyingSeq = placedSeq;
     persist();
     opts.onMove?.(move, round);
+    if (round.phase === 'over' && match.outcome) opts.onMatchOver?.(match);
     renderAll();
     if (placedSeq !== null) {
       if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.values, flyFrom);
