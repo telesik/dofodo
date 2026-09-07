@@ -326,7 +326,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   let markOwners = false;
   let autoFitOn = true;
   let soundOn = true;
-  let handsVertical = true;
   /**
    * Зеркальный стол: корень справа, дерево растёт влево. Нужно тем, кто привык
    * сидеть напротив — у соперника через стол всё выглядело именно так, и после
@@ -362,7 +361,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       autoFit?: boolean;
       sound?: boolean;
       locale?: string;
-      handsVertical?: boolean;
       mirror?: boolean;
       confirm?: boolean;
       tutor?: boolean;
@@ -379,7 +377,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (typeof prefs.p2Name === 'string') savedP2 = prefs.p2Name.slice(0, 16);
     autoFitOn = prefs.autoFit !== false;
     soundOn = prefs.sound !== false;
-    handsVertical = prefs.handsVertical !== false;
+    // prefs.handsVertical старых сборок (до 07.09.2026) просто игнорируется:
+    // рука всегда вертикальна (идея 0035).
     mirrorBoard = !!prefs.mirror;
     confirmOn = !!prefs.confirm;
     // «Включено, пока явно не выключили»: prefs.tutor пишется при каждом
@@ -425,7 +424,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           autoFit: autoFitOn,
           sound: soundOn,
           locale: getLocale(),
-          handsVertical,
           mirror: mirrorBoard,
           confirm: confirmOn,
           tutor: tutorOn,
@@ -671,7 +669,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     clone.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
     document.body.appendChild(clone);
     const start = { x: from.left + from.width / 2, y: from.top + from.height / 2 };
-    const startAngle = handsVertical ? 90 : 0;
+    const startAngle = 90; // кость в руке стоит вертикально
     const t0 = performance.now();
     const dur = 340;
     let raf = 0;
@@ -1008,7 +1006,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         // ней всё равно невозможны, а инспектор браузера не должен подсматривать.
         const attrs = hidden || view ? '' : ` data-player="${player}" data-tile="${t}"`;
         return `<div class="${cls}"${attrs}>
-          ${tileSvgElement(inner, 86, { vertical: handsVertical })}
+          ${tileSvgElement(inner, 86, { vertical: true })}
         </div>`;
       })
       .join('');
@@ -2151,7 +2149,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ${row('sound', soundOn, L().tipSound)}
         ${row('tutor', tutorOn, L().tipTutor)}
         ${row('confirm', confirmOn, L().tipConfirm)}
-        ${row('hands', handsVertical, L().tipOrient)}
         ${row('mirror', mirrorBoard, L().tipMirror)}
         ${extraToggles
           .map((t) => row(`x:${t.id}`, toggleState.get(t.id) === true, esc(t.label())))
@@ -2208,8 +2205,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } else if (id === 'confirm') {
       confirmOn = on;
       if (!on) pending = null;
-    } else if (id === 'hands') {
-      handsVertical = on;
     } else if (id === 'mirror') {
       applyMirror(on);
     }

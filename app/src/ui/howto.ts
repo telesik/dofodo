@@ -90,7 +90,8 @@ export function howtoSlides(): HowtoSlide[] {
      ${closedMark(x0 + TILE_L + 4 + TILE_W + 28, 240)}
      ${label(x0 + TILE_L + 4 + TILE_W + 28, 280, t.howtoClosed, { dim: true })}`,
   );
-  // Открытые руки: две руки лицом вверх, базар — рубашками.
+  // Открытые руки: две руки лицом вверх, базар — рубашками. Соперник сверху,
+  // свои кости снизу — как за столом в самой игре (замечание автора 07.09.2026).
   const sc = 0.72;
   const step = TILE_L * sc + 6;
   const hand = (vals: [number, number][], y: number): string =>
@@ -98,9 +99,9 @@ export function howtoSlides(): HowtoSlide[] {
   const s4 = scene(
     380,
     250,
-    `${label(12, 22, t.howtoYou, { anchor: 'start' })}
+    `${label(12, 22, t.howtoOpponent, { anchor: 'start' })}
      ${hand([[6, 2], [3, 3], [1, 5]], 56)}
-     ${label(12, 122, t.howtoOpponent, { anchor: 'start' })}
+     ${label(12, 122, t.howtoYou, { anchor: 'start' })}
      ${hand([[4, 0], [2, 2], [6, 5]], 156)}
      ${back(318, 92, sc)} ${back(324, 108, sc)} ${back(330, 124, sc)}
      ${label(324, 176, t.howtoBoneyard, { dim: true })}`,
