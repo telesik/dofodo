@@ -2,17 +2,17 @@
 // Рука всегда вертикальна (идея 0035 штаба): переключателя «кости в руке
 // горизонтально» в настройках больше нет, старое сохранённое значение
 // handsVertical:false игнорируется без падений и не переписывается обратно.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import indexHtml from '../index.html?raw';
 import { initApp } from '../src/ui/app';
 import { L, LOCALES, setLocale } from '../src/ui/i18n';
 
 const LS_UI_KEY = 'bonesai-ui-v1';
 
+// index.html читается через Vite (?raw), а не node:fs: tsc в CI проверяет
+// и тесты, а типов Node в зависимостях веба нет (урок деплоя 07.09.2026).
 function mountIndexHtml(): void {
-  const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-  const body = /<body>([\s\S]*)<\/body>/.exec(html)?.[1] ?? '';
+  const body = /<body>([\s\S]*)<\/body>/.exec(indexHtml)?.[1] ?? '';
   document.body.innerHTML = body.replace(/<script[\s\S]*?<\/script>/g, '');
 }
 
