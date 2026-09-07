@@ -30,9 +30,10 @@ import {
 import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
 import { nextRoundButton } from './next-round-button';
-import { openHowTo } from './howto';
+import { openHowTo, openHowToAsk } from './howto';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
-import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
+import { ensureTileDefs, tileBack, tileFace, tileSvgElement } from './tile-svg';
+import { logoSvg } from './logo';
 
 const LS_KEY = 'bonesai-match-v1';
 const LS_UI_KEY = 'bonesai-ui-v1';
@@ -238,11 +239,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   /** Состояния переключателей платформы; ключ — id переключателя. */
   const toggleState = new Map<string, boolean>();
   // Общие SVG-определения (градиенты, тени) — один раз на документ:
-  // на них ссылаются и стол, и кости в руках, и базар.
-  const defsHost = document.createElement('div');
-  defsHost.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-  defsHost.innerHTML = `<svg width="0" height="0"><defs>${tileDefs()}</defs></svg>`;
-  document.body.prepend(defsHost);
+  // на них ссылаются и стол, и кости в руках, и базар, и слайды «Как играть».
+  ensureTileDefs();
+  // Логотип перед именем игры в шапке стола (решение автора 07.09.2026).
+  const brand = document.querySelector<HTMLElement>('#topbar .brand');
+  if (brand && !brand.querySelector('.logo')) brand.insertAdjacentHTML('afterbegin', logoSvg(26, 'brand-logo'));
 
   // Бейдж версии в правом нижнем углу: версия приложения, версия правил
   // (ссылка на опубликованную запись) и коммит сборки — для разбора багов.
@@ -355,8 +356,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // Имена игроков переживают перезапуск (пустая строка = не задано).
   let savedP1 = '';
   let savedP2 = '';
+  /**
+   * «Как играть» один раз после установки (идея 0038 штаба): показано ли
+   * обучение. Первый запуск — когда сохранённых настроек интерфейса нет
+   * вовсе; у игравших раньше настройки есть, им обучение не навязываем,
+   * даже если ключа howtoShown в них ещё нет (обновление с прежней версии).
+   */
+  let howtoShown = true;
   try {
-    const prefs = JSON.parse(store.get(LS_UI_KEY) ?? '{}') as {
+    const rawPrefs = store.get(LS_UI_KEY);
+    const prefs = JSON.parse(rawPrefs ?? '{}') as {
+      howtoShown?: boolean;
       markOwners?: boolean;
       autoFit?: boolean;
       sound?: boolean;
@@ -387,6 +397,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     tutorOn = prefs.tutor !== false;
     roundsDone = Math.max(0, Math.trunc(prefs.roundsDone ?? 0));
     tutorAsked = !!prefs.tutorAsked;
+    howtoShown = rawPrefs === null ? false : prefs.howtoShown !== false;
     const validOpp = [
       'human',
       'easy',
@@ -415,6 +426,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     t.onChange(toggleState.get(t.id) === true);
   }
 
+  function markHowtoShown(): void {
+    if (howtoShown) return;
+    howtoShown = true;
+    persistUi();
+  }
+
   function persistUi(): void {
     try {
       store.set(
@@ -434,6 +451,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           toggles: Object.fromEntries(toggleState),
           roundsDone,
           tutorAsked,
+          howtoShown,
         }),
       );
     } catch {
@@ -1149,9 +1167,20 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       elTutorBar.hidden = true;
       return;
     }
-    elTutorBar.textContent = tutorText(round, legal);
+    // Текст подсказки + галочка «показывать правила игры»: снять её — то же,
+    // что выключить режим обучения в настройках (решение автора 07.09.2026).
+    elTutorBar.innerHTML = `<div class="tutor-text">${esc(tutorText(round, legal))}</div>
+      <label class="tutor-toggle"><input type="checkbox" checked data-tutor-toggle>${esc(L().tutorShowRules)}</label>`;
     elTutorBar.hidden = false;
   }
+  elTutorBar.addEventListener('change', (ev) => {
+    const cb = ev.target as HTMLInputElement;
+    if (!cb.matches('[data-tutor-toggle]') || cb.checked) return;
+    tutorOn = false;
+    tutorAsked = true; // явный выбор игрока — вопрос «выключить подсказки?» больше не нужен
+    persistUi();
+    renderAll();
+  });
 
   function renderConfirmBar(round: GameState, legal: readonly Move[]): void {
     // Самолечение: черновик обязан оставаться легальным ходом (смена партии,
@@ -1409,7 +1438,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           ({ code, label }) =>
             `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
         ).join('')}</select>
-        <h1><span class="gold">D</span>ofodo</h1>
+        <h1 class="title-with-logo">${logoSvg(34, 'title-logo')}<span><span class="gold">D</span>ofodo</span></h1>
         <p class="sub">${L().tagline}</p>
         ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
         <div class="field"><label for="inp-n0">${
@@ -1955,7 +1984,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         opts.onMatchReset?.();
         renderAll();
       } else if (action === 'howto') {
-        openHowTo({ rulesUrl: rulesDocUrl() });
+        openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown });
       } else if (action === 'settings-open') {
         openSettings(true);
       } else if (action === 'tutor-off' || action === 'tutor-keep') {
@@ -2273,6 +2302,20 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       /* ignore */
     }
     renderAll();
+  }
+
+  // Первый запуск после установки: поверх стартовой карточки — вопрос
+  // «Показать, как играть?», слайды только по согласию (идея 0038 штаба,
+  // уточнение автора 07.09.2026). Любой ответ ставит флаг; если приложение
+  // убьют с открытым вопросом — спросим снова.
+  if (!howtoShown && !match) {
+    openHowToAsk({
+      onShow: () => {
+        markHowtoShown();
+        openHowTo({ rulesUrl: rulesDocUrl() });
+      },
+      onLater: markHowtoShown,
+    });
   }
 
   return {

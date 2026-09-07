@@ -26,6 +26,10 @@ html,
 body {
   height: 100%;
   margin: 0;
+  /* Без двойного тапа «увеличить»: кнопки обучения стоят на одном месте,
+     быстрые тапы по ним WebKit принимал за зум страницы (баг 07.09.2026,
+     iPhone автора); щипок отключён в viewport (WKWebView его уважает). */
+  touch-action: manipulation;
 }
 
 body {
@@ -101,6 +105,24 @@ textarea,
 
 .brand-name::first-letter {
   color: var(--gold);
+}
+/* Логотип (фигура с иконки) перед именем игры — шапка, карточка, вопрос. */
+.logo {
+  display: inline-block;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+.brand-logo {
+  align-self: center;
+}
+h1.title-with-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ask-logo {
+  display: block;
+  margin: 0 auto 10px;
 }
 
 .round-chip {
@@ -1449,6 +1471,21 @@ hr.sep {
      телефоне она накрывает тень корневого хода и ход не поставить. */
   pointer-events: none;
 }
+/* Галочка «показывать правила игры» — единственное, что в панели ловит тап. */
+#tutor-bar .tutor-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--muted);
+  pointer-events: auto;
+  cursor: pointer;
+  width: max-content;
+}
+#tutor-bar .tutor-toggle input {
+  accent-color: var(--gold);
+  margin: 0;
+}
 
 #tutor-bar[hidden] {
   display: none;
@@ -1627,6 +1664,56 @@ select {
 #howto .howto-card {
   width: min(440px, 100%);
   padding: 20px 22px 18px;
+  position: relative;
+}
+/* Крестик — прервать показ, не листая до конца (уточнение автора 07.09.2026). */
+.howto-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 26px;
+  line-height: 36px;
+  cursor: pointer;
+  padding: 0;
+}
+.howto-close:hover {
+  color: var(--text);
+}
+/* Вопрос при первом запуске: маленькая карточка поверх стартовой. */
+#howto-ask {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 10, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 68;
+  animation: fade-in 0.3s ease;
+  padding: 16px;
+}
+#howto-ask .howto-ask {
+  width: min(360px, 100%);
+  padding: 20px 22px 16px;
+  text-align: center;
+}
+#howto-ask p {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+.howto-ask-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.howto-ask-row .btn {
+  flex: 1 1 0;
 }
 #howto h1 {
   font-size: 24px;

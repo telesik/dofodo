@@ -45,7 +45,25 @@ const PIPS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
   ],
 ];
 
-/** Общие определения: градиенты, тени. Вставить в <defs> один раз на svg. */
+const DEFS_HOST_ID = 'tile-defs';
+
+/**
+ * Общие определения (градиенты, тени) — один скрытый <svg> на документ:
+ * id в SVG глобальны, дубликат с тем же id ломает ссылки url(#…) в WebKit
+ * после удаления дубликата (баг 07.09.2026: тёмные кости после слайдов
+ * «Как играть»). Вызывать перед первой отрисовкой костей; повторные вызовы
+ * ничего не делают.
+ */
+export function ensureTileDefs(): void {
+  if (document.getElementById(DEFS_HOST_ID)) return;
+  const host = document.createElement('div');
+  host.id = DEFS_HOST_ID;
+  host.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  host.innerHTML = `<svg width="0" height="0"><defs>${tileDefs()}</defs></svg>`;
+  document.body.prepend(host);
+}
+
+/** Общие определения: градиенты, тени. Вставить в <defs> один раз на документ (ensureTileDefs). */
 export function tileDefs(): string {
   return `
   <linearGradient id="g-ivory" x1="0" y1="0" x2="1" y2="1">
