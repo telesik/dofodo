@@ -46,7 +46,7 @@ export default defineConfig({
         lines: 52,
         statements: 52,
         functions: 18,
-        branches: 88,
+        branches: 80, // 07.09.2026: jsdom-тест приложения включил app.ts и board.ts в отчёт (решение автора)
       },
     },
   },
