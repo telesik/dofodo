@@ -1,4 +1,4 @@
-[English](README.en.md) · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Português (BR)** · [Українська](README.uk.md) · [中文](README.zh.md)
+[Deutsch](README.de.md) · [English](README.en.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · **Português (BR)** · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [中文](README.zh.md)
 
 # Dofodo
 
@@ -11,9 +11,6 @@ Jogar no navegador: <https://telesik.github.io/dofodo/> — a dois na mesma tela
 Um jogo de tabuleiro com um **dominó padrão comum** (28 peças, dupla seis) — mas com regras
 completamente diferentes. Não é o dominó clássico: a corrente de metades iguais, o tradicional
 jogo de bloqueio e a contagem pelos restos não funcionam aqui.
-
-O nome vem de *bones* (é assim que as peças de dominó são chamadas em inglês) e *bonsai*:
-uma árvore que se cultiva e se poda ao mesmo tempo. Essa é justamente a essência do jogo.
 
 ## De que trata o jogo
 
@@ -54,18 +51,27 @@ Como tudo aconteceu — [RULES.pt-BR.md §14](RULES.pt-BR.md).
 
 ## Status
 
-As regras do jogo a dois estão concluídas. O jogo foi inventado na noite de 31 de julho
-de 2026, e naquela mesma noite disputamos muitos jogos a dois — gostamos do resultado, e por
-isso as regras foram postas por escrito. Por enquanto é uma única noite e dois jogadores: para
-tirar conclusões sobre o equilíbrio são necessários mais jogos e mais gente.
+As regras para dois jogadores estão completas. A edição 1.1 foi publicada em setembro de 2026 com um
+identificador permanente (o DOI no cabeçalho); as regras em si não mudaram desde a primeira edição —
+apenas a forma de colocar uma peça girada foi precisada. O modo para 3 ou mais jogadores está
+adiado de propósito ([RULES.pt-BR.md §12](RULES.pt-BR.md)).
 
-O protótipo digital está pronto — é possível jogar no navegador: a dois na mesma tela ou contra
-o bot. A seguir — a ampliação do grupo de teste para além de duas pessoas. O modo para 3+
-jogadores foi adiado de propósito até que o jogo a dois esteja implementado.
+Dá para jogar:
 
-O nome é provisório: a disponibilidade foi verificada no BoardGameGeek, no GitHub e no
-TMview. Não há coincidências exatas, mas marcas próximas, como “Bonsai”, na classe de jogos
-representam um risco para o registro da marca, então o nome comercial ainda não está definido.
+- **no navegador** — <https://telesik.github.io/dofodo/>: dois jogadores na mesma tela ou contra o bot;
+- **no iPhone e iPad** — o aplicativo [Dofodo na App Store](https://apps.apple.com/app/id6801880127): dois jogadores na mesma tela,
+  contra um bot com três níveis de força ou em dois celulares lado a lado por Bluetooth, sem
+  internet. Grátis, sem anúncios, sem contas e sem coleta de dados; onze idiomas de interface;
+- **no Android** — a versão para o Google Play está em teste fechado; será publicada após a
+  aprovação.
+
+O jogo foi inventado na noite de 31 de julho de 2026 e desde então foi jogado muitas vezes — a dois,
+contra o bot e pelos testadores do aplicativo. Ainda é pouco para tirar conclusões sobre o
+equilíbrio; as observações estão reunidas em «Notas sobre o equilíbrio»
+([RULES.pt-BR.md §13](RULES.pt-BR.md)).
+
+O nome foi escolhido em setembro de 2026, após verificação no BoardGameGeek, nas lojas de
+aplicativos e nos registros de marcas (TMview, EUIPO, OMPI).
 
 ## Contato
 

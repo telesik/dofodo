@@ -1,0 +1,32 @@
+Dofodo — règles du jeu et documentation
+Copyright (c) 2026 Alexey Kiselyov, Olga Popova
+                   (Алексей Киселёв, Ольга Попова)
+
+Cette œuvre est mise à disposition selon les termes de la licence
+Creative Commons Attribution 4.0 International (CC BY 4.0).
+
+Vous êtes autorisé à :
+  — Partager : copier, distribuer et communiquer le matériel par tous moyens
+    et sous tous formats ;
+  — Adapter : remixer, transformer et créer à partir du matériel pour toute
+    utilisation, y compris commerciale.
+
+Selon les conditions suivantes :
+  — Attribution. Vous devez créditer l’œuvre, intégrer un lien vers la licence
+    et indiquer si des modifications ont été effectuées. Vous devez le faire
+    de manière raisonnable, sans suggérer que l’offrant vous soutient ou
+    soutient la façon dont vous avez utilisé son œuvre.
+
+Texte intégral de la licence :
+  https://creativecommons.org/licenses/by/4.0/legalcode.fr
+
+Résumé :
+  https://creativecommons.org/licenses/by/4.0/deed.fr
+
+Autres langues : voir l’index LICENSE.md à la racine du dépôt.
+
+Note sur l’objet de la licence. La licence couvre le texte des règles, les
+schémas et la documentation — c’est-à-dire l’expression concrète. Les
+mécaniques de jeu et les règles en tant que système ne relèvent du droit
+d’auteur dans aucune juridiction et ne peuvent pas être restreintes par
+cette licence.

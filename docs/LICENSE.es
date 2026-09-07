@@ -22,9 +22,7 @@ Texto completo de la licencia:
 Resumen:
   https://creativecommons.org/licenses/by/4.0/deed.es
 
-Otros idiomas: LICENSE.en (English), LICENSE.ru (Русский), LICENSE.de (Deutsch),
-LICENSE.pt-BR (Português BR), LICENSE.zh (中文), LICENSE.uk (Українська);
-el índice — en el archivo LICENSE.md en la raíz del repositorio.
+Otros idiomas: véase el índice LICENSE.md en la raíz del repositorio.
 
 Nota sobre el objeto de la licencia. La licencia cubre el texto de las reglas, los
 esquemas y la documentación — es decir, la expresión concreta. Las mecánicas de juego

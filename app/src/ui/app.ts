@@ -50,6 +50,10 @@ const RULES_DOC_LANG: Record<Locale, string> = {
   pt: 'pt-BR',
   uk: 'uk',
   zh: 'zh',
+  fr: 'fr',
+  it: 'it',
+  ja: 'ja',
+  ko: 'ko',
 };
 
 function rulesDocUrl(): string {
