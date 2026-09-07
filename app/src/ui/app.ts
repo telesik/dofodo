@@ -355,8 +355,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // Имена игроков переживают перезапуск (пустая строка = не задано).
   let savedP1 = '';
   let savedP2 = '';
+  /**
+   * «Как играть» один раз после установки (идея 0038 штаба): показано ли
+   * обучение. Первый запуск — когда сохранённых настроек интерфейса нет
+   * вовсе; у игравших раньше настройки есть, им обучение не навязываем,
+   * даже если ключа howtoShown в них ещё нет (обновление с прежней версии).
+   */
+  let howtoShown = true;
   try {
-    const prefs = JSON.parse(store.get(LS_UI_KEY) ?? '{}') as {
+    const rawPrefs = store.get(LS_UI_KEY);
+    const prefs = JSON.parse(rawPrefs ?? '{}') as {
+      howtoShown?: boolean;
       markOwners?: boolean;
       autoFit?: boolean;
       sound?: boolean;
@@ -387,6 +396,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     tutorOn = prefs.tutor !== false;
     roundsDone = Math.max(0, Math.trunc(prefs.roundsDone ?? 0));
     tutorAsked = !!prefs.tutorAsked;
+    howtoShown = rawPrefs === null ? false : prefs.howtoShown !== false;
     const validOpp = [
       'human',
       'easy',
@@ -415,6 +425,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     t.onChange(toggleState.get(t.id) === true);
   }
 
+  function markHowtoShown(): void {
+    if (howtoShown) return;
+    howtoShown = true;
+    persistUi();
+  }
+
   function persistUi(): void {
     try {
       store.set(
@@ -434,6 +450,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           toggles: Object.fromEntries(toggleState),
           roundsDone,
           tutorAsked,
+          howtoShown,
         }),
       );
     } catch {
@@ -1955,7 +1972,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         opts.onMatchReset?.();
         renderAll();
       } else if (action === 'howto') {
-        openHowTo({ rulesUrl: rulesDocUrl() });
+        openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown });
       } else if (action === 'settings-open') {
         openSettings(true);
       } else if (action === 'tutor-off' || action === 'tutor-keep') {
@@ -2274,6 +2291,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
     renderAll();
   }
+
+  // Первый запуск после установки: обучение поверх стартовой карточки, один
+  // раз (идея 0038 штаба, решение автора 07.09.2026). Флаг ставится при любом
+  // закрытии; если приложение убьют с открытым оверлеем — покажем снова.
+  if (!howtoShown && !match) openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown });
 
   return {
     // Внешний ход важнее просмотра истории: иначе ход, пришедший while
