@@ -1,8 +1,8 @@
-[English](README.en.md) · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Português (BR)](README.pt-BR.md) · [Українська](README.uk.md) · **中文**
+[Deutsch](README.de.md) · [English](README.en.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Português (BR)](README.pt-BR.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · **中文**
 
 # Dofodo
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22512610.svg)](https://doi.org/10.5281/zenodo.22512610)
 
 游戏已收录于 BoardGameGeek：[Dofodo (2026)](https://boardgamegeek.com/boardgame/476432)。
 
@@ -10,9 +10,6 @@
 
 一款使用**普通多米诺骨牌**（28 张，双六制）的桌面游戏——但规则完全不同。它不是传统的
 多米诺：按相同半边接成一条链、经典的封锁玩法、按剩牌计分——这些在这里都不适用。
-
-名称来自 *bones*（英语里对多米诺骨牌的称呼）与 *bonsai*（盆景）：一棵一边生长、一边被
-修剪的树。这正是游戏的本质。
 
 ## 游戏讲什么
 
@@ -48,14 +45,17 @@
 
 ## 状态
 
-双人规则已完成。游戏构思于 2026 年 7 月 31 日晚，当晚就双人玩了许多局——我们喜欢它，
-规则因此得以写下。但这毕竟只是一个晚上、两名玩家：要对平衡下结论，还需要更多对局和更多
-的人。
+双人规则已经完成。1.1 版于 2026 年 9 月发布，并带有永久标识符（见页首 DOI）；规则本身自第一版以来没有改动，只是明确了转向牌的摆放方式。三人及以上模式有意暂缓（[RULES.zh.md §12](RULES.zh.md)）。
 
-数字原型已完成，可在浏览器中游玩：两人同屏对局，或与电脑对战。
-接下来：把测试群体扩大到两人以外。3 人及以上模式有意推迟到双人版实现之后。
+可以这样玩：
 
-名称为工作名称：已在 BoardGameGeek、GitHub 和 TMview 检索。没有完全相同的商标，但游戏类别中相近的「Bonsai」商标构成注册风险，因此商业名称尚未确定。
+- **在浏览器中** — <https://telesik.github.io/dofodo/>：两人同屏，或与机器人对战；
+- **在 iPhone 和 iPad 上** — 应用 [Dofodo（App Store）](https://apps.apple.com/app/id6801880127)：两人同屏、与三种强度的机器人对战，或两部手机并排通过蓝牙对战，无需网络。免费，无广告，无账号，不收集数据；十一种界面语言；
+- **在 Android 上** — Google Play 版本正在封闭测试，获批后发布。
+
+游戏于 2026 年 7 月 31 日晚诞生，此后已玩过很多局——两人对局、与机器人对局，以及应用测试者的对局。要对平衡性下结论仍然不够；观察记录汇集在「关于平衡的札记」（[RULES.zh.md §13](RULES.zh.md)）。
+
+名称于 2026 年 9 月选定，此前已在 BoardGameGeek、应用商店和商标登记库（TMview、EUIPO、WIPO）中检索核实。
 
 ## 联系方式
 

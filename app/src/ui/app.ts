@@ -29,15 +29,17 @@ import {
 } from '../engine';
 import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
+import { nextRoundButton } from './next-round-button';
+import { openHowTo } from './howto';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
 import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
 
 const LS_KEY = 'bonesai-match-v1';
 const LS_UI_KEY = 'bonesai-ui-v1';
 
-/** Версия правил, которую реализует прототип (опубликована на Zenodo,
- *  DOI 10.5281/zenodo.21745035). */
-const RULES_VERSION = '1.0';
+/** Версия правил, которую реализует прототип (редакция 1.1 опубликована на Zenodo,
+ *  DOI 10.5281/zenodo.22512610; редакция 1.0 — 10.5281/zenodo.21745035). */
+const RULES_VERSION = '1.1';
 
 /** Полный текст правил по языку интерфейса. */
 const RULES_DOC_LANG: Record<Locale, string> = {
@@ -48,6 +50,10 @@ const RULES_DOC_LANG: Record<Locale, string> = {
   pt: 'pt-BR',
   uk: 'uk',
   zh: 'zh',
+  fr: 'fr',
+  it: 'it',
+  ja: 'ja',
+  ko: 'ko',
 };
 
 function rulesDocUrl(): string {
@@ -172,6 +178,20 @@ export interface AppOptions {
   /** Пользователь сбросил матч (новый матч поверх текущего): надстройке
    *  пора закрыть свои ресурсы (например, сетевую сессию). */
   onMatchReset?: () => void;
+  /** Матч завершён: исход определён завершающим ходом партии (§10.5).
+   *  Вызывается один раз на матч, после onMove того же хода; при
+   *  восстановлении уже завершённого матча из хранилища не вызывается.
+   *  Платформа вправе отметить событие (например, локальный счётчик
+   *  сыгранных матчей) — ядро ничего не ждёт в ответ. */
+  onMatchOver?: (match: MatchState) => void;
+}
+
+/** Ожидание договора о следующей партии в матче с внешним игроком:
+ *  waiting — наш «Следующая партия» уже нажат, ждём соперника;
+ *  peerReady — соперник уже нажал. Ядро только рисует состояние. */
+export interface NextRoundWait {
+  waiting: boolean;
+  peerReady: boolean;
 }
 
 /** Управление приложением снаружи: вход внешних ходов и чтение состояния. */
@@ -195,6 +215,10 @@ export interface AppHandle {
   }): void;
   /** Следующая партия с заданным seed (для синхронного перехода сторон). */
   nextRoundWith(seed: number): void;
+  /** Состояние договора о следующей партии — кнопка и подпись на экране
+   *  итога партии (идея 0030 штаба). null — обычный вид. Сбрасывается
+   *  ядром само при переходе к партии, сбросе матча и снятии внешнего места. */
+  setNextRoundWait(state: NextRoundWait | null): void;
   render(): void;
 }
 
@@ -302,7 +326,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   let markOwners = false;
   let autoFitOn = true;
   let soundOn = true;
-  let handsVertical = true;
   /**
    * Зеркальный стол: корень справа, дерево растёт влево. Нужно тем, кто привык
    * сидеть напротив — у соперника через стол всё выглядело именно так, и после
@@ -338,7 +361,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       autoFit?: boolean;
       sound?: boolean;
       locale?: string;
-      handsVertical?: boolean;
       mirror?: boolean;
       confirm?: boolean;
       tutor?: boolean;
@@ -355,7 +377,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (typeof prefs.p2Name === 'string') savedP2 = prefs.p2Name.slice(0, 16);
     autoFitOn = prefs.autoFit !== false;
     soundOn = prefs.sound !== false;
-    handsVertical = prefs.handsVertical !== false;
+    // prefs.handsVertical старых сборок (до 07.09.2026) просто игнорируется:
+    // рука всегда вертикальна (идея 0035).
     mirrorBoard = !!prefs.mirror;
     confirmOn = !!prefs.confirm;
     // «Включено, пока явно не выключили»: prefs.tutor пишется при каждом
@@ -401,7 +424,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           autoFit: autoFitOn,
           sound: soundOn,
           locale: getLocale(),
-          handsVertical,
           mirror: mirrorBoard,
           confirm: confirmOn,
           tutor: tutorOn,
@@ -572,6 +594,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   /** Место, управляемое извне (setRemoteSeat): его ходы приходят через
    *  handle.dispatch, локальный ввод в его ход заблокирован. */
   let remoteSeat: 0 | 1 | null = null;
+  /** Договор о следующей партии с внешним игроком (см. AppHandle). */
+  let nextRoundWait: NextRoundWait | null = null;
 
   /**
    * Чья рука внизу экрана. В игре на двоих за одним экраном это всегда
@@ -645,7 +669,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     clone.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
     document.body.appendChild(clone);
     const start = { x: from.left + from.width / 2, y: from.top + from.height / 2 };
-    const startAngle = handsVertical ? 90 : 0;
+    const startAngle = 90; // кость в руке стоит вертикально
     const t0 = performance.now();
     const dur = 340;
     let raf = 0;
@@ -746,6 +770,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (placedSeq !== null && flyFrom) flyingSeq = placedSeq;
     persist();
     opts.onMove?.(move, round);
+    if (round.phase === 'over' && match.outcome) opts.onMatchOver?.(match);
     renderAll();
     if (placedSeq !== null) {
       if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.values, flyFrom);
@@ -981,7 +1006,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         // ней всё равно невозможны, а инспектор браузера не должен подсматривать.
         const attrs = hidden || view ? '' : ` data-player="${player}" data-tile="${t}"`;
         return `<div class="${cls}"${attrs}>
-          ${tileSvgElement(inner, 86, { vertical: handsVertical })}
+          ${tileSvgElement(inner, 86, { vertical: true })}
         </div>`;
       })
       .join('');
@@ -1362,9 +1387,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // в строке версии — осознанный, оба перехода ведут на RULES.xx.md).
     // Остальное — только переданное входом приложения: веб задаёт донат
     // и App Store, мобильные сборки не задают ничего.
-    const extLinks: string[] = [
-      `<a href="${rulesDocUrl()}" target="_blank" rel="noopener">${L().linkRules}</a>`,
-    ];
+    // С идеи 0032 штаба первой идут слайды «Как играть» (полный текст —
+    // с последнего слайда и из строки версии); переход на RULES.xx.md
+    // с карточки убран по решению автора 06.09.2026.
+    const extLinks: string[] = [`<a class="howto-link" data-action="howto">${L().howtoLink}</a>`];
     if (opts.supportUrl)
       extLinks.push(
         `<a href="${opts.supportUrl}" target="_blank" rel="noopener">${L().linkSupport}</a>`,
@@ -1532,6 +1558,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (lotFirst === null) return;
     const bot = botLevel ? { player: 1 as const, level: botLevel } : null;
     remoteSeat = null;
+    nextRoundWait = null;
     opts.onMatchReset?.();
     match = startMatch({ names: [n0, n1], first: lotFirst, variant, bot });
     // Новый матч — новый отсчёт времени хода, каким бы ни был сид (0003).
@@ -1631,10 +1658,16 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } else {
       const nextFirst = lastRound.winner ?? ((1 - lastRound.first) as 0 | 1);
       const why = lastRound.winner !== null ? L().whyWinner : L().whySwap;
+      // Матч с внешним игроком (идея 0030 штаба): состояние договора —
+      // на самой кнопке. Нажали мы — кнопка гаснет: «Ждём подтверждения
+      // от соперника»; нажал он первым — кнопка активна и зовёт:
+      // «Соперник готов и ждёт вас». Без имён — ни рода, ни падежа.
+      const nextBtn = nextRoundButton(nextRoundWait, remoteSeat !== null, L());
+      const notes = `<span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>`;
       footer = `
         <div class="btn-row">
-          <button class="btn" data-action="next-round">${L().btnNextRound}</button>
-          <span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>
+          ${nextBtn}
+          ${notes}
         </div>${reviewRow}
         <div class="btn-row">
           <button class="btn ghost-btn" data-action="abort-match">${L().btnAbortMatch}</button>
@@ -1917,9 +1950,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         replay = null;
         pending = null;
         remoteSeat = null;
+        nextRoundWait = null;
         store.remove(LS_KEY);
         opts.onMatchReset?.();
         renderAll();
+      } else if (action === 'howto') {
+        openHowTo({ rulesUrl: rulesDocUrl() });
       } else if (action === 'settings-open') {
         openSettings(true);
       } else if (action === 'tutor-off' || action === 'tutor-keep') {
@@ -2113,7 +2149,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         ${row('sound', soundOn, L().tipSound)}
         ${row('tutor', tutorOn, L().tipTutor)}
         ${row('confirm', confirmOn, L().tipConfirm)}
-        ${row('hands', handsVertical, L().tipOrient)}
         ${row('mirror', mirrorBoard, L().tipMirror)}
         ${extraToggles
           .map((t) => row(`x:${t.id}`, toggleState.get(t.id) === true, esc(t.label())))
@@ -2170,8 +2205,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     } else if (id === 'confirm') {
       confirmOn = on;
       if (!on) pending = null;
-    } else if (id === 'hands') {
-      handsVertical = on;
     } else if (id === 'mirror') {
       applyMirror(on);
     }
@@ -2203,6 +2236,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     replay = null;
     pending = null;
     remoteSeat = null;
+    nextRoundWait = null;
     store.remove(LS_KEY);
     opts.onMatchReset?.();
     renderAll();
@@ -2279,6 +2313,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     nextRoundWith(seed) {
       if (!match || match.outcome) return;
       match = nextRound(match, seed);
+      nextRoundWait = null;
       turnKey = '';
       selected = null;
       pending = null;
@@ -2289,6 +2324,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       renderAll();
       playShuffle();
       toast(L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)));
+    },
+    setNextRoundWait(state) {
+      nextRoundWait = state;
+      renderAll();
     },
     render: renderAll,
   };

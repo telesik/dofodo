@@ -168,6 +168,9 @@ describe('политика кегля фокусируемых контроло�
       '.result-pts',
       '.result-note',
       '.match-round',
+      // «Как играть» (идея 0032): подпись-кикер и кнопка-призрак «Пропустить»
+      '.howto-kicker',
+      '.howto-ghost',
       "[data-tip]:hover::after",
     ]);
     const bad: string[] = [];

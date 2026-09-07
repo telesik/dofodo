@@ -1,15 +1,19 @@
 # Dofodo — Rules
 
-> **Status as of 2026-08-01.** The two-player rules are complete; no open questions remain.
+> **Status as of 2026-09-06.** The two-player rules are complete; no open questions remain.
 > The game was invented on the evening of 31 July 2026, and many rounds were played that same
 > evening (§14). Deferred items — §12.
 >
 > This is a translation. The Russian text in [RULES.ru.md](RULES.ru.md) is the primary version; if the
 > two ever disagree, the Russian one is correct.
 >
-> Published version 1.0, with a permanent identifier:
-> [10.5281/zenodo.21745035](https://doi.org/10.5281/zenodo.21745035). Please cite that.
-> The text in the repository may run ahead of it; those changes go into the next version.
+> **Edition 1.1** (September 2026): the game is now called Dofodo (Bonesai until 5 September 2026);
+> §6.3 refines how a turned tile is laid out — the **forced turn** is introduced (§1), a convenient
+> technique for play with real tiles on a table. The rules themselves are unchanged.
+> Edition 1.0 was published on 1 August 2026.
+>
+> Published version 1.1, with a permanent identifier:
+> [10.5281/zenodo.22512610](https://doi.org/10.5281/zenodo.22512610). Please cite that.
 
 ## 1. Terminology
 
@@ -30,6 +34,7 @@
 | **Dead end** | An end no tile can be joined to: all 7 tiles bearing that number are already on the table. |
 | **Straight** | A way of playing a tile: it continues the branch without splitting it. |
 | **As a fork** | A way of playing a tile: it splits the branch. |
+| **Forced turn** | A tile joined to an end from the side, off to the side straight away. Under the rules this is “straight”: no fork is formed, the branch merely changes direction on the table (§6.3). (A purely practical device for a cramped table where a branch has nowhere left to grow; it does not affect the rules themselves.) |
 | **Crosswise** | A way of playing a double: it closes the end. |
 | **Block** | The state in which no player can play any tile (§9.1). Called *ryba*, “fish”, in the Russian original. |
 | **Going out** | A player has played the last tile from their hand (§9.2). |
@@ -153,18 +158,31 @@ after:   … ── [3|5] ──→ straight end "5"
 
 *A fork does not consume the old end, it **adds** a new one: the number of open ends grows by 1.*
 
-**Placing a forking tile on the table.** Physically it can be butted up in two ways: with the joined
-half running along the straight branch, or set off to the side straight away. This makes no
-difference to the rules — either way you get the same two ends, straight and fork. Choose whichever
-suits the space on your table and keeps the branches clear of one another.
+**Placing the tile on the table: a fork versus a forced turn.** Physically a tile turned through 90°
+can be butted up to an end in two ways, and since edition 1.1 they mean different things.
+
+- **Way 1 — flush with the row: a real fork.** The joined half lies along the straight branch and the
+  free half sticks out to the side. This is the play “as a fork”: there are now two ends — straight
+  and fork — and both are live. This is also how the app places the tile.
+- **Way 2 — off to the side straight away: a forced turn.** The tile is joined to the
+  end from the side; its joined half does not continue the row but sits beside it. Under the rules
+  this is a **“straight”** play: the old end is sealed, the new end is the free half of the tile, and
+  the number of open ends does not change. The branch merely changes direction on the table. All the
+  rules of a straight play apply: a forced turn is allowed even on a fresh end (§6.4), and the next
+  tile on this end is again free to go straight, as a fork, or as a double crosswise.
+
+Why this matters. The main reason is space: on a small table there is often nowhere left to extend a
+branch, and without the forced turn the whole branch would have to be re-laid. The second is
+legibility: a tile set off to the side reads to the eye as the row turning, not as a fork; the
+convention simply fixes what the eye already sees.
 
 ![The forking tile 6:1 set flush with the row](img/turn-inline.jpg)
 
-*Option 1: the 6:1 tile is set flush with the row — its “6” half runs along the straight branch.*
+*Way 1: the 6:1 tile is set flush with the row — its “6” half runs along the straight branch. A fork: the straight end “6” on the right and the fork end “1” below.*
 
-![The same 6:1 tile set off to the side and shifted down](img/turn-sideways.jpg)
+![The same 6:1 tile set off to the side straight away](img/turn-sideways.jpg)
 
-*Option 2: the same 6:1 tile shifted down and set off to the side. The play and the resulting ends are identical — only the table layout differs.*
+*Way 2: the same 6:1 tile set off to the side straight away — a forced turn. Under the rules it is the same as playing 6:1 straight: the end “6” is sealed and the branch continues downward with the end “1”.*
 
 Both photographs also show a **closed end** at the top: the vertical branch runs into the double 1:1
 laid crosswise across it (§7.1).

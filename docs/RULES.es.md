@@ -1,16 +1,19 @@
 # Dofodo — reglas del juego
 
-> **Estado a 2026-08-01.** Las reglas del juego a dos están descritas por completo; no quedan
+> **Estado a 2026-09-06.** Las reglas del juego a dos están descritas por completo; no quedan
 > cuestiones abiertas. El juego fue inventado la noche del 31 de julio de 2026, y esa misma noche
 > se jugaron muchos juegos a dos (§14). Lo aplazado — §12.
 >
 > Esto es una traducción. El texto ruso de [RULES.ru.md](RULES.ru.md) es la versión primaria;
 > en caso de discrepancia, prevalece el ruso.
 >
-> Versión publicada 1.0 con identificador permanente:
-> [10.5281/zenodo.21745035](https://doi.org/10.5281/zenodo.21745035). Cítese esa versión.
-> El texto del repositorio puede ir por delante — esos cambios entrarán en la siguiente versión
-> del registro.
+> **Edición 1.1** (septiembre de 2026): el juego se llama ahora Dofodo (Bonesai hasta el 05.09.2026);
+> en el §6.3 se precisa cómo se dispone la ficha girada — se introduce el **giro forzado** (§1),
+> un recurso práctico para jugar con fichas reales sobre la mesa. Las reglas en sí no cambian.
+> La edición 1.0 se publicó el 1 de agosto de 2026.
+>
+> Versión publicada 1.1 con identificador permanente:
+> [10.5281/zenodo.22512610](https://doi.org/10.5281/zenodo.22512610). Cítese esa versión.
 
 ## 1. Terminología
 
@@ -31,6 +34,7 @@
 | **Extremo muerto** | Extremo al que no puede unirse ficha alguna: las 7 fichas con ese número ya están en la mesa. |
 | **Recto** | Modo de colocar una ficha: continuación sin ramificar. |
 | **En giro** | Modo de colocar una ficha: formando una bifurcación. |
+| **Giro forzado** | La ficha se acopla al extremo por el costado, directamente de lado. Según las reglas es «recto»: no hay bifurcación, la rama solo cambia de dirección sobre la mesa (§6.3). (Recurso puramente práctico para una mesa estrecha donde la rama ya no tiene por dónde crecer; no afecta a las reglas en sí.) |
 | **Atravesado** | Modo de colocar un doble que cierra el extremo. |
 | **Tranca** | Estado en el que nadie puede colocar ficha (§9.1). |
 | **Dominó** | Un jugador ha colocado la última ficha de su mano (§9.2). |
@@ -160,18 +164,31 @@ después:  … ── [3|5] ──→ extremo recto «5»
 *El giro no consume el extremo viejo, sino que **añade** uno nuevo: el número de extremos abiertos
 crece en 1.*
 
-**Cómo poner la ficha girada sobre la mesa.** Físicamente puede acoplarse de dos maneras: de modo
-que la mitad unida siga la dirección de la rama recta, o desviada hacia el lado desde el principio.
-Esto no afecta a las reglas — en ambos casos resultan los mismos dos extremos, el recto y el de
-giro. Elija según el espacio en la mesa, para que las ramas no se estorben entre sí.
+**Cómo poner la ficha sobre la mesa: bifurcación o giro forzado.** Físicamente, una ficha girada 90°
+puede acoplarse a un extremo de dos maneras, y desde la edición 1.1 significan cosas distintas.
+
+- **Modo 1 — a ras de la fila: una bifurcación de verdad.** La mitad unida sigue la dirección de la
+  rama recta y la mitad libre sobresale hacia el lado. Esta es la jugada «en giro»: ahora hay dos
+  extremos — el recto y el de giro —, ambos vivos. Así coloca la ficha también la aplicación.
+- **Modo 2 — directamente de lado: un giro forzado.** La ficha se acopla al extremo por
+  el costado; su mitad unida no continúa la fila, sino que queda junto a ella. Según las reglas es
+  una jugada **«recto»**: el extremo viejo queda cerrado, el nuevo es la mitad libre de la ficha y el
+  número de extremos abiertos no cambia. La rama solo cambia de dirección sobre la mesa. Rigen todas
+  las reglas de la jugada «recto»: el giro forzado se permite incluso en un extremo fresco (§6.4),
+  y la siguiente ficha en ese extremo vuelve a ser libre de ir recto, en giro o como doble atravesado.
+
+Para qué sirve. Lo principal es el espacio: en una mesa pequeña muchas veces no hay dónde prolongar
+la rama, y sin el giro forzado habría que recolocarla entera. Lo segundo es la legibilidad: una
+ficha acoplada directamente de lado se percibe a simple vista como un giro de la fila, no como una
+bifurcación; la convención fija lo que el ojo ya ve.
 
 ![La ficha girada 6:1 acoplada a ras de la fila](img/turn-inline.jpg)
 
-*Modo 1: la ficha 6:1 acoplada a ras de la fila — su mitad «6» sigue la dirección de la rama recta.*
+*Modo 1: la ficha 6:1 acoplada a ras de la fila — su mitad «6» sigue la dirección de la rama recta. Una bifurcación: el extremo recto «6» a la derecha y el extremo de giro «1» abajo.*
 
-![La misma ficha 6:1 acoplada de lado, desplazada hacia abajo](img/turn-sideways.jpg)
+![La misma ficha 6:1 acoplada directamente de lado](img/turn-sideways.jpg)
 
-*Modo 2: la misma ficha 6:1 desplazada hacia abajo y acoplada directamente de lado. La jugada es la misma y los extremos son los mismos — solo cambia la disposición sobre la mesa.*
+*Modo 2: la misma ficha 6:1 acoplada directamente de lado — un giro forzado. Según las reglas es lo mismo que colocar la 6:1 recto: el extremo «6» queda cerrado y la rama continúa hacia abajo con el extremo «1».*
 
 En ambas fotos se ve arriba también un **extremo cerrado**: la rama vertical topa con el doble 1:1
 colocado atravesado sobre ella (§7.1).

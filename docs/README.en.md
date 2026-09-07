@@ -1,8 +1,8 @@
-**English** · [Русский](README.ru.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Português (BR)](README.pt-BR.md) · [Українська](README.uk.md) · [中文](README.zh.md)
+[Deutsch](README.de.md) · **English** · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Português (BR)](README.pt-BR.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [中文](README.zh.md)
 
 # Dofodo
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21745035.svg)](https://doi.org/10.5281/zenodo.21745035)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22512610.svg)](https://doi.org/10.5281/zenodo.22512610)
 
 The game is listed on BoardGameGeek: [Dofodo (2026)](https://boardgamegeek.com/boardgame/476432).
 
@@ -11,9 +11,6 @@ Play in the browser: <https://telesik.github.io/dofodo/> — two players at one 
 A board game played with an **ordinary domino set** (28 tiles, double-six) — but under completely
 different rules. This is not conventional dominoes: matching halves into a single chain, the
 traditional blocking game and scoring off the leftovers all work differently here.
-
-The name comes from *bones* (what domino tiles are called) and *bonsai*: a tree that is grown and
-pruned at the same time. That is exactly what the game is about.
 
 ## What the game is about
 
@@ -53,18 +50,27 @@ The full story is in [RULES.en.md §14](RULES.en.md).
 
 ## Status
 
-The two-player rules are complete. The game was invented on the evening of 31 July 2026 and many
-rounds were played that same evening — we enjoyed it, which is why the rules were written down. That
-is still one evening and two players: drawing conclusions about the balance will take more rounds
-and more people.
+The two-player rules are complete. Edition 1.1 was published in September 2026 with a persistent
+identifier (the DOI at the top); the rules themselves have not changed since the first edition — only
+the way a turned tile is laid out was clarified. A mode for 3+ players is deliberately postponed
+([RULES.en.md §12](RULES.en.md)).
 
-The digital prototype is ready — it can be played in the browser: two players at one screen or
-against the bot. Next — widening the test group beyond two people. A mode for 3+ players is
-deliberately deferred until the two-player game has been implemented.
+You can play:
 
-The name is a working title: it has been checked on BoardGameGeek, GitHub and TMview. There are
-no exact matches, but close “Bonsai” marks in the games class pose a risk for trademark
-registration, so the commercial name is not settled yet.
+- **in the browser** — <https://telesik.github.io/dofodo/>: two players on one screen or against the bot;
+- **on iPhone and iPad** — the app [Dofodo on the App Store](https://apps.apple.com/app/id6801880127): two players on one screen,
+  against a bot with three strength levels, or on two phones side by side over Bluetooth, no
+  internet needed. Free, with no ads, no accounts and no data collection; eleven interface
+  languages;
+- **on Android** — the Google Play version is in closed testing; it will be published once
+  approved.
+
+The game was invented on the evening of 31 July 2026 and has been played many times since — by
+two players, against the bot and by the app's testers. That is still too little to draw conclusions
+about balance; observations are collected in "Notes on balance" ([RULES.en.md §13](RULES.en.md)).
+
+The name was chosen in September 2026 after a check of BoardGameGeek, the app stores and the
+trademark registers (TMview, EUIPO, WIPO).
 
 ## Contact
 
