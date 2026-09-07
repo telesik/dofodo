@@ -32,7 +32,8 @@ import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i
 import { nextRoundButton } from './next-round-button';
 import { openHowTo, openHowToAsk } from './howto';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
-import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
+import { ensureTileDefs, tileBack, tileFace, tileSvgElement } from './tile-svg';
+import { logoSvg } from './logo';
 
 const LS_KEY = 'bonesai-match-v1';
 const LS_UI_KEY = 'bonesai-ui-v1';
@@ -154,6 +155,10 @@ export interface AppOptions {
    *  только веб-версия; при production-выпуске заменить на опцию
    *  с URL по образцу appStoreUrl (тикет 0019). */
   googlePlaySoon?: boolean;
+  /** ВРЕМЕННО (просмотр автора, 07.09.2026): задавать вопрос «Показать, как
+   *  играть?» при каждом запуске, а не только после установки. Передают
+   *  только dev-сборки; после одобрения убрать. */
+  howtoAskEveryLaunch?: boolean;
   /** Адрес политики конфиденциальности — ссылка на экране настроек.
    *  Задают только мобильные сборки: Apple требует ссылку внутри
    *  приложения (guideline 5.1.1(i)); веб-версия опцию не передаёт. */
@@ -238,11 +243,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   /** Состояния переключателей платформы; ключ — id переключателя. */
   const toggleState = new Map<string, boolean>();
   // Общие SVG-определения (градиенты, тени) — один раз на документ:
-  // на них ссылаются и стол, и кости в руках, и базар.
-  const defsHost = document.createElement('div');
-  defsHost.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-  defsHost.innerHTML = `<svg width="0" height="0"><defs>${tileDefs()}</defs></svg>`;
-  document.body.prepend(defsHost);
+  // на них ссылаются и стол, и кости в руках, и базар, и слайды «Как играть».
+  ensureTileDefs();
+  // Логотип перед именем игры в шапке стола (решение автора 07.09.2026).
+  const brand = document.querySelector<HTMLElement>('#topbar .brand');
+  if (brand && !brand.querySelector('.logo')) brand.insertAdjacentHTML('afterbegin', logoSvg(26, 'brand-logo'));
 
   // Бейдж версии в правом нижнем углу: версия приложения, версия правил
   // (ссылка на опубликованную запись) и коммит сборки — для разбора багов.
@@ -1426,7 +1431,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           ({ code, label }) =>
             `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
         ).join('')}</select>
-        <h1><span class="gold">D</span>ofodo</h1>
+        <h1 class="title-with-logo">${logoSvg(34, 'title-logo')}<span><span class="gold">D</span>ofodo</span></h1>
         <p class="sub">${L().tagline}</p>
         ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
         <div class="field"><label for="inp-n0">${
@@ -2296,7 +2301,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // «Показать, как играть?», слайды только по согласию (идея 0038 штаба,
   // уточнение автора 07.09.2026). Любой ответ ставит флаг; если приложение
   // убьют с открытым вопросом — спросим снова.
-  if (!howtoShown && !match) {
+  // opts.howtoAskEveryLaunch — временный режим просмотра для автора (dev-сборки).
+  if ((!howtoShown || opts.howtoAskEveryLaunch) && !match) {
     openHowToAsk({
       onShow: () => {
         markHowtoShown();

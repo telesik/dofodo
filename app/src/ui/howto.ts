@@ -5,7 +5,8 @@
 // в состоянии игры не трогает. Тексты — словарь ядра, картинки — SVG
 // движка (без сторонних ресурсов).
 import { L } from './i18n';
-import { CELL, TILE_L, TILE_W, tileBack, tileDefs, tileFace } from './tile-svg';
+import { CELL, TILE_L, TILE_W, ensureTileDefs, tileBack, tileFace } from './tile-svg';
+import { logoSvg } from './logo';
 
 export interface HowtoSlide {
   title: string;
@@ -50,7 +51,9 @@ const esc = (s: string): string =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
 
 function scene(w: number, h: number, inner: string): string {
-  const defs = `<defs>${tileDefs().replace(/<\/?defs>/g, '')}<marker id="howto-arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c9a86a"/></marker></defs>`;
+  // Градиенты костей — из общего хоста документа (ensureTileDefs), не копия:
+  // дубликаты id ломали ссылки url(#…) в WebKit после закрытия слайдов.
+  const defs = `<defs><marker id="howto-arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c9a86a"/></marker></defs>`;
   return `<svg class="howto-svg" viewBox="0 0 ${w} ${h}" width="100%" role="img">${defs}${inner}</svg>`;
 }
 
@@ -155,6 +158,7 @@ export interface HowtoOptions {
 
 /** Открыть слайды. Повторный вызов при открытом оверлее — начать с первого. */
 export function openHowTo(opts: HowtoOptions): void {
+  ensureTileDefs();
   const slides = howtoSlides();
   let idx = 0;
   let root = document.getElementById(ROOT_ID);
@@ -235,9 +239,10 @@ export function openHowToAsk(opts: HowtoAskOptions): void {
   }
   root.innerHTML = `
     <div class="card howto-ask">
+      ${logoSvg(64, 'ask-logo')}
       <p>${esc(t.howtoAsk)}</p>
       <div class="howto-ask-row">
-        <button class="howto-ghost" data-howto="later">${esc(t.howtoAskLater)}</button>
+        <button class="btn" data-howto="later">${esc(t.howtoAskLater)}</button>
         <button class="btn howto-next" data-howto="show">${esc(t.howtoAskYes)}</button>
       </div>
     </div>`;
