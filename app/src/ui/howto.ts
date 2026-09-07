@@ -16,6 +16,7 @@ export interface HowtoSlide {
 }
 
 const ROOT_ID = 'howto';
+const ASK_ID = 'howto-ask';
 const H = CELL;
 
 function tile(
@@ -175,6 +176,7 @@ export function openHowTo(opts: HowtoOptions): void {
       .join('');
     root!.innerHTML = `
       <div class="card howto-card">
+        <button class="howto-close" data-howto="close" aria-label="${esc(t.howtoClose)}">×</button>
         <div class="howto-kicker">${esc(t.howtoKicker(idx + 1, slides.length))}</div>
         <h1>${esc(s.title)}</h1>
         <div class="howto-scene">${s.scene}</div>
@@ -208,4 +210,49 @@ export function openHowTo(opts: HowtoOptions): void {
     }
   };
   render();
+}
+
+export interface HowtoAskOptions {
+  /** Игрок хочет посмотреть слайды. */
+  onShow: () => void;
+  /** «Позже» или тап по фону — вопрос больше не задаём. */
+  onLater: () => void;
+}
+
+/**
+ * Вопрос при первом запуске после установки (идея 0038 штаба, уточнение
+ * автора 07.09.2026): не открывать слайды сразу, а показать поверх стартовой
+ * карточки короткий вопрос «Показать, как играть?». Любой ответ закрывает
+ * окно; слайды — только по «Показать».
+ */
+export function openHowToAsk(opts: HowtoAskOptions): void {
+  const t = L();
+  let root = document.getElementById(ASK_ID);
+  if (!root) {
+    root = document.createElement('div');
+    root.id = ASK_ID;
+    document.body.appendChild(root);
+  }
+  root.innerHTML = `
+    <div class="card howto-ask">
+      <p>${esc(t.howtoAsk)}</p>
+      <div class="howto-ask-row">
+        <button class="howto-ghost" data-howto="later">${esc(t.howtoAskLater)}</button>
+        <button class="btn howto-next" data-howto="show">${esc(t.howtoAskYes)}</button>
+      </div>
+    </div>`;
+  const finish = (show: boolean): void => {
+    root?.remove();
+    if (show) opts.onShow();
+    else opts.onLater();
+  };
+  root.onclick = (ev) => {
+    const target = ev.target as HTMLElement;
+    if (target === root) {
+      finish(false);
+      return;
+    }
+    const b = target.closest<HTMLElement>('[data-howto]');
+    if (b) finish(b.dataset.howto === 'show');
+  };
 }

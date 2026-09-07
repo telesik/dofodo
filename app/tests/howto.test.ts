@@ -27,6 +27,19 @@ describe('howto', () => {
     }
   });
 
+  it('крестик закрывает показ с любого слайда', () => {
+    setLocale('ru');
+    document.body.innerHTML = '';
+    const onClose = vi.fn();
+    openHowTo({ rulesUrl: 'https://example.test/rules', onClose });
+    click('[data-howto="next"]');
+    expect(kicker()).toContain('2 из 6');
+    expect(root()?.querySelector('.howto-close')?.getAttribute('aria-label')).toBe('Закрыть');
+    click('[data-howto="close"]');
+    expect(root()).toBeNull();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('навигация: далее до конца, назад, «Понятно» закрывает', () => {
     setLocale('ru');
     document.body.innerHTML = '';

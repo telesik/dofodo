@@ -30,7 +30,7 @@ import {
 import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
 import { nextRoundButton } from './next-round-button';
-import { openHowTo } from './howto';
+import { openHowTo, openHowToAsk } from './howto';
 import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
 import { tileBack, tileDefs, tileFace, tileSvgElement } from './tile-svg';
 
@@ -2292,10 +2292,19 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     renderAll();
   }
 
-  // Первый запуск после установки: обучение поверх стартовой карточки, один
-  // раз (идея 0038 штаба, решение автора 07.09.2026). Флаг ставится при любом
-  // закрытии; если приложение убьют с открытым оверлеем — покажем снова.
-  if (!howtoShown && !match) openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown });
+  // Первый запуск после установки: поверх стартовой карточки — вопрос
+  // «Показать, как играть?», слайды только по согласию (идея 0038 штаба,
+  // уточнение автора 07.09.2026). Любой ответ ставит флаг; если приложение
+  // убьют с открытым вопросом — спросим снова.
+  if (!howtoShown && !match) {
+    openHowToAsk({
+      onShow: () => {
+        markHowtoShown();
+        openHowTo({ rulesUrl: rulesDocUrl() });
+      },
+      onLater: markHowtoShown,
+    });
+  }
 
   return {
     // Внешний ход важнее просмотра истории: иначе ход, пришедший while

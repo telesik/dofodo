@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 // «Как играть» один раз после установки (идея 0038 штаба, решение автора
-// 07.09.2026): без сохранённых настроек оверлей открыт поверх карточки;
-// закрытие пишет флаг, и следующий запуск его не показывает; у игравших
-// раньше (настройки есть, флага нет) обучение не навязывается.
+// 07.09.2026): без сохранённых настроек поверх карточки — вопрос «Показать,
+// как играть?»; «Показать» открывает слайды, «Позже» — нет; любой ответ
+// пишет флаг, и следующий запуск вопроса не задаёт; у игравших раньше
+// (настройки есть, флага нет) обучение не навязывается.
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import indexHtml from '../index.html?raw';
 import { initApp } from '../src/ui/app';
@@ -20,6 +21,7 @@ function makeStorage(initial: Record<string, string> = {}) {
 }
 
 const howto = (): HTMLElement | null => document.getElementById('howto');
+const ask = (): HTMLElement | null => document.getElementById('howto-ask');
 
 describe('«Как играть» при первом запуске', () => {
   beforeAll(() => {
@@ -36,14 +38,26 @@ describe('«Как играть» при первом запуске', () => {
     document.body.innerHTML = body.replace(/<script[\s\S]*?<\/script>/g, '');
   });
 
-  it('без сохранённых настроек оверлей открыт; «Пропустить» пишет флаг', () => {
+  it('без сохранённых настроек — вопрос, не слайды; «Показать» открывает слайды и пишет флаг', () => {
     const storage = makeStorage();
     initApp({ storage });
-    expect(howto()).not.toBeNull();
-    expect(howto()?.hidden).toBe(false);
+    expect(ask()).not.toBeNull();
+    expect(howto()).toBeNull();
     expect(document.querySelector('#btn-start, [data-action="lots"]')).not.toBeNull();
 
-    howto()?.querySelector<HTMLElement>('[data-howto="skip"]')?.click();
+    ask()?.querySelector<HTMLElement>('[data-howto="show"]')?.click();
+    expect(ask()).toBeNull();
+    expect(howto()).not.toBeNull();
+    const saved = JSON.parse(storage.mem.get(LS_UI_KEY) ?? '{}') as Record<string, unknown>;
+    expect(saved.howtoShown).toBe(true);
+  });
+
+  it('«Позже» закрывает вопрос без слайдов и тоже пишет флаг', () => {
+    const storage = makeStorage();
+    initApp({ storage });
+    ask()?.querySelector<HTMLElement>('[data-howto="later"]')?.click();
+    expect(ask()).toBeNull();
+    expect(howto()).toBeNull();
     const saved = JSON.parse(storage.mem.get(LS_UI_KEY) ?? '{}') as Record<string, unknown>;
     expect(saved.howtoShown).toBe(true);
   });
@@ -51,12 +65,14 @@ describe('«Как играть» при первом запуске', () => {
   it('после закрытия следующий запуск обучение не показывает', () => {
     const storage = makeStorage({ [LS_UI_KEY]: JSON.stringify({ howtoShown: true }) });
     initApp({ storage });
+    expect(ask()).toBeNull();
     expect(howto()).toBeNull();
   });
 
   it('игравшим раньше (настройки есть, флага нет) обучение не навязывается', () => {
     const storage = makeStorage({ [LS_UI_KEY]: JSON.stringify({ roundsDone: 3, sound: false }) });
     initApp({ storage });
+    expect(ask()).toBeNull();
     expect(howto()).toBeNull();
   });
 
