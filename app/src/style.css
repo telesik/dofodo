@@ -1471,6 +1471,21 @@ hr.sep {
      телефоне она накрывает тень корневого хода и ход не поставить. */
   pointer-events: none;
 }
+/* Галочка «показывать правила игры» — единственное, что в панели ловит тап. */
+#tutor-bar .tutor-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--muted);
+  pointer-events: auto;
+  cursor: pointer;
+  width: max-content;
+}
+#tutor-bar .tutor-toggle input {
+  accent-color: var(--gold);
+  margin: 0;
+}
 
 #tutor-bar[hidden] {
   display: none;

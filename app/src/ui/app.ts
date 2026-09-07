@@ -1171,9 +1171,20 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       elTutorBar.hidden = true;
       return;
     }
-    elTutorBar.textContent = tutorText(round, legal);
+    // Текст подсказки + галочка «показывать правила игры»: снять её — то же,
+    // что выключить режим обучения в настройках (решение автора 07.09.2026).
+    elTutorBar.innerHTML = `<div class="tutor-text">${esc(tutorText(round, legal))}</div>
+      <label class="tutor-toggle"><input type="checkbox" checked data-tutor-toggle>${esc(L().tutorShowRules)}</label>`;
     elTutorBar.hidden = false;
   }
+  elTutorBar.addEventListener('change', (ev) => {
+    const cb = ev.target as HTMLInputElement;
+    if (!cb.matches('[data-tutor-toggle]') || cb.checked) return;
+    tutorOn = false;
+    tutorAsked = true; // явный выбор игрока — вопрос «выключить подсказки?» больше не нужен
+    persistUi();
+    renderAll();
+  });
 
   function renderConfirmBar(round: GameState, legal: readonly Move[]): void {
     // Самолечение: черновик обязан оставаться легальным ходом (смена партии,
