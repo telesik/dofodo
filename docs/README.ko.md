@@ -58,7 +58,8 @@
 - **iPhone과 iPad에서** — 앱 [Dofodo(App Store)](https://apps.apple.com/app/id6801880127): 한 화면에서 둘이, 세 단계 강도의 봇과 대전,
   또는 나란히 놓은 두 대의 전화기로 Bluetooth 대전. 인터넷 불필요. 무료, 광고 없음, 계정 없음,
   데이터 수집 없음; 인터페이스 언어 11개;
-- **Android에서** — Google Play 버전은 비공개 테스트 중이며 승인 후 공개합니다.
+- **Android에서** — 앱 [Dofodo(Google Play)](https://play.google.com/store/apps/details?id=com.telesik.bonesai):
+  같은 세 가지 플레이 방식; 무료, 광고 없음, 계정 없음, 데이터 수집 없음; 인터페이스 언어 11개.
 
 이 게임은 2026년 7월 31일 저녁에 만들어졌고 그 뒤로 여러 번 플레이되었습니다 — 둘이서, 봇과, 그리고
 앱 테스터들이. 균형에 대해 결론을 내리기에는 아직 부족합니다. 관찰 내용은 「균형에 관한 메모」

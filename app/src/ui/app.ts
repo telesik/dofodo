@@ -150,11 +150,11 @@ export interface AppOptions {
    *  на чужой стор рискованна по правилам ревью (идея 0019). Чистый
    *  href без campaign-параметров — трекинга не добавлять. */
   appStoreUrl?: string;
-  /** Пометка «Google Play — скоро» в той же строке (текст, не ссылка:
-   *  приложение пока в закрытом треке, публичной страницы нет). Задаёт
-   *  только веб-версия; при production-выпуске заменить на опцию
-   *  с URL по образцу appStoreUrl (тикет 0019). */
-  googlePlaySoon?: boolean;
+  /** Адрес страницы приложения в Google Play — ссылка на стартовой карточке,
+   *  по образцу appStoreUrl (тикет 0019; до production-выпуска 11.09.2026
+   *  здесь была пометка «Google Play — скоро»). Задаёт только веб-версия;
+   *  чистый href без campaign-параметров — трекинга не добавлять. */
+  googlePlayUrl?: string;
   /** Адрес политики конфиденциальности — ссылка на экране настроек.
    *  Задают только мобильные сборки: Apple требует ссылку внутри
    *  приложения (guideline 5.1.1(i)); веб-версия опцию не передаёт. */
@@ -1428,7 +1428,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       extLinks.push(
         `<a href="${opts.appStoreUrl}" target="_blank" rel="noopener">${L().linkAppStore}</a>`,
       );
-    if (opts.googlePlaySoon) extLinks.push(`<span class="soon">${L().googlePlaySoon}</span>`);
+    if (opts.googlePlayUrl)
+      extLinks.push(
+        `<a href="${opts.googlePlayUrl}" target="_blank" rel="noopener">${L().linkGooglePlay}</a>`,
+      );
     elOverlay.innerHTML = `
       <div class="card">
         <!-- Язык — прямо на карточке: игрок, не знающий текущего языка,

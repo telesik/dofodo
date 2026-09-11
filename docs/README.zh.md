@@ -51,7 +51,7 @@
 
 - **在浏览器中** — <https://telesik.github.io/dofodo/>：两人同屏，或与机器人对战；
 - **在 iPhone 和 iPad 上** — 应用 [Dofodo（App Store）](https://apps.apple.com/app/id6801880127)：两人同屏、与三种强度的机器人对战，或两部手机并排通过蓝牙对战，无需网络。免费，无广告，无账号，不收集数据；十一种界面语言；
-- **在 Android 上** — Google Play 版本正在封闭测试，获批后发布。
+- **在 Android 上** — 应用 [Dofodo（Google Play）](https://play.google.com/store/apps/details?id=com.telesik.bonesai)：同样的三种玩法；免费，无广告，无账号，不收集数据；十一种界面语言。
 
 游戏于 2026 年 7 月 31 日晚诞生，此后已玩过很多局——两人对局、与机器人对局，以及应用测试者的对局。要对平衡性下结论仍然不够；观察记录汇集在「关于平衡的札记」（[RULES.zh.md §13](RULES.zh.md)）。
 
