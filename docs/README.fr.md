@@ -62,7 +62,9 @@ On peut jouer :
   contre un bot à trois niveaux de force ou sur deux téléphones côte à côte en Bluetooth, sans
   internet. Gratuite, sans publicité, sans compte et sans collecte de données ; onze langues
   d’interface ;
-- **sur Android** — la version Google Play est en test fermé ; elle sera publiée après approbation.
+- **sur Android** — l’application [Dofodo sur Google Play](https://play.google.com/store/apps/details?id=com.telesik.bonesai) :
+  les trois mêmes façons de jouer ; gratuite, sans publicité, sans compte et sans collecte de
+  données ; onze langues d’interface.
 
 Le jeu a été inventé le soir du 31 juillet 2026 et joué de nombreuses fois depuis — à deux, contre le
 bot et par les testeurs de l’application. C’est encore trop peu pour conclure sur l’équilibre ; les

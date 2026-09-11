@@ -57,7 +57,7 @@
 - **iPhone と iPad で** — アプリ [Dofodo（App Store）](https://apps.apple.com/app/id6801880127)：1つの画面で2人、3段階の強さのボットと
   対戦、または並べた2台の電話で Bluetooth 対戦。インターネット不要。無料、広告なし、アカウント
   不要、データ収集なし。インターフェースは11言語。
-- **Android で** — Google Play 版はクローズドテスト中で、承認後に公開します。
+- **Android で** — アプリ [Dofodo（Google Play）](https://play.google.com/store/apps/details?id=com.telesik.bonesai)：同じ3つの遊び方。無料、広告なし、アカウント不要、データ収集なし。インターフェースは11言語。
 
 ゲームは2026年7月31日の夜に考案され、以来何度も遊ばれてきました。2人で、ボットと、そしてアプリの
 テスターによって。バランスについて結論を出すにはまだ足りません。観察は「バランスに関する覚え書き」

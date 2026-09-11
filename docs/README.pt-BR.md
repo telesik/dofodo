@@ -62,8 +62,9 @@ Dá para jogar:
 - **no iPhone e iPad** — o aplicativo [Dofodo na App Store](https://apps.apple.com/app/id6801880127): dois jogadores na mesma tela,
   contra um bot com três níveis de força ou em dois celulares lado a lado por Bluetooth, sem
   internet. Grátis, sem anúncios, sem contas e sem coleta de dados; onze idiomas de interface;
-- **no Android** — a versão para o Google Play está em teste fechado; será publicada após a
-  aprovação.
+- **no Android** — o aplicativo [Dofodo no Google Play](https://play.google.com/store/apps/details?id=com.telesik.bonesai):
+  as mesmas três formas de jogar; grátis, sem anúncios, sem contas e sem coleta de dados; onze
+  idiomas de interface.
 
 O jogo foi inventado na noite de 31 de julho de 2026 e desde então foi jogado muitas vezes — a dois,
 contra o bot e pelos testadores do aplicativo. Ainda é pouco para tirar conclusões sobre o
