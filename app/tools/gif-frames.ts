@@ -32,6 +32,8 @@ const fixedSeed = args.includes('--seed') ? Number(flag('seed', '0')) : null;
 const names: [string, string] = [flag('p1', 'Alex'), flag('p2', 'Olya')];
 
 const VARIANT = { doubleOnlyCloses: false };
+/** Сторона кадра в пикселях (квадрат). Камера живёт в viewBox, холст не меняется. */
+const FRAME_PX = 900;
 
 // Та же формула, что в board.ts (tileTransform без зеркала); копия, а не
 // импорт: board.ts тянет за собой DOM и i18n — в ноде это лишнее.
@@ -131,13 +133,20 @@ function target(state: GameState): Cam {
   };
 }
 
-/** Экспоненциальное сглаживание: камера догоняет цель, а не прыгает на неё. */
+/**
+ * Экспоненциальное сглаживание: камера догоняет цель, а не прыгает на неё.
+ * Подъехав вплотную, встаёт ровно на цель: неподвижные кадры GIF ужимает
+ * в разы лучше, чем вечно ползущие на доли пикселя.
+ */
 function follow(cam: Cam, to: Cam, k: number): Cam {
-  return {
+  const next = {
     x0: cam.x0 + (to.x0 - cam.x0) * k,
     y0: cam.y0 + (to.y0 - cam.y0) * k,
     side: cam.side + (to.side - cam.side) * k,
   };
+  const far =
+    Math.abs(next.x0 - to.x0) + Math.abs(next.y0 - to.y0) + Math.abs(next.side - to.side);
+  return far < to.side * 0.004 ? { ...to } : next;
 }
 
 /** Панель итога: имена и очки партии (§10.3) — язык не нужен, только цифры. */
@@ -184,7 +193,9 @@ function frameSvg(
     })
     .join('\n');
   const { x0, y0, side } = cam;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(side)}" height="${Math.round(side)}"
+  // Пиксельный размер холста постоянный, движется только viewBox: кадры разного
+  // размера ffmpeg не склеивает (на смене разрешения ролик обрывается).
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${FRAME_PX}" height="${FRAME_PX}"
   viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${side.toFixed(1)} ${side.toFixed(1)}">
   <defs>
     ${tileDefs()}
@@ -240,7 +251,7 @@ for (let f = 0; f < PANEL_HOLD; f++) emit(final, { highlight: 0, result: round.r
 
 writeFileSync(
   resolve(outDir, 'meta.json'),
-  JSON.stringify({ fps: FPS, frames: n, seed: round.seed, side: Math.round(target(final).side) }, null, 2),
+  JSON.stringify({ fps: FPS, frames: n, seed: round.seed, px: FRAME_PX }, null, 2),
 );
 
 const turns = final.placed.filter((p) => p.kind === 'turn').length;
