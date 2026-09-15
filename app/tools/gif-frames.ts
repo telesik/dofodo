@@ -28,6 +28,13 @@ const flag = (name: string, def: string): string => {
 // По умолчанию — local/ (каталог для рабочих файлов, в git не попадает).
 const outDir = resolve(__dirname, '..', flag('out', process.env.DOFODO_OUT ?? 'local/gif'));
 const scanTo = Number(flag('scan', '400'));
+// Рамка по числу костей и требование «дубль поставлен прямо» (не поперёк):
+// --tiles 16-17 --double-straight; --list N печатает N лучших сидов и выходит.
+const [tilesMin, tilesMax] = flag('tiles', '10-14')
+  .split('-')
+  .map((v) => Number(v)) as [number, number];
+const needDoubleStraight = args.includes('--double-straight');
+const listTop = args.includes('--list') ? Number(flag('list', '5')) : 0;
 const fixedSeed = args.includes('--seed') ? Number(flag('seed', '0')) : null;
 const names: [string, string] = [flag('p1', 'Alex'), flag('p2', 'Olya')];
 
@@ -67,35 +74,57 @@ function playRound(seed: number): Round {
   return { seed, states, result: scoreRound(state.hands, 'out') };
 }
 
-/** Фотогеничность: короткая партия, но с поворотами и закрытием ветки. */
+/** Дубль, поставленный прямо вдоль ветки, а не поперёк (§7.1). */
+function straightDoubles(state: GameState): number {
+  return state.placed.filter((p) => p.kind === 'straight' && p.values[0] === p.values[1]).length;
+}
+
+/** Фотогеничность: партия в заданной рамке, с поворотами и закрытием ветки. */
 function beauty(r: Round): number {
   const last = r.states[r.states.length - 1];
   const turns = last.placed.filter((p) => p.kind === 'turn').length;
   const crosses = last.placed.filter((p) => p.kind === 'cross').length;
+  const doubles = straightDoubles(last);
   const n = last.placed.length;
+  if (n < tilesMin || n > tilesMax) return -Infinity;
+  if (needDoubleStraight && doubles === 0) return -Infinity;
+  const mid = (tilesMin + tilesMax) / 2;
   return (
     Math.min(turns, 3) * 3 +
     Math.min(crosses, 2) * 3 +
-    (n >= 10 && n <= 14 ? 6 : 0) -
-    Math.abs(12 - n) * 1.5 -
+    Math.min(doubles, 2) * 2 +
+    6 -
+    Math.abs(mid - n) * 1.5 -
     (last.placed.some((p) => p.overlap) ? 4 : 0)
   );
 }
 
 function pickRound(): Round {
   if (fixedSeed !== null) return playRound(fixedSeed);
-  let best: Round | null = null;
-  let bestScore = -Infinity;
+  const found: { r: Round; score: number }[] = [];
   for (let seed = 1; seed <= scanTo; seed++) {
     const r = playRound(seed);
-    const s = beauty(r);
-    if (s > bestScore) {
-      bestScore = s;
-      best = r;
-    }
+    const score = beauty(r);
+    if (score > -Infinity) found.push({ r, score });
   }
-  if (!best) throw new Error('Кандидат не найден');
-  return best;
+  if (!found.length) throw new Error(`Под условия (костей ${tilesMin}–${tilesMax}` +
+    `${needDoubleStraight ? ', дубль прямо' : ''}) не нашлось партии среди ${scanTo} сидов`);
+  found.sort((a, b) => b.score - a.score);
+  if (listTop) {
+    console.log(`Кандидаты (сидов просмотрено ${scanTo}):`);
+    for (const { r, score } of found.slice(0, listTop)) {
+      const last = r.states[r.states.length - 1];
+      console.log(
+        `  seed=${String(r.seed).padStart(4)} костей=${last.placed.length} ` +
+          `поворотов=${last.placed.filter((p) => p.kind === 'turn').length} ` +
+          `закрытий=${last.placed.filter((p) => p.kind === 'cross').length} ` +
+          `дублей прямо=${straightDoubles(last)} итог=${r.result.added[0]}:${r.result.added[1]} ` +
+          `оценка=${score.toFixed(1)}`,
+      );
+    }
+    process.exit(0);
+  }
+  return found[0].r;
 }
 
 /**
