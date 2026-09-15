@@ -74,6 +74,22 @@ function playRound(seed: number): Round {
   return { seed, states, result: scoreRound(state.hands, 'out') };
 }
 
+/**
+ * Форма кроны: отношение длинной стороны к короткой и плотность (сколько костей
+ * приходится на клетку габарита). Длинная одинокая ветка даёт вытянутый габарит
+ * и низкую плотность — в ролике это выглядит бедно.
+ */
+function shape(state: GameState): { aspect: number; density: number } {
+  const xs = state.placed.flatMap((p) => [p.cells[0].x, p.cells[1].x]);
+  const ys = state.placed.flatMap((p) => [p.cells[0].y, p.cells[1].y]);
+  const w = Math.max(...xs) - Math.min(...xs) + 1;
+  const h = Math.max(...ys) - Math.min(...ys) + 1;
+  return {
+    aspect: Math.max(w, h) / Math.min(w, h),
+    density: state.placed.length / (w * h),
+  };
+}
+
 /** Дубль, поставленный прямо вдоль ветки, а не поперёк (§7.1). */
 function straightDoubles(state: GameState): number {
   return state.placed.filter((p) => p.kind === 'straight' && p.values[0] === p.values[1]).length;
@@ -89,13 +105,17 @@ function beauty(r: Round): number {
   if (n < tilesMin || n > tilesMax) return -Infinity;
   if (needDoubleStraight && doubles === 0) return -Infinity;
   const mid = (tilesMin + tilesMax) / 2;
+  const { aspect, density } = shape(last);
   return (
     Math.min(turns, 3) * 3 +
     Math.min(crosses, 2) * 3 +
     Math.min(doubles, 2) * 2 +
     6 -
     Math.abs(mid - n) * 1.5 -
-    (last.placed.some((p) => p.overlap) ? 4 : 0)
+    (last.placed.some((p) => p.overlap) ? 4 : 0) -
+    // Вытянутый габарит и редкое дерево — минус: «длинная одинокая ветка».
+    Math.max(0, aspect - 1.25) * 8 +
+    Math.min(density, 0.22) * 20
   );
 }
 
@@ -114,11 +134,13 @@ function pickRound(): Round {
     console.log(`Кандидаты (сидов просмотрено ${scanTo}):`);
     for (const { r, score } of found.slice(0, listTop)) {
       const last = r.states[r.states.length - 1];
+      const { aspect, density } = shape(last);
       console.log(
         `  seed=${String(r.seed).padStart(4)} костей=${last.placed.length} ` +
           `поворотов=${last.placed.filter((p) => p.kind === 'turn').length} ` +
           `закрытий=${last.placed.filter((p) => p.kind === 'cross').length} ` +
-          `дублей прямо=${straightDoubles(last)} итог=${r.result.added[0]}:${r.result.added[1]} ` +
+          `дублей прямо=${straightDoubles(last)} форма=${aspect.toFixed(2)} ` +
+          `плотность=${density.toFixed(2)} итог=${r.result.added[0]}:${r.result.added[1]} ` +
           `оценка=${score.toFixed(1)}`,
       );
     }
