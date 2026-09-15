@@ -19,6 +19,7 @@ import {
   type Vec,
 } from '../src/engine';
 import { CELL, TILE_L, TILE_W, TILE_R, tileDefs, tileFace } from '../src/ui/tile-svg';
+import { logoSvg } from '../src/ui/logo';
 
 const args = process.argv.slice(2);
 const flag = (name: string, def: string): string => {
@@ -34,6 +35,11 @@ const [tilesMin, tilesMax] = flag('tiles', '10-14')
   .split('-')
   .map((v) => Number(v)) as [number, number];
 const needDoubleStraight = args.includes('--double-straight');
+// Название игры в левом верхнем углу: a — золотое без подложки, b — цвет кости,
+// c — золотое на подложке, d — то же крупнее, e — логотип игры с названием на
+// подложке, f — то же без подложки, off — без надписи.
+// По умолчанию — e (утверждён автором 15.09.2026).
+const markStyle = flag('mark', 'e');
 const listTop = args.includes('--list') ? Number(flag('list', '5')) : 0;
 const fixedSeed = args.includes('--seed') ? Number(flag('seed', '0')) : null;
 const names: [string, string] = [flag('p1', 'Alex'), flag('p2', 'Olya')];
@@ -171,8 +177,12 @@ function target(state: GameState): Cam {
   });
   const minX = Math.min(...box.map((b) => b.x0)) - pad;
   const maxX = Math.max(...box.map((b) => b.x1)) + pad;
-  const minY = Math.min(...box.map((b) => b.y0)) - pad;
+  const rawMinY = Math.min(...box.map((b) => b.y0)) - pad;
   const rawMaxY = Math.max(...box.map((b) => b.y1)) + pad;
+  // Сверху — полоса под название игры. Полоса намеренно неглубокая: растущая
+  // ветка иногда чуть заходит под надпись, и это решение автора 15.09.2026 —
+  // так взгляд цепляется за слово «Dofodo». Не «чинить».
+  const minY = rawMinY - (markStyle === 'off' ? 0 : Math.max(maxX - minX, rawMaxY - rawMinY) * 0.07);
   const reserve = Math.max(maxX - minX, rawMaxY - minY) * 0.2;
   const maxY = rawMaxY + reserve;
   // Минимум кадра: на первой кости камера не должна упираться в неё вплотную.
@@ -224,6 +234,49 @@ function scorePanel(cam: Cam, res: RoundResult): string {
   </g>`;
 }
 
+/**
+ * Название игры в углу кадра. Со стилями e и f рядом встаёт логотип игры —
+ * тот же, что на иконке приложения (src/ui/logo.ts, решение автора 07.09.2026):
+ * своя графика, чистый SVG, сторонних ресурсов нет. Знак марки не трогаем.
+ */
+function wordmark(cam: Cam): string {
+  if (markStyle === 'off') return '';
+  const withLogo = markStyle === 'e' || markStyle === 'f';
+  const onPlate = markStyle === 'c' || markStyle === 'd' || markStyle === 'e';
+  const fs =
+    cam.side *
+    (markStyle === 'd' ? 0.078 : markStyle === 'b' ? 0.05 : withLogo ? 0.058 : markStyle === 'c' ? 0.062 : 0.055);
+  const x = cam.x0 + cam.side * 0.055;
+  const y = cam.y0 + cam.side * 0.075 + fs * 0.35;
+  const font = 'system-ui, -apple-system, Helvetica, sans-serif';
+  const fill = markStyle === 'b' ? '#e8e3d8' : '#c9a86a';
+  const opacity = markStyle === 'b' ? 0.82 : 0.95;
+
+  // Логотип: высота чуть больше строки, ширина — по пропорции фигуры 69.5×96.
+  // Подложка строится от габарита знака, иначе он вылезает за её край.
+  const logoH = fs * 1.75;
+  const logoW = (logoH * 69.5) / 96;
+  const gap = fs * 0.5;
+  const inset = fs * 0.34;
+  const logoTop = y - logoH * 0.66;
+  const textX = withLogo ? x + logoW + gap : x;
+  const logo = withLogo
+    ? `<g transform="translate(${x.toFixed(1)} ${logoTop.toFixed(1)})">${logoSvg(logoH)}</g>`
+    : '';
+  const plateW = withLogo ? logoW + gap + fs * 3.4 : fs * 4.2;
+  const plateX = x - inset;
+  const plateY = withLogo ? logoTop - inset : y - fs * 0.95;
+  const plateH = withLogo ? logoH + inset * 2 : fs * 1.5;
+  const plate = onPlate
+    ? `<rect x="${plateX.toFixed(1)}" y="${plateY.toFixed(1)}" width="${(plateW + inset * 2).toFixed(1)}"
+         height="${plateH.toFixed(1)}" rx="${(fs * 0.35).toFixed(1)}" fill="#0b100e" opacity="0.7"/>`
+    : '';
+  return `<g class="mark">${plate}${logo}
+    <text x="${textX.toFixed(1)}" y="${(withLogo ? logoTop + logoH * 0.62 : y).toFixed(1)}" font-size="${fs.toFixed(1)}" fill="${fill}"
+      opacity="${opacity}" font-family="${font}" font-weight="500"
+      letter-spacing="${(fs * 0.04).toFixed(2)}">Dofodo</text></g>`;
+}
+
 function frameSvg(
   state: GameState,
   cam: Cam,
@@ -260,6 +313,7 @@ function frameSvg(
   <rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}"
     fill="url(#g-felt)"/>
   ${tiles}
+  ${wordmark(cam)}
   ${opts.result ? `<g opacity="${(opts.panel ?? 1).toFixed(2)}">${scorePanel(cam, opts.result)}</g>` : ''}
 </svg>
 `;
