@@ -14,6 +14,7 @@ import {
   type TileId,
   type Variant,
 } from '../src/engine';
+import { lcg } from '../src/ui/lcg';
 
 export const BASE: Variant = { doubleOnlyCloses: false };
 export const ONLY_CLOSES: Variant = { doubleOnlyCloses: true };
@@ -77,11 +78,7 @@ export function playFrom(
   policy: Policy = randomPolicy,
 ): GameState {
   let state = start;
-  let rng = (policySeed ^ 0x9e3779b9) >>> 0;
-  const rand = () => {
-    rng = (Math.imul(rng, 1664525) + 1013904223) >>> 0;
-    return rng / 4294967296;
-  };
+  const rand = lcg(policySeed ^ 0x9e3779b9);
   let guard = 0;
   while (state.phase !== 'over') {
     if (++guard > 1000) {

@@ -1,16 +1,19 @@
 // Отрисовка костей в SVG. Все размеры — в «мировых» единицах стола:
 // клетка сетки = половинка кости = CELL.
 
+import type { Vec } from '../engine';
+
 export const CELL = 56;
 export const TILE_L = CELL * 2 - 8; // длина кости
 export const TILE_W = CELL - 8; // ширина кости
 export const TILE_R = 7; // скругление углов
 
 // Классическая раскладка пипсов на половинке, координаты в единичном квадрате.
+// Экспорт — для пипсов-намёков на призраках (board.ts): раскладка одна.
 const T = 0.24;
 const C = 0.5;
 const B = 0.76;
-const PIPS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
+export const PIPS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
   [],
   [[C, C]],
   [
@@ -46,6 +49,24 @@ const PIPS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
 ];
 
 const DEFS_HOST_ID = 'tile-defs';
+
+/**
+ * Центр и угол кости, лежащей в клетках сцены a→b: мировые единицы и градусы.
+ * Без DOM — годится и ноде (tools/gif-frames.ts, у которого была копия).
+ */
+export function tileCenterAngle(a: Vec, b: Vec): { cx: number; cy: number; angle: number } {
+  return {
+    cx: ((a.x + b.x) / 2) * CELL,
+    cy: ((a.y + b.y) / 2) * CELL,
+    angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI,
+  };
+}
+
+/** SVG-transform кости в клетках сцены a→b (зеркало — забота вызывающего). */
+export function placedTransform(a: Vec, b: Vec): string {
+  const { cx, cy, angle } = tileCenterAngle(a, b);
+  return `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${angle.toFixed(1)})`;
+}
 
 /**
  * Общие определения (градиенты, тени) — один скрытый <svg> на документ:
@@ -124,6 +145,11 @@ export interface TileFaceOptions {
   shadow?: 'flat' | 'tile' | 'raised';
 }
 
+/** Атрибут фильтра тени по опциям: 'flat' — без атрибута. */
+function shadowAttr(opts: TileFaceOptions): string {
+  return opts.shadow === 'flat' ? '' : `filter="url(#${opts.shadow === 'raised' ? 'f-raised' : 'f-tile'})"`;
+}
+
 /**
  * Лицо кости, лежащей горизонтально: значение a слева, b справа.
  * Группа центрирована в (0,0): поворот вокруг центра безопасен.
@@ -132,8 +158,7 @@ export function tileFace(a: number, b: number, opts: TileFaceOptions = {}): stri
   const L = TILE_L;
   const W = TILE_W;
   const half = CELL;
-  const shadow =
-    opts.shadow === 'flat' ? '' : `filter="url(#${opts.shadow === 'raised' ? 'f-raised' : 'f-tile'})"`;
+  const shadow = shadowAttr(opts);
   return `
   <g class="tile-face ${opts.className ?? ''}" ${shadow}>
     <rect x="${-L / 2}" y="${-W / 2}" width="${L}" height="${W}" rx="${TILE_R}"
@@ -158,8 +183,7 @@ export function tileFace(a: number, b: number, opts: TileFaceOptions = {}): stri
 export function tileBack(opts: TileFaceOptions = {}): string {
   const L = TILE_L;
   const W = TILE_W;
-  const shadow =
-    opts.shadow === 'flat' ? '' : `filter="url(#${opts.shadow === 'raised' ? 'f-raised' : 'f-tile'})"`;
+  const shadow = shadowAttr(opts);
   return `
   <g class="tile-back ${opts.className ?? ''}" ${shadow}>
     <rect x="${-L / 2}" y="${-W / 2}" width="${L}" height="${W}" rx="${TILE_R}"
