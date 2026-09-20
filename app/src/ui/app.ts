@@ -31,12 +31,19 @@ import { createBoard, samePlacement } from './board';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
 import { nextRoundButton } from './next-round-button';
 import { openHowTo, openHowToAsk } from './howto';
-import { isSoundEnabled, playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
+import { playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
+import { esc } from './html';
 import { ensureTileDefs, tileBack, tileFace, tileSvgElement } from './tile-svg';
 import { logoSvg } from './logo';
 
-const LS_KEY = 'bonesai-match-v1';
-const LS_UI_KEY = 'bonesai-ui-v1';
+/** Ключи хранилища: сейв матча и настройки интерфейса. Экспортированы для
+ *  мобильной надстройки (миграция, паспорт сети) — литералы там повторялись. */
+export const LS_KEY = 'bonesai-match-v1';
+export const LS_UI_KEY = 'bonesai-ui-v1';
+
+/** Цель матча (§10.5): к выбору предлагаются эти значения, канон — 100.
+ *  Экспорт — для лобби мобильной надстройки (там была копия). */
+export const MATCH_TARGETS: readonly number[] = [50, 100, 150, 200];
 
 /** Версия правил, которую реализует прототип (редакция 1.1 опубликована на Zenodo,
  *  DOI 10.5281/zenodo.22512610; редакция 1.0 — 10.5281/zenodo.21745035). */
@@ -318,7 +325,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     readonly names: readonly [string, string];
     readonly variant: Variant;
     readonly rounds: readonly RoundProtocol[];
-    readonly external: boolean;
   }
   let replay: { data: ReplayData; roundIdx: number; step: number } | null = null;
   let replayLastKey = '';
@@ -352,8 +358,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // Первый запуск — против лёгкого бота (решение автора 2026-09-03):
   // игру можно попробовать сразу, без второго человека; выбор запоминается.
   let opponentPref: OpponentPref = 'easy';
-  /** Цель матча (§10.5): к выбору предлагаются эти значения, канон — 100. */
-  const MATCH_TARGETS: readonly number[] = [50, 100, 150, 200];
   let targetPref = 100;
   // Имена игроков переживают перезапуск (пустая строка = не задано).
   let savedP1 = '';
@@ -497,13 +501,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   const nameOf = (p: 0 | 1): string =>
     match?.names[p] ?? (p === 0 ? L().defaultP1 : L().defaultP2);
   const tileLabel = (t: TileId): string => t.replace('-', ':');
-  const esc = (s: string): string =>
-    s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
 
   function persist(): void {
     try {
@@ -1262,7 +1259,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (rounds.length === 0) return;
     const roundIdx = rounds.length - 1;
     replay = {
-      data: { names: match.names, variant: match.variant, rounds, external: false },
+      data: { names: match.names, variant: match.variant, rounds },
       roundIdx,
       step: rounds[roundIdx]!.moves.length,
     };
@@ -1272,11 +1269,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   }
 
   function exitReplay(): void {
-    const wasExternal = replay?.data.external ?? false;
     replay = null;
     replayLastKey = '';
     // Если живая партия уже завершена — вернуть экран итогов.
-    if (!wasExternal && match && match.round.phase === 'over') showRoundOver = true;
+    if (match && match.round.phase === 'over') showRoundOver = true;
     renderAll();
   }
 
@@ -1303,7 +1299,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
     elBtnHist.classList.add('active');
     elRoundChip.textContent = L().viewChip(rp.roundIdx + 1, rp.data.rounds.length);
-    elStatusEvent.textContent = rp.data.external ? L().historyExternal : L().historyLive;
+    elStatusEvent.textContent = L().historyLive;
     elStatusPrompt.innerHTML =
       rp.step === 0
         ? L().historyDeal(`<b>${esc(rp.data.names[round.first])}</b>`)
@@ -1361,7 +1357,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     elHistoryBar.hidden = false;
     // Язык — часть ключа: селект партий и подсказки кнопок строятся здесь
     // один раз и без него не обновились бы при смене языка.
-    const barKey = `${getLocale()}|${rp.data.external}|${rp.data.rounds.length}|${rp.roundIdx}|${total}`;
+    const barKey = `${getLocale()}|${rp.data.rounds.length}|${rp.roundIdx}|${total}`;
     if (elHistoryBar.dataset.key !== barKey) {
       elHistoryBar.dataset.key = barKey;
       const options = rp.data.rounds
@@ -2088,9 +2084,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       persistUi();
       applyStaticTexts();
       renderStartScreen();
+      // Второго рендера здесь быть не должно: renderAll без матча строил бы
+      // карточку заново и затирал восстановленную галочку (telesik-team#128).
       const varEl = document.querySelector<HTMLInputElement>('#inp-variant');
       if (varEl && varOn !== undefined) varEl.checked = varOn;
-      renderAll();
     } else if (t.id === 'inp-opp') {
       opponentPref = t.value as OpponentPref;
       persistUi();
@@ -2121,7 +2118,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     persistUi();
     renderAll();
     if (markOwners) {
-      toast('Разметка ходов: кости первого игрока светлее, второго — темнее');
+      toast(L().toastMarkOwners);
     }
   });
 
@@ -2270,6 +2267,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (el.dataset.action === 'settings-close') openSettings(false);
     if (el.dataset.action.startsWith('x-act:')) {
       ev.preventDefault();
+      // Общий обработчик документа тоже понимает x-act (кнопка на карточке
+      // и на итогах) — без остановки всплытия надстройку звали дважды
+      // (telesik-team#129).
+      ev.stopPropagation();
       const act = extraActions.find((a) => a.id === el.dataset.action?.slice(6));
       if (!act) return;
       openSettings(false);

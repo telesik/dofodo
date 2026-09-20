@@ -396,9 +396,8 @@ describe('партия через DOM: кнопки шапки', () => {
     expect(q('#toast').hidden).toBe(true);
   });
 
-  // Известный баг telesik-team#114: тост захардкожен по-русски, ключ
-  // toastMarkOwners не читается. it.fails снять при исправлении.
-  it.fails('тост ◐ берётся из словаря выбранного языка (telesik-team#114)', () => {
+  // Баг telesik-team#114 (исправлен в #121): тост был захардкожен по-русски.
+  it('тост ◐ берётся из словаря выбранного языка (telesik-team#114)', () => {
     const m = mountApp({ prefs: { howtoShown: true, locale: 'en' } });
     startFixtureMatch(m.app);
     click(q('#btn-mark'));

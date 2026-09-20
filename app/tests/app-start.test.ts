@@ -180,11 +180,9 @@ describe('стартовая карточка: жребий и старт', () =
     expect(readPrefs(storage).p1Name).toBe('Зина');
   });
 
-  // Известный баг telesik-team#128: после смены языка renderAll() строит
-  // карточку второй раз и затирает восстановленную галочку варианта.
-  // it.fails — красный тест по правилу автора 17.09.2026; при исправлении
-  // снять it.fails (тогда прогон упадёт, пока это не сделано).
-  it.fails('смена языка на карточке сохраняет галочку варианта (telesik-team#128)', () => {
+  // Баг telesik-team#128 (исправлен в #121): после смены языка renderAll()
+  // строил карточку второй раз и затирал восстановленную галочку варианта.
+  it('смена языка на карточке сохраняет галочку варианта (telesik-team#128)', () => {
     mountApp({ prefs: { howtoShown: true } });
     q<HTMLInputElement>('#inp-variant').checked = true;
     setValue('#inp-lang-start', 'en');
@@ -388,16 +386,15 @@ describe('настройки', () => {
     click(q('#btn-settings'));
     expect(q<HTMLAnchorElement>('#settings .privacy-line a').href).toBe('https://example.test/privacy');
     click(q('#settings [data-action="x-act:tipjar"]'));
-    expect(onSelect).toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledTimes(1);
     expect(q('#settings').hidden).toBe(true);
     // На стартовой карточке без флага startCard кнопки действия нет.
     expect(document.querySelector('#overlay [data-action="x-act:tipjar"]')).toBeNull();
   });
 
-  // Известный баг telesik-team#129: строку действия в настройках
-  // обрабатывают и слушатель настроек, и общий слушатель документа —
-  // onSelect зовётся дважды. it.fails снять при исправлении.
-  it.fails('действие платформы в настройках зовёт onSelect ровно один раз (telesik-team#129)', () => {
+  // Баг telesik-team#129 (исправлен в #121): строку действия в настройках
+  // обрабатывали и слушатель настроек, и общий слушатель документа.
+  it('действие платформы в настройках зовёт onSelect ровно один раз (telesik-team#129)', () => {
     const onSelect = vi.fn();
     mountApp({
       prefs: { howtoShown: true },

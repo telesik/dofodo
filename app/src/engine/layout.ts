@@ -118,7 +118,7 @@ function geometryCore(
  * Автовыбор стороны поворота: где больше свободного места, при равенстве —
  * сторона, уводящая от центра фигуры. Возвращает индекс в perps(dir).
  */
-export function turnSideIndex(occ: ReadonlySet<string>, A: Vec, d: Vec): 0 | 1 {
+function turnSideIndex(occ: ReadonlySet<string>, A: Vec, d: Vec): 0 | 1 {
   const [p1, p2] = perps(d);
   const run = (s: Vec): number => {
     let k = 0;
@@ -283,7 +283,7 @@ export function simulateLayout(
 const budgetExceeded = Symbol('layout-budget');
 
 /** Есть ли конец, упёршийся клеткой роста в занятую клетку. */
-export function hasBlockedEnd(state: GameState): boolean {
+function hasBlockedEnd(state: GameState): boolean {
   const occ = new Set(state.occupied);
   return state.ends.some((e) => occ.has(cellKey(e.attach)));
 }
