@@ -841,9 +841,11 @@ h1.title-with-logo {
 }
 
 /* Итоги партии: «Бросить матч» и «История ходов» — всегда одним рядом
-   поровну (telesik-team#113). Ряд не переносится даже в длинных языках
-   (es «Abandonar encuentro / Historial de jugadas») на 360 px — кнопки
-   ужимаются, подпись переносится внутри кнопки, а не ряд. */
+   поровну, подпись в одну строку без переносов внутри кнопки
+   (telesik-team#113, требование автора 20.09.2026). Самые длинные
+   подписи — it «Cronologia delle mosse» (155 px при 14 px), es, fr, pt
+   (131–142 px); на телефоне кнопке достаётся ~152 px, поэтому на узких
+   экранах кегль 12 px и отступы 8 px — замер 20.09 на 375 px. */
 .btn-row.review-row {
   flex-wrap: nowrap;
 }
@@ -853,6 +855,16 @@ h1.title-with-logo {
   min-width: 0;
   padding-left: 10px;
   padding-right: 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 430px) {
+  .btn-row.review-row > .btn {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 }
 
 /* Версия внизу карточки: бейдж в углу экрана стартовая карточка накрывает
