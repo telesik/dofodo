@@ -123,7 +123,9 @@ export interface ExtraAction {
    *  (ghost) кнопкой во всю ширину внизу карточки, над строкой версии
    *  (решение автора 2026-09-02 после сравнения шести мест). Пункт
    *  в настройках при этом остаётся: вход должен быть заметен до партии,
-   *  но не соседствовать с кнопками партии. */
+   *  но не соседствовать с кнопками партии. С 20.09.2026 тот же флаг
+   *  дублирует пункт и на итогах партии между партиями матча — последним
+   *  рядом карточки под «Бросить матч / История ходов» (telesik-team#113). */
   startCard?: boolean;
   onSelect(): void;
 }
@@ -1672,10 +1674,20 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
     const outcome = match.outcome;
     let footer: string;
-    const reviewRow = `
-        <div class="btn-row">
-          <button class="btn ghost-btn" data-action="history">${L().btnHistory}</button>
-        </div>`;
+    const historyBtn = `<button class="btn ghost-btn" data-action="history">${L().btnHistory}</button>`;
+    // Действия платформы (чаевые в мобильных сборках) — тем же рядом
+    // во всю ширину, что и на стартовой карточке (telesik-team#113,
+    // решение автора 20.09.2026): пауза между партиями — естественный
+    // момент, кнопка пассивна и ничего не запирает (манифест tlsk).
+    // Без надстройки ряд не рендерится — пустого блока на карточке нет.
+    const platformRow = startCardActions.length
+      ? `<div class="btn-row action-row">${startCardActions
+          .map(
+            (a) =>
+              `<button class="btn ghost-btn" data-action="x-act:${esc(a.id)}">${esc(a.label())}</button>`,
+          )
+          .join('')}</div>`
+      : '';
     if (outcome) {
       const title =
         outcome.kind === 'draw'
@@ -1686,7 +1698,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <h2>${title}</h2>
         <div class="btn-row">
           <button class="btn" data-action="new-match">${L().btnNewMatch}</button>
-        </div>${reviewRow}`;
+        </div>
+        <div class="btn-row">${historyBtn}</div>`;
     } else {
       const nextFirst = lastRound.winner ?? ((1 - lastRound.first) as 0 | 1);
       const why = lastRound.winner !== null ? L().whyWinner : L().whySwap;
@@ -1696,14 +1709,17 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       // «Соперник готов и ждёт вас». Без имён — ни рода, ни падежа.
       const nextBtn = nextRoundButton(nextRoundWait, remoteSeat !== null, L());
       const notes = `<span class="result-note">${L().nextFirstNote(esc(nameOf(nextFirst)), why)}</span>`;
+      // «Бросить матч» и «История ходов» — одним рядом поровну, под ним
+      // действие платформы во всю ширину (telesik-team#113).
       footer = `
         <div class="btn-row">
           ${nextBtn}
           ${notes}
-        </div>${reviewRow}
-        <div class="btn-row">
+        </div>
+        <div class="btn-row review-row">
           <button class="btn ghost-btn" data-action="abort-match">${L().btnAbortMatch}</button>
-        </div>`;
+          ${historyBtn}
+        </div>${platformRow}`;
     }
 
     // Время партии и матча (0003) — только когда есть честные замеры.
