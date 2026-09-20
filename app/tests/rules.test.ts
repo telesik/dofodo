@@ -16,7 +16,7 @@ import {
   type GameState,
   type Move,
 } from '../src/engine';
-import { BASE, ONLY_CLOSES, makeState } from './helpers';
+import { BASE, ONLY_CLOSES, makeState, withResult } from './helpers';
 
 function movesOfType(state: GameState, type: Move['type']): Move[] {
   return legalMoves(state).filter((m) => m.type === type);
@@ -350,28 +350,14 @@ describe('время хода (t, идея 0003)', () => {
 describe('матч (§2.5, §10.5)', () => {
   it('очки копятся, матч кончается на 100+, проигрывает больший', () => {
     let m = startMatch({ names: ['А', 'Б'], first: 0, variant: BASE, seed: 7 });
-    m = {
-      ...m,
-      round: {
-        ...m.round,
-        phase: 'over',
-        result: { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 },
-      },
-    };
+    m = withResult(m, { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 });
     m = finishRound(m);
     expect(m.totals).toEqual([0, 99]);
     expect(m.outcome).toBeNull();
     // Следующую партию начинает победитель (§2.5).
     m = nextRound(m, 8);
     expect(m.first).toBe(0);
-    m = {
-      ...m,
-      round: {
-        ...m.round,
-        phase: 'over',
-        result: { cause: 'out', sums: [0, 5], added: [0, 5], winner: 0 },
-      },
-    };
+    m = withResult(m, { cause: 'out', sums: [0, 5], added: [0, 5], winner: 0 });
     m = finishRound(m);
     expect(m.totals).toEqual([0, 104]);
     expect(m.outcome).toEqual({ kind: 'loss', loser: 1 });
@@ -379,14 +365,7 @@ describe('матч (§2.5, §10.5)', () => {
 
   it('после ничьей в партии игроки меняются ролями (§2.5)', () => {
     let m = startMatch({ names: ['А', 'Б'], first: 1, variant: BASE, seed: 7 });
-    m = {
-      ...m,
-      round: {
-        ...m.round,
-        phase: 'over',
-        result: { cause: 'fish', sums: [7, 7], added: [7, 7], winner: null },
-      },
-    };
+    m = withResult(m, { cause: 'fish', sums: [7, 7], added: [7, 7], winner: null });
     m = finishRound(m);
     m = nextRound(m, 9);
     expect(m.first).toBe(0);
@@ -403,14 +382,7 @@ describe('матч (§2.5, §10.5)', () => {
       variant: { ...BASE, target: 50 },
       seed: 7,
     });
-    short = {
-      ...short,
-      round: {
-        ...short.round,
-        phase: 'over',
-        result: { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 },
-      },
-    };
+    short = withResult(short, { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 });
     short = finishRound(short);
     expect(short.outcome).toEqual({ kind: 'loss', loser: 1 });
     // До 150: те же 99 матч не заканчивают, цель переживает nextRound.
@@ -420,19 +392,29 @@ describe('матч (§2.5, §10.5)', () => {
       variant: { ...BASE, target: 150 },
       seed: 7,
     });
-    long = {
-      ...long,
-      round: {
-        ...long.round,
-        phase: 'over',
-        result: { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 },
-      },
-    };
+    long = withResult(long, { cause: 'fish', sums: [40, 99], added: [0, 99], winner: 0 });
     long = finishRound(long);
     expect(long.outcome).toBeNull();
     long = nextRound(long, 8);
     expect(long.variant.target).toBe(150);
     expect(long.round.variant.target).toBe(150);
+  });
+
+  it('ошибки матча: незавершённая партия, следующая без завершённых, после исхода; seed по умолчанию', () => {
+    const fresh = startMatch({ names: ['А', 'Б'], first: 0, variant: BASE, seed: 7 });
+    expect(() => finishRound(fresh)).toThrow('Партия ещё не завершена');
+    expect(() => nextRound(fresh, 1)).toThrow('Нет завершённых партий');
+    // Без seed — случайный из crypto, партия всё равно валидна.
+    const noSeed = startMatch({ names: ['А', 'Б'], first: 1, variant: BASE });
+    expect(noSeed.round.hands[0]!.length).toBe(7);
+    let m = finishRound(withResult(fresh, { cause: 'fish', sums: [3, 9], added: [0, 9], winner: 0 }));
+    const next = nextRound(m);
+    expect(next.rounds.length).toBe(1);
+    expect(next.round.phase).toBe('root');
+    // Проигрывает набравший больше — и когда это первый игрок.
+    m = finishRound(withResult(m, { cause: 'out', sums: [120, 0], added: [120, 0], winner: 1 }));
+    expect(m.outcome).toEqual({ kind: 'loss', loser: 0 });
+    expect(() => nextRound(m, 5)).toThrow('Матч окончен');
   });
 
   it('равные счёты 100+ — ничья в матче (§10.5)', () => {

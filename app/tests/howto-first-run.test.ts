@@ -4,85 +4,55 @@
 // как играть?»; «Показать» открывает слайды, «Позже» — нет; любой ответ
 // пишет флаг, и следующий запуск вопроса не задаёт; у игравших раньше
 // (настройки есть, флага нет) обучение не навязывается.
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import indexHtml from '../index.html?raw';
-import { initApp } from '../src/ui/app';
-
-const LS_UI_KEY = 'bonesai-ui-v1';
-
-function makeStorage(initial: Record<string, string> = {}) {
-  const mem = new Map(Object.entries(initial));
-  return {
-    mem,
-    get: (k: string) => mem.get(k) ?? null,
-    set: (k: string, v: string) => void mem.set(k, v),
-    remove: (k: string) => void mem.delete(k),
-  };
-}
+import { afterEach, describe, expect, it } from 'vitest';
+import { click, mountApp, readPrefs, unmountApps } from './dom-helpers';
 
 const howto = (): HTMLElement | null => document.getElementById('howto');
 const ask = (): HTMLElement | null => document.getElementById('howto-ask');
 
 describe('«Как играть» при первом запуске', () => {
-  beforeAll(() => {
-    (globalThis as { matchMedia?: unknown }).matchMedia = () => ({
-      matches: false,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    });
-    Element.prototype.scrollTo = () => undefined;
-  });
-
-  beforeEach(() => {
-    const body = /<body>([\s\S]*)<\/body>/.exec(indexHtml)?.[1] ?? '';
-    document.body.innerHTML = body.replace(/<script[\s\S]*?<\/script>/g, '');
-  });
+  afterEach(unmountApps);
 
   it('без сохранённых настроек — вопрос, не слайды; «Показать» открывает слайды и пишет флаг', () => {
-    const storage = makeStorage();
-    initApp({ storage });
+    const { storage } = mountApp();
     expect(ask()).not.toBeNull();
     expect(howto()).toBeNull();
-    expect(document.querySelector('#btn-start, [data-action="lots"]')).not.toBeNull();
+    // Карточка под вопросом уже отрисована: кнопки жребия и старта на месте.
+    expect(document.querySelector('[data-action="lot"]')).not.toBeNull();
+    expect(document.querySelector('#btn-start')).not.toBeNull();
 
-    ask()?.querySelector<HTMLElement>('[data-howto="show"]')?.click();
+    click(ask()?.querySelector('[data-howto="show"]') ?? null);
     expect(ask()).toBeNull();
     expect(howto()).not.toBeNull();
-    const saved = JSON.parse(storage.mem.get(LS_UI_KEY) ?? '{}') as Record<string, unknown>;
-    expect(saved.howtoShown).toBe(true);
+    expect(readPrefs(storage).howtoShown).toBe(true);
   });
 
   it('«Позже» закрывает вопрос без слайдов и тоже пишет флаг', () => {
-    const storage = makeStorage();
-    initApp({ storage });
-    ask()?.querySelector<HTMLElement>('[data-howto="later"]')?.click();
+    const { storage } = mountApp();
+    click(ask()?.querySelector('[data-howto="later"]') ?? null);
     expect(ask()).toBeNull();
     expect(howto()).toBeNull();
-    const saved = JSON.parse(storage.mem.get(LS_UI_KEY) ?? '{}') as Record<string, unknown>;
-    expect(saved.howtoShown).toBe(true);
+    expect(readPrefs(storage).howtoShown).toBe(true);
   });
 
   it('после закрытия следующий запуск обучение не показывает', () => {
-    const storage = makeStorage({ [LS_UI_KEY]: JSON.stringify({ howtoShown: true }) });
-    initApp({ storage });
+    mountApp({ prefs: { howtoShown: true } });
     expect(ask()).toBeNull();
     expect(howto()).toBeNull();
   });
 
   it('игравшим раньше (настройки есть, флага нет) обучение не навязывается', () => {
-    const storage = makeStorage({ [LS_UI_KEY]: JSON.stringify({ roundsDone: 3, sound: false }) });
-    initApp({ storage });
+    mountApp({ prefs: { roundsDone: 3, sound: false } });
     expect(ask()).toBeNull();
     expect(howto()).toBeNull();
   });
 
   it('ссылка «Как играть» на карточке работает как раньше; у игравших флаг уже считается стоящим', () => {
-    const storage = makeStorage({ [LS_UI_KEY]: JSON.stringify({ roundsDone: 3 }) });
-    initApp({ storage });
-    document.querySelector<HTMLElement>('[data-action="howto"]')?.click();
+    const { storage } = mountApp({ prefs: { roundsDone: 3 } });
+    click(document.querySelector('[data-action="howto"]'));
     expect(howto()).not.toBeNull();
-    howto()?.querySelector<HTMLElement>('[data-howto="skip"]')?.click();
-    const saved = JSON.parse(storage.mem.get(LS_UI_KEY) ?? '{}') as Record<string, unknown>;
+    click(howto()?.querySelector('[data-howto="skip"]') ?? null);
+    const saved = readPrefs(storage);
     expect(howto()?.hidden ?? true).toBe(true);
     expect(saved.howtoShown ?? true).toBe(true);
     expect(saved.roundsDone).toBe(3);

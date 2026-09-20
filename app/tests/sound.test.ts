@@ -207,6 +207,18 @@ class SampleAudioContext extends FakeAudioContext {
  */
 const flushLoad = () => new Promise((r) => setTimeout(r, 0));
 
+/**
+ * Свежий модуль звука с включённым звуком после `waves` волн загрузки:
+ * одна — записи декодированы с первой попытки, две — первая волна (m4a)
+ * отвергнута и подхвачен WAV-набор.
+ */
+async function loadSound(waves = 1) {
+  const mod = await import('../src/ui/sound');
+  mod.setSoundEnabled(true);
+  for (let i = 0; i < waves; i++) await flushLoad();
+  return mod;
+}
+
 describe('sound.ts — записи: разметка и сэмпловое проигрывание', () => {
   // Встряски коробки (сек): A 0.3–0.5, B 0.9–1.1, C 1.5–1.65; блип 0.02 с
   // на 1.85 короче minLen и должен быть отброшен разметкой.
@@ -243,13 +255,6 @@ describe('sound.ts — записи: разметка и сэмпловое пр
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
-
-  async function loadSound() {
-    const mod = await import('../src/ui/sound');
-    mod.setSoundEnabled(true);
-    await flushLoad();
-    return mod;
-  }
 
   it('после загрузки играют записи, а не синтез; тишина в начале отрезана', async () => {
     const { playPlace } = await loadSound();
@@ -374,10 +379,7 @@ describe('sound.ts — платформенные фолбэки звука (б�
     // В декодере ЕСТЬ только wav-теги: любой m4a-буфер отвергается,
     // как в WebKit «iOS-app на Mac».
     SampleAudioContext.bufs = wavBufs();
-    const mod = await import('../src/ui/sound');
-    mod.setSoundEnabled(true);
-    await new Promise((r) => setTimeout(r, 0)); // волна m4a (все reject)
-    await new Promise((r) => setTimeout(r, 0)); // волна wav
+    const mod = await loadSound(2);
     const ctx = FakeAudioContext.instances[0] as SampleAudioContext;
     mod.playPlace('straight');
     expect(ctx.started.length).toBe(1); // играет ЗАПИСЬ
@@ -386,10 +388,7 @@ describe('sound.ts — платформенные фолбэки звука (б�
 
   it('оба формата не декодятся — честный синтез, как раньше', async () => {
     SampleAudioContext.bufs = {}; // декодер отвергает всё
-    const mod = await import('../src/ui/sound');
-    mod.setSoundEnabled(true);
-    await new Promise((r) => setTimeout(r, 0));
-    await new Promise((r) => setTimeout(r, 0));
+    const mod = await loadSound(2);
     const ctx = FakeAudioContext.instances[0] as SampleAudioContext;
     mod.playPlace('straight');
     // Синтез — осциллятор плюс шумовой щелчок (он тоже BufferSource,
@@ -400,10 +399,7 @@ describe('sound.ts — платформенные фолбэки звука (б�
 
   it('контекст застрял не-running и resume не будит — второй звук пересоздаёт (0036)', async () => {
     SampleAudioContext.bufs = wavBufs();
-    const mod = await import('../src/ui/sound');
-    mod.setSoundEnabled(true);
-    await new Promise((r) => setTimeout(r, 0));
-    await new Promise((r) => setTimeout(r, 0));
+    const mod = await loadSound(2);
     const first = FakeAudioContext.instances[0]!;
     // Симуляция беззвучного переключателя: interrupted, resume бессилен.
     first.state = 'interrupted';
@@ -419,10 +415,7 @@ describe('sound.ts — платформенные фолбэки звука (б�
 
   it('живой running-контекст серией звуков не пересоздаётся', async () => {
     SampleAudioContext.bufs = wavBufs();
-    const mod = await import('../src/ui/sound');
-    mod.setSoundEnabled(true);
-    await new Promise((r) => setTimeout(r, 0));
-    await new Promise((r) => setTimeout(r, 0));
+    const mod = await loadSound(2);
     mod.playPlace('straight');
     mod.playPlace('turn');
     mod.playDraw();

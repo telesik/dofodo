@@ -8,7 +8,9 @@ import {
   newRound,
   type End,
   type GameState,
+  type MatchState,
   type Move,
+  type RoundResult,
   type TileId,
   type Variant,
 } from '../src/engine';
@@ -57,16 +59,26 @@ export function makeState(opts: {
   };
 }
 
-/** Доиграть состояние случайной политикой до конца. Детерминировано по policySeed. */
+/** Политика выбора хода: состояние, легальные ходы и «случай» политики в [0, 1). */
+export type Policy = (state: GameState, moves: readonly Move[], rand: () => number) => Move;
+
+/** Случайная политика — равновероятный легальный ход. */
+export const randomPolicy: Policy = (_state, moves, rand) => moves[Math.floor(rand() * moves.length)]!;
+
+/**
+ * Доиграть состояние до конца заданной политикой (по умолчанию —
+ * случайной). Детерминировано по policySeed: у политики свой маленький
+ * PRNG, чтобы не трогать rng движка.
+ */
 export function playFrom(
   start: GameState,
   policySeed: number,
   onStep?: (state: GameState, move: Move) => void,
+  policy: Policy = randomPolicy,
 ): GameState {
   let state = start;
   let rng = (policySeed ^ 0x9e3779b9) >>> 0;
   const rand = () => {
-    // Отдельный маленький PRNG для выбора политики, чтобы не трогать rng движка.
     rng = (Math.imul(rng, 1664525) + 1013904223) >>> 0;
     return rng / 4294967296;
   };
@@ -79,9 +91,9 @@ export function playFrom(
     if (moves.length === 0) {
       throw new Error(`Нет легальных ходов в фазе ${state.phase}`);
     }
-    const move = moves[Math.floor(rand() * moves.length)]!;
+    const move = policy(state, moves, rand);
     onStep?.(state, move);
-    state = applyMove(state, move);
+    state = applyMove(state, move); // applyMove проверяет легальность
   }
   return state;
 }
@@ -94,4 +106,10 @@ export function playout(
   onStep?: (state: GameState, move: Move) => void,
 ): GameState {
   return playFrom(newRound({ seed, first, variant }), seed, onStep);
+}
+
+/** Матч с подменённым итогом текущей партии: партия «завершена» с таким
+ *  результатом, без розыгрыша — для тестов finishRound/nextRound (§10.5). */
+export function withResult(match: MatchState, result: RoundResult): MatchState {
+  return { ...match, round: { ...match.round, phase: 'over', result } };
 }
