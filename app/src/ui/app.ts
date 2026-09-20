@@ -35,6 +35,8 @@ import { playDraw, playPlace, playShuffle, setSoundEnabled } from './sound';
 import { esc } from './html';
 import { ensureTileDefs, tileBack, tileFace, tileSvgElement } from './tile-svg';
 import { logoSvg } from './logo';
+import { gearSvg } from './icons';
+import { lcg } from './lcg';
 
 /** Ключи хранилища: сейв матча и настройки интерфейса. Экспортированы для
  *  мобильной надстройки (миграция, паспорт сети) — литералы там повторялись. */
@@ -299,7 +301,11 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   const elBtnRelayout = $('#btn-relayout');
   const elBtnFit = $('#btn-fit');
   const elBtnNew = $('#btn-new');
+  const elBtnSettings = $('#btn-settings');
   const svgBoard = document.querySelector<SVGSVGElement>('#board')!;
+  // Значок шестерёнки один на шапку и стартовую карточку (icons.ts):
+  // в index.html кнопка пустая, путь подставляется здесь.
+  elBtnSettings.innerHTML = gearSvg();
 
   // --- Состояние ---------------------------------------------------------------
   let match: MatchState | null = null;
@@ -578,13 +584,28 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }, 2600);
   }
 
-  /** Детерминированный мини-рандом для раскладки кучи базара. */
-  function scatterRand(seed: number): () => number {
-    let s = seed >>> 0;
-    return () => {
-      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-      return s / 4294967296;
-    };
+  /** Раскладка 14 костей кучи по seed: со сдвигом и поворотом, немного
+   *  внахлёст — как на столе. Одна и та же для живой партии и истории. */
+  function scatterSprites(seed: number): PileSprite[] {
+    const rand = lcg(seed);
+    const out: PileSprite[] = [];
+    for (let i = 0; i < 14; i++) {
+      const x = 12 + rand() * 180;
+      const y = 8 + rand() * 140;
+      const rot = -50 + rand() * 100;
+      out.push({ x, y, rot, alive: true });
+    }
+    return out;
+  }
+
+  /** Кость кучи в HTML; idx — индекс спрайта для добора кликом
+   *  (в истории кликов нет — без индекса). */
+  function pileTileHtml(s: PileSprite, idx?: number): string {
+    const data = idx === undefined ? '' : ` data-pile="${idx}"`;
+    return `<div class="pile-tile"${data}
+          style="left:${s.x}px; top:${s.y}px; --rot:${s.rot}deg; transform:rotate(${s.rot}deg)">
+          ${tileSvgElement(tileBack({ shadow: 'flat' }), 78)}
+        </div>`;
   }
 
   function ensurePileSprites(): void {
@@ -592,15 +613,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const key = match.rounds.length;
     if (key === pileRoundKey) return;
     pileRoundKey = key;
-    const rand = scatterRand((match.round.rng ^ (key * 0x9e3779b9)) >>> 0);
-    pileSprites = [];
-    for (let i = 0; i < 14; i++) {
-      // Кучка: кладём со сдвигом и поворотом, немного внахлёст — как на столе.
-      const x = 12 + rand() * 180;
-      const y = 8 + rand() * 140;
-      const rot = -50 + rand() * 100;
-      pileSprites.push({ x, y, rot, alive: true });
-    }
+    pileSprites = scatterSprites((match.round.rng ^ (key * 0x9e3779b9)) >>> 0);
     // Если партия продолжена из сохранения — часть кучи уже разобрана.
     const dead = 14 - match.round.boneyard.length;
     for (let i = 0; i < dead; i++) pileSprites[i]!.alive = false;
@@ -674,6 +687,15 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }, 750);
   }
 
+  /** HTML-клон кости для полёта (рука → стол, куча → рука): лицо без тени,
+   *  88 px по длинной стороне; в документ добавляет и убирает вызывающий. */
+  function makeFlyingTile(values: readonly [number, number], extraClass = ''): HTMLElement {
+    const el = document.createElement('div');
+    el.className = extraClass ? `flying-tile ${extraClass}` : 'flying-tile';
+    el.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
+    return el;
+  }
+
   /**
    * Полёт кости из руки к месту установки. Цель пересчитывается каждый кадр:
    * автомасштаб в это же время может панорамировать и зумить стол.
@@ -681,9 +703,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   function flyPlacement(seq: number, values: readonly [number, number], from: DOMRect): void {
     flightCancel?.();
     flyingSeq = seq; // отменённый полёт мог сбросить флаг скрытия
-    const clone = document.createElement('div');
-    clone.className = 'flying-tile fly-place';
-    clone.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
+    const clone = makeFlyingTile(values, 'fly-place');
     document.body.appendChild(clone);
     const start = { x: from.left + from.width / 2, y: from.top + from.height / 2 };
     const startAngle = 90; // кость в руке стоит вертикально
@@ -893,20 +913,19 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     elBtnRelayout.hidden = remoteSeat !== null || !round.placed.some((p) => p.kind === 'turn');
   }
 
+  /** Слово режима выставления — для журнала и панели подтверждения
+   *  (у призраков на столе свои подписи, modeLabel в board.ts). */
+  function modeWord(mode: 'straight' | 'turn' | 'cross'): string {
+    return mode === 'straight' ? L().modeStraight : mode === 'turn' ? L().modeTurn : L().modeCross;
+  }
+
   // Формулировки без глаголов прошедшего времени: имена игроков любого рода.
   function describeLog(e: LogEntry, names: readonly [string, string]): string {
     switch (e.kind) {
       case 'root':
         return L().logRoot(names[e.player], tileLabel(e.tile));
-      case 'place': {
-        const mode =
-          e.mode === 'straight'
-            ? L().modeStraight
-            : e.mode === 'turn'
-              ? L().modeTurn
-              : L().modeCross;
-        return L().logPlace(names[e.player], tileLabel(e.tile), mode);
-      }
+      case 'place':
+        return L().logPlace(names[e.player], tileLabel(e.tile), modeWord(e.mode));
       case 'draw':
         return e.played ? L().logDrawPlayed(names[e.player]) : L().logDrawKept(names[e.player]);
       case 'pass':
@@ -1082,15 +1101,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const key = `${getLocale()}|${pileRoundKey}|${alive}|${round.boneyard.length}`;
     if (elBoneyard.dataset.key === key) return;
     elBoneyard.dataset.key = key;
-    const tiles = pileSprites
-      .map((s, i) => {
-        if (!s.alive) return '';
-        return `<div class="pile-tile" data-pile="${i}"
-          style="left:${s.x}px; top:${s.y}px; --rot:${s.rot}deg; transform:rotate(${s.rot}deg)">
-          ${tileSvgElement(tileBack({ shadow: 'flat' }), 78)}
-        </div>`;
-      })
-      .join('');
+    const tiles = pileSprites.map((s, i) => (s.alive ? pileTileHtml(s, i) : '')).join('');
     const count = round.boneyard.length;
     elBoneyard.innerHTML = `${tiles}<div class="pile-count">${L().pileCount(count)}</div>`;
   }
@@ -1197,14 +1208,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       pending.type === 'placeRoot'
         ? L().confirmRootAsk(tileLabel(pending.tile))
         : pending.type === 'place'
-          ? L().confirmAsk(
-              tileLabel(pending.tile),
-              pending.mode === 'straight'
-                ? L().modeStraight
-                : pending.mode === 'turn'
-                  ? L().modeTurn
-                  : L().modeCross,
-            )
+          ? L().confirmAsk(tileLabel(pending.tile), modeWord(pending.mode))
           : '';
     elConfirmBar.innerHTML =
       `<span class="confirm-q">${esc(q)}</span>` +
@@ -1334,20 +1338,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const key = `replay|${getLocale()}|${seed}|${count}`;
     if (elBoneyard.dataset.key === key) return;
     elBoneyard.dataset.key = key;
-    const rand = scatterRand(seed >>> 0);
-    const tiles: string[] = [];
-    for (let i = 0; i < 14; i++) {
-      const x = 12 + rand() * 180;
-      const y = 8 + rand() * 140;
-      const rot = -50 + rand() * 100;
-      if (i < count) {
-        tiles.push(`<div class="pile-tile"
-          style="left:${x}px; top:${y}px; --rot:${rot}deg; transform:rotate(${rot}deg)">
-          ${tileSvgElement(tileBack({ shadow: 'flat' }), 78)}
-        </div>`);
-      }
-    }
-    elBoneyard.innerHTML = `${tiles.join('')}<div class="pile-count">${L().pileCount(count)}</div>`;
+    // Первые count спрайтов раскладки — «ещё в куче», как и в живой партии.
+    const tiles = scatterSprites(seed)
+      .slice(0, count)
+      .map((s) => pileTileHtml(s))
+      .join('');
+    elBoneyard.innerHTML = `${tiles}<div class="pile-count">${L().pileCount(count)}</div>`;
   }
 
   function renderHistoryBar(
@@ -1401,6 +1397,25 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     elOverlay.hidden = true;
   }
 
+  /** Пункты селектора языка; имена языков написаны на самих языках. */
+  function localeOptionsHtml(): string {
+    return LOCALES.map(
+      ({ code, label }) =>
+        `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
+    ).join('');
+  }
+
+  /** Ряд действий платформы во всю ширину карточки — стартовой и итогов
+   *  (telesik-team#113). Без надстройки — пустая строка: пустого блока нет. */
+  function platformActionsRow(): string {
+    if (!startCardActions.length) return '';
+    return `<div class="btn-row action-row">${startCardActions
+      .map(
+        (a) => `<button class="btn ghost-btn" data-action="x-act:${esc(a.id)}">${esc(a.label())}</button>`,
+      )
+      .join('')}</div>`;
+  }
+
   function renderStartScreen(): void {
     const curExtra = extraOpponents.find((o) => o.id === opponentPref);
     const wantLots = curExtra?.needsLots !== false;
@@ -1439,10 +1454,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <!-- Язык — прямо на карточке: игрок, не знающий текущего языка,
              не догадается заглянуть за шестерёнку. Дубль настройки из ⚙;
              имена языков в списке написаны на самих языках. -->
-        <select id="inp-lang-start" class="lang-select lang-corner">${LOCALES.map(
-          ({ code, label }) =>
-            `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
-        ).join('')}</select>
+        <select id="inp-lang-start" class="lang-select lang-corner">${localeOptionsHtml()}</select>
         <h1 class="title-with-logo">${logoSvg(34, 'title-logo')}<span><span class="gold">D</span>ofodo</span></h1>
         <p class="sub">${L().tagline}</p>
         ${extLinks.length ? `<p class="sub links-line">${extLinks.join(' · ')}</p>` : ''}
@@ -1509,22 +1521,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
                не достать: вход в настройки нужен и здесь. Шестерёнка на самой
                кнопке — чтобы при случайно выбранном чужом языке игрок нашёл
                настройки по значку, не читая подпись. -->
-          <button class="btn ghost-btn" data-action="settings-open">
-            <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M10.07 5.27 L10.37 2.74 A 9.40 9.40 0 0 1 13.63 2.74 L13.93 5.27 A 7.00 7.00 0 0 1 15.39 5.88 L15.39 5.88 L17.39 4.30 A 9.40 9.40 0 0 1 19.70 6.61 L18.12 8.61 A 7.00 7.00 0 0 1 18.73 10.07 L18.73 10.07 L21.26 10.37 A 9.40 9.40 0 0 1 21.26 13.63 L18.73 13.93 A 7.00 7.00 0 0 1 18.12 15.39 L18.12 15.39 L19.70 17.39 A 9.40 9.40 0 0 1 17.39 19.70 L15.39 18.12 A 7.00 7.00 0 0 1 13.93 18.73 L13.93 18.73 L13.63 21.26 A 9.40 9.40 0 0 1 10.37 21.26 L10.07 18.73 A 7.00 7.00 0 0 1 8.61 18.12 L8.61 18.12 L6.61 19.70 A 9.40 9.40 0 0 1 4.30 17.39 L5.88 15.39 A 7.00 7.00 0 0 1 5.27 13.93 L5.27 13.93 L2.74 13.63 A 9.40 9.40 0 0 1 2.74 10.37 L5.27 10.07 A 7.00 7.00 0 0 1 5.88 8.61 L5.88 8.61 L4.30 6.61 A 9.40 9.40 0 0 1 6.61 4.30 L8.61 5.88 A 7.00 7.00 0 0 1 10.07 5.27 Z" />
-              <circle cx="12" cy="12" r="3.1" />
-            </svg>${L().settingsTitle}</button>
+          <button class="btn ghost-btn" data-action="settings-open">${gearSvg('btn-ico')}${L().settingsTitle}</button>
         </div>
-        ${
-          startCardActions.length
-            ? `<div class="btn-row action-row">${startCardActions
-                .map(
-                  (a) =>
-                    `<button class="btn ghost-btn" data-action="x-act:${esc(a.id)}">${esc(a.label())}</button>`,
-                )
-                .join('')}</div>`
-            : ''
-        }
+        ${platformActionsRow()}
         <p class="sub version-line">${versionLine()}</p>
       </div>`;
     elOverlay.hidden = false;
@@ -1592,20 +1591,89 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (lotFirst === null) return;
     const bot = botLevel ? { player: 1 as const, level: botLevel } : null;
     remoteSeat = null;
-    nextRoundWait = null;
     opts.onMatchReset?.();
     match = startMatch({ names: [n0, n1], first: lotFirst, variant, bot });
-    // Новый матч — новый отсчёт времени хода, каким бы ни был сид (0003).
+    beginRound({ toast: L().toastFirstOpen(nameOf(lotFirst)) });
+  }
+
+  /**
+   * Общий вход в партию — новую или продолженную из сейва — после того, как
+   * match уже подменён: сброс выбора и черновика, новая раскладка кучи,
+   * кадр, сохранение, перерисовка. Пять мест делали это каждое по-своему
+   * и разъезжались по мелочам (telesik-team#122). Ключ хода сбрасывается
+   * всегда: сид рематча приходит извне и может повториться (идея 0003).
+   * resume — партия продолжается, а не начинается: первый показанный ход
+   * не мерить, автомасштаб — по настройке игрока, без звука раздачи.
+   * toast — подпись после перерисовки.
+   */
+  function beginRound(o: { resume?: boolean; toast?: string } = {}): void {
+    if (!match) return;
     turnKey = '';
+    spoilNextTurn = !!o.resume;
     selected = null;
     pending = null;
     pileRoundKey = -1;
-    showRoundOver = false;
-    enableAutoFit(false);
+    showRoundOver = match.round.phase === 'over';
+    lotFirst = null;
+    nextRoundWait = null;
+    if (o.resume) board.setAutoFit(autoFitOn, false);
+    else enableAutoFit(false);
     persist();
     renderAll();
-    playShuffle();
-    toast(L().toastFirstOpen(nameOf(lotFirst)));
+    if (!o.resume) playShuffle();
+    if (o.toast) toast(o.toast);
+  }
+
+  /** Продолжить сохранённый матч со стартовой карточки. */
+  function continueSaved(): void {
+    const saved = loadSaved();
+    if (!saved) return;
+    match = saved;
+    beginRound({ resume: true });
+  }
+
+  /** Следующая партия матча за этим экраном (hot-seat, бот). */
+  function startNextRound(): void {
+    if (!match) return;
+    // Надстройка может взять переход на себя (общий seed сетевой партии).
+    if (opts.onNextRoundRequest?.() === true) return;
+    match = nextRound(match, seedFromCrypto());
+    beginRound({ toast: L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)) });
+  }
+
+  /** Сброс матча: стартовая карточка, сейв стёрт, надстройка извещена. */
+  function resetMatch(): void {
+    match = null;
+    lotFirst = null;
+    replay = null;
+    pending = null;
+    remoteSeat = null;
+    nextRoundWait = null;
+    store.remove(LS_KEY);
+    opts.onMatchReset?.();
+    renderAll();
+  }
+
+  /** Сброс с подтверждением, если матч не доигран: «дверь» в шапке
+   *  и «Бросить матч» на карточке итогов — один путь. */
+  function askResetMatch(): void {
+    if (match && !match.outcome && !window.confirm(L().confirmNewMatch)) return;
+    resetMatch();
+  }
+
+  /** Ответ на разовое предложение убрать подсказки: пометка при любом ответе. */
+  function answerTutorOffer(keep: boolean): void {
+    tutorAsked = true;
+    if (!keep) tutorOn = false;
+    persistUi();
+    renderAll();
+  }
+
+  /** Шаг просмотра истории; значение клампится в renderReplayView. */
+  function seekReplay(next: (step: number) => number): void {
+    if (!replay) return;
+    replay.step = next(replay.step);
+    renderAll();
   }
 
   /**
@@ -1679,15 +1747,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     // во всю ширину, что и на стартовой карточке (telesik-team#113,
     // решение автора 20.09.2026): пауза между партиями — естественный
     // момент, кнопка пассивна и ничего не запирает (манифест tlsk).
-    // Без надстройки ряд не рендерится — пустого блока на карточке нет.
-    const platformRow = startCardActions.length
-      ? `<div class="btn-row action-row">${startCardActions
-          .map(
-            (a) =>
-              `<button class="btn ghost-btn" data-action="x-act:${esc(a.id)}">${esc(a.label())}</button>`,
-          )
-          .join('')}</div>`
-      : '';
+    const platformRow = platformActionsRow();
     if (outcome) {
       const title =
         outcome.kind === 'draw'
@@ -1853,9 +1913,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const toEl = handEl(drawer);
     const toRect = toEl.getBoundingClientRect();
     const pt = parseTile(entry.tile);
-    const fly = document.createElement('div');
-    fly.className = 'flying-tile';
-    fly.innerHTML = tileSvgElement(tileFace(pt.hi, pt.lo, { shadow: 'flat' }), 88);
+    const fly = makeFlyingTile([pt.hi, pt.lo]);
     fly.style.left = `${fromRect.left}px`;
     fly.style.top = `${fromRect.top}px`;
     document.body.appendChild(fly);
@@ -1950,88 +2008,41 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
 
     const actionEl = target.closest<HTMLElement>('[data-action]');
-    if (actionEl) {
-      const action = actionEl.dataset.action!;
-      if (action === 'lot') rollLot();
-      else if (action === 'start') startNewMatch();
-      else if (action.startsWith('x-act:')) {
-        // Пункт-действие платформы на стартовой карточке: та же цель,
-        // что у строки в настройках; карточка остаётся на месте.
-        extraActions.find((a) => a.id === action.slice(6))?.onSelect();
-      } else if (action === 'continue') {
-        const saved = loadSaved();
-        if (saved) {
-          match = saved;
-          // Ход, разбитый перезапуском приложения, не меряем (идея 0003).
-          spoilNextTurn = true;
-          turnKey = '';
-          selected = null;
-          pending = null;
-          pileRoundKey = -1;
-          showRoundOver = match.round.phase === 'over';
-          elOverlay.hidden = true;
-          board.setAutoFit(autoFitOn, false);
-          renderAll();
-        }
-      } else if (action === 'next-round') {
-        if (!match) return;
-        // Надстройка может взять переход на себя (общий seed сетевой партии).
-        if (opts.onNextRoundRequest?.() === true) return;
-        match = nextRound(match, seedFromCrypto());
-        selected = null;
-        pending = null;
-        pileRoundKey = -1;
-        showRoundOver = false;
-        enableAutoFit(false);
-        persist();
-        renderAll();
-        playShuffle();
-        toast(L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)));
-      } else if (action === 'abort-match') {
-        // Карточка итогов перекрывает шапку целиком, и «дверь» из неё
-        // не достать (замечено на телефоне) — та же кнопка здесь.
-        // Клик по кнопке шапки — единый путь с её подтверждением.
-        elBtnNew.click();
-      } else if (action === 'new-match') {
-        match = null;
-        lotFirst = null;
-        replay = null;
-        pending = null;
-        remoteSeat = null;
-        nextRoundWait = null;
-        store.remove(LS_KEY);
-        opts.onMatchReset?.();
-        renderAll();
-      } else if (action === 'howto') {
-        openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown });
-      } else if (action === 'settings-open') {
-        openSettings(true);
-      } else if (action === 'tutor-off' || action === 'tutor-keep') {
-        // Спрашиваем один раз: пометка ставится при любом ответе.
-        tutorAsked = true;
-        if (action === 'tutor-off') tutorOn = false;
-        persistUi();
-        renderAll();
-      } else if (action === 'history') {
-        showRoundOver = false;
-        openHistory();
-      } else if (action === 'replay-exit') {
-        exitReplay();
-      } else if (replay && action === 'replay-first') {
-        replay.step = 0;
-        renderAll();
-      } else if (replay && action === 'replay-prev') {
-        replay.step = Math.max(0, replay.step - 1);
-        renderAll();
-      } else if (replay && action === 'replay-next') {
-        replay.step += 1; // клампится в renderReplayView
-        renderAll();
-      } else if (replay && action === 'replay-last') {
-        replay.step = Number.MAX_SAFE_INTEGER; // клампится в renderReplayView
-        renderAll();
-      }
+    if (!actionEl) return;
+    const action = actionEl.dataset.action!;
+    if (action.startsWith('x-act:')) {
+      // Пункт-действие платформы на стартовой карточке и итогах: та же
+      // цель, что у строки в настройках; карточка остаётся на месте.
+      extraActions.find((a) => a.id === action.slice(6))?.onSelect();
+      return;
     }
+    if (Object.hasOwn(actions, action)) actions[action]!();
   });
+
+  /** Действия кнопок карточек и панелей по data-action (клик по документу). */
+  const actions: Record<string, () => void> = {
+    lot: rollLot,
+    start: startNewMatch,
+    continue: continueSaved,
+    'next-round': startNextRound,
+    // Карточка итогов перекрывает шапку целиком, и «дверь» из неё не
+    // достать (замечено на телефоне) — то же действие с тем же подтверждением.
+    'abort-match': askResetMatch,
+    'new-match': resetMatch,
+    howto: () => openHowTo({ rulesUrl: rulesDocUrl(), onClose: markHowtoShown }),
+    'settings-open': () => openSettings(true),
+    'tutor-off': () => answerTutorOffer(false),
+    'tutor-keep': () => answerTutorOffer(true),
+    history: () => {
+      showRoundOver = false;
+      openHistory();
+    },
+    'replay-exit': exitReplay,
+    'replay-first': () => seekReplay(() => 0),
+    'replay-prev': () => seekReplay((s) => Math.max(0, s - 1)),
+    'replay-next': () => seekReplay((s) => s + 1),
+    'replay-last': () => seekReplay(() => Number.MAX_SAFE_INTEGER),
+  };
 
   // Ползунок и селект партии в панели истории; выбор файла протокола.
   // Приложение ушло с глаз (сворачивание, блокировка, внешний браузер) —
@@ -2190,10 +2201,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       <div class="card" style="max-width:460px;width:100%">
         <h1 style="font-size:22px">${L().settingsTitle}</h1>
         <div class="field"><label for="set-lang">${L().fieldLang}</label>
-          <select id="set-lang" class="lang-select">${LOCALES.map(
-            ({ code, label }) =>
-              `<option value="${code}" ${code === getLocale() ? 'selected' : ''}>${label}</option>`,
-          ).join('')}</select></div>
+          <select id="set-lang" class="lang-select">${localeOptionsHtml()}</select></div>
         <hr class="sep">
         ${row('sound', soundOn, L().tipSound)}
         ${row('tutor', tutorOn, L().tipTutor)}
@@ -2278,22 +2286,9 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
   });
 
-  $('#btn-settings').addEventListener('click', () => openSettings(elSettings.hidden));
+  elBtnSettings.addEventListener('click', () => openSettings(elSettings.hidden));
 
-  elBtnNew.addEventListener('click', () => {
-    if (match && !match.outcome) {
-      if (!window.confirm(L().confirmNewMatch)) return;
-    }
-    match = null;
-    lotFirst = null;
-    replay = null;
-    pending = null;
-    remoteSeat = null;
-    nextRoundWait = null;
-    store.remove(LS_KEY);
-    opts.onMatchReset?.();
-    renderAll();
-  });
+  elBtnNew.addEventListener('click', askResetMatch);
 
   /** Локализуемые статические элементы: подсказки кнопок, бейдж, селект языка. */
   function applyStaticTexts(): void {
@@ -2303,7 +2298,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     elBtnFit.dataset.tip = L().tipFit;
     elBtnNew.dataset.tip = L().tipNew;
     elBtnRelayout.dataset.tip = L().tipRelayout;
-    $('#btn-settings').dataset.tip = L().settingsTitle;
+    elBtnSettings.dataset.tip = L().settingsTitle;
     updateBadge();
   }
 
@@ -2363,34 +2358,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         bot: null,
       });
       remoteSeat = o.remoteSeat;
-      // Сид рематча приходит извне и может повториться — ключ сбрасываем (0003).
-      turnKey = '';
-      selected = null;
-      pending = null;
-      pileRoundKey = -1;
-      showRoundOver = false;
-      lotFirst = null;
-      elOverlay.hidden = true;
-      enableAutoFit(false);
-      persist();
-      renderAll();
-      playShuffle();
-      toast(L().toastFirstOpen(nameOf(o.first)));
+      beginRound({ toast: L().toastFirstOpen(nameOf(o.first)) });
     },
     nextRoundWith(seed) {
       if (!match || match.outcome) return;
       match = nextRound(match, seed);
-      nextRoundWait = null;
-      turnKey = '';
-      selected = null;
-      pending = null;
-      pileRoundKey = -1;
-      showRoundOver = false;
-      enableAutoFit(false);
-      persist();
-      renderAll();
-      playShuffle();
-      toast(L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)));
+      beginRound({ toast: L().toastRoundStart(match.rounds.length + 1, nameOf(match.first)) });
     },
     setNextRoundWait(state) {
       nextRoundWait = state;

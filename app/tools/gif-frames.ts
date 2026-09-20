@@ -18,7 +18,7 @@ import {
   type RoundResult,
   type Vec,
 } from '../src/engine';
-import { CELL, TILE_L, TILE_W, TILE_R, tileDefs, tileFace } from '../src/ui/tile-svg';
+import { CELL, TILE_L, TILE_W, TILE_R, placedTransform, tileDefs, tileFace } from '../src/ui/tile-svg';
 import { logoSvg } from '../src/ui/logo';
 
 const args = process.argv.slice(2);
@@ -47,15 +47,6 @@ const names: [string, string] = [flag('p1', 'Alex'), flag('p2', 'Olya')];
 const VARIANT = { doubleOnlyCloses: false };
 /** Сторона кадра в пикселях (квадрат). Камера живёт в viewBox, холст не меняется. */
 const FRAME_PX = 900;
-
-// Та же формула, что в board.ts (tileTransform без зеркала); копия, а не
-// импорт: board.ts тянет за собой DOM и i18n — в ноде это лишнее.
-function tileTr(a: Vec, b: Vec): string {
-  const cx = ((a.x + b.x) / 2) * CELL;
-  const cy = ((a.y + b.y) / 2) * CELL;
-  const angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
-  return `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${angle.toFixed(1)})`;
-}
 
 interface Round {
   readonly seed: number;
@@ -293,7 +284,7 @@ function frameSvg(
                rx="${(TILE_R + 3).toFixed(1)}" fill="none" stroke="#c9a86a" stroke-width="2.6"
                opacity="${opts.highlight.toFixed(2)}"/>`
           : '';
-      return `<g transform="${tileTr(p.cells[0], p.cells[1])}">${face}${ring}</g>`;
+      return `<g transform="${placedTransform(p.cells[0], p.cells[1])}">${face}${ring}</g>`;
     })
     .join('\n');
   const { x0, y0, side } = cam;

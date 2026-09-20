@@ -5,6 +5,7 @@
 // работает прежний WebAudio-синтез, он остаётся фолбэком.
 
 import boxUrl from './sounds/box.m4a';
+import { lcg } from './lcg';
 import place1Url from './sounds/place-1.m4a';
 import place2Url from './sounds/place-2.m4a';
 import shuffleUrl from './sounds/shuffle.m4a';
@@ -247,10 +248,9 @@ function noise(ac: AudioContext): AudioBuffer {
   const len = Math.floor(ac.sampleRate * 0.06);
   noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
   const data = noiseBuf.getChannelData(0);
-  let s = 22222;
+  const rand = lcg(22222);
   for (let i = 0; i < len; i++) {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    data[i] = (s / 2147483648 - 1) * (1 - i / len);
+    data[i] = (rand() * 2 - 1) * (1 - i / len);
   }
   return noiseBuf;
 }
