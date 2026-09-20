@@ -8,12 +8,9 @@
 import { vi } from 'vitest';
 import indexHtml from '../index.html?raw';
 import { legalMoves, type Move, type Variant } from '../src/engine';
-import { initApp, type AppHandle, type AppOptions, type KVStore } from '../src/ui/app';
+import { initApp, LS_UI_KEY, type AppHandle, type AppOptions, type KVStore } from '../src/ui/app';
 
-/** Ключи localStorage приложения (app.ts их не экспортирует — идентификаторы
- *  неизменяемы, см. правило 06.09.2026 про старое имя). */
-export const LS_UI_KEY = 'bonesai-ui-v1';
-export const LS_KEY = 'bonesai-match-v1';
+export { LS_KEY, LS_UI_KEY } from '../src/ui/app';
 
 export interface MemStore extends KVStore {
   readonly mem: Map<string, string>;

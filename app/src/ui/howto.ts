@@ -4,6 +4,7 @@
 // текст. Оверлей самостоятельный: своя разметка, свой обработчик, ничего
 // в состоянии игры не трогает. Тексты — словарь ядра, картинки — SVG
 // движка (без сторонних ресурсов).
+import { esc } from './html';
 import { L } from './i18n';
 import { CELL, TILE_L, TILE_W, ensureTileDefs, tileBack, tileFace } from './tile-svg';
 import { logoSvg } from './logo';
@@ -47,8 +48,6 @@ function arrow(x1: number, y1: number, x2: number, y2: number): string {
 function label(x: number, y: number, t: string, o: { anchor?: string; dim?: boolean } = {}): string {
   return `<text x="${x}" y="${y}" text-anchor="${o.anchor ?? 'middle'}" font-size="13" fill="${o.dim ? '#97a099' : '#e6ded0'}">${esc(t)}</text>`;
 }
-const esc = (s: string): string =>
-  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
 
 function scene(w: number, h: number, inner: string): string {
   // Градиенты костей — из общего хоста документа (ensureTileDefs), не копия:
