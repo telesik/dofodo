@@ -986,9 +986,13 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     );
 
     // Общий счёт матча — бейджем у имени (в шапке ему тесно на мобильных).
+    // Рядом со счётом — цель матча «43/100» (telesik-team#112, постановка
+    // автора 20.09.2026): цель — порог проигрыша (§10.5), и до этой правки
+    // в самой партии её было не видно, только на итогах. Цель приглушена,
+    // чтобы свои очки читались первыми.
     const totalChip =
       !view && match
-        ? `<span class="total-chip" data-tip="${L().tipTotal}">${match.totals[player]}</span>`
+        ? `<span class="total-chip" data-tip="${L().tipTotal}">${match.totals[player]}<span class="total-goal">/${matchTarget(match.variant)}</span></span>`
         : '';
     const meta = `
       <div class="hand-meta">
