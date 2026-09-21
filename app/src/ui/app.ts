@@ -516,6 +516,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
   }
 
+  // Кэш разбора сохранения (telesik-team#123, O3): карточка старта
+  // перерисовывается на смену языка и соперника, а JSON.parse и валидация
+  // всего матча каждый раз — лишние. Ключ кэша — сама строка из хранилища:
+  // любая запись, в том числе извне оболочки, меняет её, и кэш сбрасывается сам.
+  let savedRaw: string | null = null;
+  let savedParsed: MatchState | null = null;
   function loadSaved(): MatchState | null {
     const drop = (): null => {
       try {
@@ -528,6 +534,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     try {
       const raw = store.get(LS_KEY);
       if (!raw) return null;
+      if (raw === savedRaw) return savedParsed;
       const TILE_RE = /^[0-6]-[0-6]$/;
       const tiles = (x: unknown): boolean =>
         Array.isArray(x) && x.every((t) => typeof t === 'string' && TILE_RE.test(t));
@@ -563,7 +570,10 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         (m.bot == null ||
           ((m.bot.player === 0 || m.bot.player === 1) &&
             ['easy', 'normal', 'strong'].includes(m.bot.level)));
-      return ok ? m : drop();
+      if (!ok) return drop();
+      savedRaw = raw;
+      savedParsed = m;
+      return m;
     } catch {
       return drop();
     }
@@ -853,7 +863,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
     deriveSelection(round, legal);
     ensurePileSprites();
-    renderTopbar(round);
+    renderTopbar(round, legal);
     // В чужой ход (бот или удалённый соперник) руки и куча не приглашают
     // к действию: без классов playable/can-draw — кликать всё равно нельзя.
     const legalUi = notMyTurn() ? [] : legal;
@@ -895,12 +905,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
   }
 
-  function renderTopbar(round: GameState): void {
+  function renderTopbar(round: GameState, legal: readonly Move[]): void {
     if (!match) return;
     elRoundChip.textContent = L().roundChip(
       match.rounds.length + (round.phase === 'over' ? 0 : 1),
     );
-    const { event, prompt } = statusTexts(round);
+    const { event, prompt } = statusTexts(round, legal);
     elStatusEvent.textContent = event;
     elStatusPrompt.innerHTML = prompt;
     elBtnFit.classList.toggle('active', board.isAutoFit());
@@ -935,7 +945,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }
   }
 
-  function statusTexts(round: GameState): { event: string; prompt: string } {
+  function statusTexts(round: GameState, legal: readonly Move[]): { event: string; prompt: string } {
     const last = round.log[round.log.length - 1];
     const event = last ? describeLog(last, match!.names) : L().statusNewRound;
     if (round.phase === 'over') {
@@ -960,7 +970,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (round.mustPlay) {
       return { event, prompt: L().promptMustPlay(name, tileLabel(round.mustPlay)) };
     }
-    const anyPlacement = legalMoves(round).some((m) => m.type === 'place');
+    // Легальные ходы уже посчитаны в renderAll (telesik-team#123, O2).
+    const anyPlacement = legal.some((m) => m.type === 'place');
     if (anyPlacement) {
       return { event, prompt: L().promptYourMove(name) };
     }
