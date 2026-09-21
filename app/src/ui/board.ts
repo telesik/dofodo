@@ -235,6 +235,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     return avoidPile(
       { x: minX * CELL, y: minY * CELL, w, h },
       { x0: rawMinX * CELL, y0: rawMinY * CELL, x1: rawMaxX * CELL, y1: rawMaxY * CELL },
+      rect,
     );
   }
 
@@ -245,11 +246,18 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
    * С зеркальным столом всё то же самое, меняется только, какой край дерева
    * подбирается к куче: обычно — растущий кончик, в зеркале — корень.
    */
-  function avoidPile(vb: ViewBox, raw: { x0: number; y0: number; x1: number; y1: number }): ViewBox {
-    const pile = document.querySelector('#boneyard');
-    if (!pile) return vb;
-    const pr = pile.getBoundingClientRect();
-    const sr = svg.getBoundingClientRect();
+  // Элемент кучи ищется один раз, а прямоугольник svg приходит из contentBox
+  // (telesik-team#123, O4): два принудительных layout-чтения за рендер
+  // вместо трёх плюс поиска по DOM.
+  let pileEl: Element | null = null;
+  function avoidPile(
+    vb: ViewBox,
+    raw: { x0: number; y0: number; x1: number; y1: number },
+    sr: DOMRect,
+  ): ViewBox {
+    pileEl ??= document.querySelector('#boneyard');
+    if (!pileEl) return vb;
+    const pr = pileEl.getBoundingClientRect();
     if (pr.width === 0 || sr.width === 0) return vb;
     const px0 = pr.left - sr.left;
     const py0 = pr.top - sr.top;
