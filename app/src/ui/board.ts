@@ -11,7 +11,7 @@ import {
   type TileId,
   type Vec,
 } from '../engine';
-import { CELL, tileFace, TILE_L, TILE_W, TILE_R } from './tile-svg';
+import { CELL, PIPS, placedTransform, tileCenterAngle, tileFace, TILE_L, TILE_W, TILE_R } from './tile-svg';
 import { L } from './i18n';
 
 export interface BoardHooks {
@@ -139,12 +139,7 @@ export function sceneCell(c: Vec, mirror: boolean): Vec {
  * а «центр отразили, а угол забыли» глазами ловится не всегда.
  */
 export function tileTransform(a: Vec, b: Vec, mirror = false): string {
-  const c0 = sceneCell(a, mirror);
-  const c1 = sceneCell(b, mirror);
-  const cx = ((c0.x + c1.x) / 2) * CELL;
-  const cy = ((c0.y + c1.y) / 2) * CELL;
-  const angle = (Math.atan2(c1.y - c0.y, c1.x - c0.x) * 180) / Math.PI;
-  return `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${angle.toFixed(1)})`;
+  return placedTransform(sceneCell(a, mirror), sceneCell(b, mirror));
 }
 
 export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
@@ -240,6 +235,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     return avoidPile(
       { x: minX * CELL, y: minY * CELL, w, h },
       { x0: rawMinX * CELL, y0: rawMinY * CELL, x1: rawMaxX * CELL, y1: rawMaxY * CELL },
+      rect,
     );
   }
 
@@ -250,11 +246,18 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
    * С зеркальным столом всё то же самое, меняется только, какой край дерева
    * подбирается к куче: обычно — растущий кончик, в зеркале — корень.
    */
-  function avoidPile(vb: ViewBox, raw: { x0: number; y0: number; x1: number; y1: number }): ViewBox {
-    const pile = document.querySelector('#boneyard');
-    if (!pile) return vb;
-    const pr = pile.getBoundingClientRect();
-    const sr = svg.getBoundingClientRect();
+  // Элемент кучи ищется один раз, а прямоугольник svg приходит из contentBox
+  // (telesik-team#123, O4): два принудительных layout-чтения за рендер
+  // вместо трёх плюс поиска по DOM.
+  let pileEl: Element | null = null;
+  function avoidPile(
+    vb: ViewBox,
+    raw: { x0: number; y0: number; x1: number; y1: number },
+    sr: DOMRect,
+  ): ViewBox {
+    pileEl ??= document.querySelector('#boneyard');
+    if (!pileEl) return vb;
+    const pr = pileEl.getBoundingClientRect();
     if (pr.width === 0 || sr.width === 0) return vb;
     const px0 = pr.left - sr.left;
     const py0 = pr.top - sr.top;
@@ -302,6 +305,21 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     };
   }
 
+  /**
+   * Зум кадра в k раз вокруг экранной точки (cx, cy): мировая точка под ней
+   * остаётся на месте, ширина зажата в [MIN_W, MAX_W]. Кадр не применяется:
+   * вызывающий может ещё сдвинуть его (панорама щипка) и применяет сам.
+   */
+  function zoomAt(cx: number, cy: number, k: number): void {
+    const rect = svg.getBoundingClientRect();
+    const w = Math.min(MAX_W, Math.max(MIN_W, vb.w * k));
+    const kk = w / vb.w;
+    const px = vb.x + ((cx - rect.left) / rect.width) * vb.w;
+    const py = vb.y + ((cy - rect.top) / rect.height) * vb.h;
+    cancelAnimationFrame(tweenHandle);
+    vb = { x: px - (px - vb.x) * kk, y: py - (py - vb.y) * kk, w, h: vb.h * kk };
+  }
+
   svg.addEventListener('pointerdown', (ev) => {
     if (ev.button !== 0) return; // панорама и клики — только основной кнопкой
     pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -330,20 +348,11 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     if (pinch && pointers.size >= 2) {
       const cur = pinchFrom([...pointers.values()]);
       if (cur.d < 1 || pinch.d < 1) return;
-      const rect = svg.getBoundingClientRect();
-      cancelAnimationFrame(tweenHandle);
-      const w = Math.min(MAX_W, Math.max(MIN_W, vb.w * (pinch.d / cur.d)));
-      const kk = w / vb.w;
       // Зум вокруг мировой точки под центром щипка…
-      const px = vb.x + ((pinch.cx - rect.left) / rect.width) * vb.w;
-      const py = vb.y + ((pinch.cy - rect.top) / rect.height) * vb.h;
-      let nx = px - (px - vb.x) * kk;
-      let ny = py - (py - vb.y) * kk;
+      zoomAt(pinch.cx, pinch.cy, pinch.d / cur.d);
       // …плюс панорама на смещение самого центра.
-      const scale = w / rect.width;
-      nx -= (cur.cx - pinch.cx) * scale;
-      ny -= (cur.cy - pinch.cy) * scale;
-      vb = { x: nx, y: ny, w, h: vb.h * kk };
+      const scale = vb.w / svg.getBoundingClientRect().width;
+      vb = { ...vb, x: vb.x - (cur.cx - pinch.cx) * scale, y: vb.y - (cur.cy - pinch.cy) * scale };
       applyViewBox();
       pinch = cur;
       if (autoFit) {
@@ -388,19 +397,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     'wheel',
     (ev) => {
       ev.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const k = ev.deltaY > 0 ? 1.15 : 1 / 1.15;
-      const w = Math.min(MAX_W, Math.max(MIN_W, vb.w * k));
-      const kk = w / vb.w;
-      const px = vb.x + ((ev.clientX - rect.left) / rect.width) * vb.w;
-      const py = vb.y + ((ev.clientY - rect.top) / rect.height) * vb.h;
-      cancelAnimationFrame(tweenHandle);
-      vb = {
-        x: px - (px - vb.x) * kk,
-        y: py - (py - vb.y) * kk,
-        w,
-        h: vb.h * kk,
-      };
+      zoomAt(ev.clientX, ev.clientY, ev.deltaY > 0 ? 1.15 : 1 / 1.15);
       applyViewBox();
       autoFit = false;
       hooks.onViewChange(false);
@@ -635,20 +632,8 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     const size = TILE_W;
     const r = size * 0.07;
     const area = size * 0.8;
-    const T2 = 0.24;
-    const C2 = 0.5;
-    const B2 = 0.76;
-    const layouts: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
-      [],
-      [[C2, C2]],
-      [[T2, T2], [B2, B2]],
-      [[T2, T2], [C2, C2], [B2, B2]],
-      [[T2, T2], [T2, B2], [B2, T2], [B2, B2]],
-      [[T2, T2], [T2, B2], [C2, C2], [B2, T2], [B2, B2]],
-      [[T2, T2], [T2, C2], [T2, B2], [B2, T2], [B2, C2], [B2, B2]],
-    ];
     const off = (size - area) / 2 - size / 2;
-    return layouts[value]!
+    return PIPS[value]!
       .map(
         ([px, py]) =>
           `<circle cx="${(cx + off + px * area).toFixed(1)}" cy="${(off + py * area).toFixed(1)}"
@@ -663,11 +648,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     if (!p) return null;
     const rect = svg.getBoundingClientRect();
     if (rect.width === 0) return null;
-    const c0 = scene(p.cells[0]);
-    const c1 = scene(p.cells[1]);
-    const cx = ((c0.x + c1.x) / 2) * CELL;
-    const cy = ((c0.y + c1.y) / 2) * CELL;
-    const angle = (Math.atan2(c1.y - c0.y, c1.x - c0.x) * 180) / Math.PI;
+    const { cx, cy, angle } = tileCenterAngle(scene(p.cells[0]), scene(p.cells[1]));
     return {
       x: rect.left + ((cx - vb.x) / vb.w) * rect.width,
       y: rect.top + ((cy - vb.y) / vb.h) * rect.height,

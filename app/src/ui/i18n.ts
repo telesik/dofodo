@@ -37,7 +37,6 @@ const ru = {
   tagline:
     'Домино по новым правилам: глубина шахмат и точно отмеренная случайность.',
   linkSupport: 'Поддержать авторов',
-  linkRules: 'Правила игры',
   howtoLink: 'Как играть',
   howtoKicker: (n: number, total: number) => `Как играть · ${n} из ${total}`,
   howtoNext: 'Далее',
@@ -108,10 +107,9 @@ const ru = {
   tipMark: 'Разметить принадлежность ходов: кости первого игрока светлее, второго — темнее',
   tipFit: 'Автомасштаб: держать всю фигуру в кадре (двойной клик по столу — включить)',
   tipMirror: 'Зеркальный стол: вид с другой стороны — корень справа, дерево растёт влево',
-  tipTotal: 'Общий счёт матча (§10.5)',
+  tipTotal: 'Общий счёт матча и цель — проигрывает набравший её (§10.5)',
   tipSound: 'Звук выставления костей',
   tipNew: 'Бросить текущий матч',
-  tipLang: 'Язык интерфейса',
   confirmNewMatch: 'Бросить текущий матч и начать новый?',
 
   // Статусы
@@ -189,7 +187,6 @@ const ru = {
 
   // История
   historyLive: 'История ходов матча',
-  historyExternal: 'Просмотр загруженного протокола',
   historyDeal: (name: string) => `Раздача — первым ходит ${name}`,
   historyPos: (k: number, m: number) => `ход ${k}/${m}`,
   roundOptDone: (n: number, cause: string, s0: number, s1: number) =>
@@ -279,7 +276,6 @@ const en: Dict = {
   tagline:
     'Dominoes with new rules: the depth of chess and precisely measured luck.',
   linkSupport: 'Support the authors',
-  linkRules: 'Game rules',
   howtoLink: 'How to play',
   howtoKicker: (n, total) => `How to play · ${n} of ${total}`,
   howtoNext: 'Next',
@@ -349,10 +345,9 @@ const en: Dict = {
   tipMark: 'Mark move ownership: first player’s tiles lighter, second’s darker',
   tipFit: 'Auto-zoom: keep the whole tree in view (double-click the table to enable)',
   tipMirror: 'Mirrored table: the view from the other side — root on the right, tree grows to the left',
-  tipTotal: 'Match total (§10.5)',
+  tipTotal: 'Match total and target — whoever reaches it loses (§10.5)',
   tipSound: 'Tile placement sound',
   tipNew: 'Abandon the current match',
-  tipLang: 'Interface language',
   confirmNewMatch: 'Abandon the current match and start a new one?',
 
   statusNewRound: 'New round',
@@ -416,7 +411,6 @@ const en: Dict = {
   whySwap: 'roles swap after a tie',
 
   historyLive: 'Match move history',
-  historyExternal: 'Reviewing a loaded protocol',
   historyDeal: (name) => `Deal — ${name} moves first`,
   historyPos: (k, m) => `move ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Round ${n} — ${cause}, ${s0}:${s1}`,
@@ -500,7 +494,6 @@ const es: Dict = {
   tagline:
     'Dominó con reglas nuevas: la profundidad del ajedrez y un azar bien medido.',
   linkSupport: 'Apoyar a los autores',
-  linkRules: 'Reglas del juego',
   howtoLink: 'Cómo se juega',
   howtoKicker: (n, total) => `Cómo se juega · ${n} de ${total}`,
   howtoNext: 'Siguiente',
@@ -570,10 +563,9 @@ const es: Dict = {
   tipMark: 'Marcar la autoría: fichas del primero más claras, del segundo más oscuras',
   tipFit: 'Autozoom: mantener todo el árbol a la vista (doble clic en la mesa para activar)',
   tipMirror: 'Mesa en espejo: la vista desde el otro lado — la raíz a la derecha, el árbol crece hacia la izquierda',
-  tipTotal: 'Total del encuentro (§10.5)',
+  tipTotal: 'Total y meta del encuentro — pierde quien la alcanza (§10.5)',
   tipSound: 'Sonido al colocar fichas',
   tipNew: 'Abandonar el encuentro actual',
-  tipLang: 'Idioma de la interfaz',
   confirmNewMatch: '¿Abandonar el encuentro actual y empezar uno nuevo?',
 
   statusNewRound: 'Juego nuevo',
@@ -637,7 +629,6 @@ const es: Dict = {
   whySwap: 'tras el empate se intercambian los roles',
 
   historyLive: 'Historial del encuentro',
-  historyExternal: 'Revisión de un protocolo cargado',
   historyDeal: (name) => `Reparto — sale primero ${name}`,
   historyPos: (k, m) => `jugada ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Juego ${n} — ${cause}, ${s0}:${s1}`,
@@ -722,7 +713,6 @@ const de: Dict = {
   tagline:
     'Domino mit neuen Regeln: die Tiefe des Schachs und genau dosierter Zufall.',
   linkSupport: 'Die Autoren unterstützen',
-  linkRules: 'Spielregeln',
   howtoLink: 'So wird gespielt',
   howtoKicker: (n, total) => `So wird gespielt · ${n} von ${total}`,
   howtoNext: 'Weiter',
@@ -792,10 +782,9 @@ const de: Dict = {
   tipMark: 'Zugehörigkeit markieren: Steine des Ersten heller, des Zweiten dunkler',
   tipFit: 'Autozoom: den ganzen Baum im Bild halten (Doppelklick auf den Tisch aktiviert)',
   tipMirror: 'Gespiegelter Tisch: die Sicht von der anderen Seite — Wurzel rechts, der Baum wächst nach links',
-  tipTotal: 'Gesamtstand des Matches (§10.5)',
+  tipTotal: 'Gesamtstand und Ziel des Matches — wer es erreicht, verliert (§10.5)',
   tipSound: 'Geräusch beim Anlegen',
   tipNew: 'Aktuelles Match abbrechen',
-  tipLang: 'Sprache der Oberfläche',
   confirmNewMatch: 'Aktuelles Match abbrechen und ein neues beginnen?',
 
   statusNewRound: 'Neue Partie',
@@ -859,7 +848,6 @@ const de: Dict = {
   whySwap: 'nach dem Remis wechseln die Rollen',
 
   historyLive: 'Zugverlauf des Matches',
-  historyExternal: 'Ansicht eines geladenen Protokolls',
   historyDeal: (name) => `Verteilung — ${name} zieht zuerst`,
   historyPos: (k, m) => `Zug ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Partie ${n} — ${cause}, ${s0}:${s1}`,
@@ -944,7 +932,6 @@ const pt: Dict = {
   tagline:
     'Dominó com regras novas: a profundidade do xadrez e um acaso bem medido.',
   linkSupport: 'Apoiar os autores',
-  linkRules: 'Regras do jogo',
   howtoLink: 'Como jogar',
   howtoKicker: (n, total) => `Como jogar · ${n} de ${total}`,
   howtoNext: 'Avançar',
@@ -1014,10 +1001,9 @@ const pt: Dict = {
   tipMark: 'Marcar a autoria: peças do primeiro mais claras, do segundo mais escuras',
   tipFit: 'Autozoom: manter a árvore inteira à vista (clique duplo na mesa ativa)',
   tipMirror: 'Mesa espelhada: a vista do outro lado — a raiz à direita, a árvore cresce para a esquerda',
-  tipTotal: 'Total da partida (§10.5)',
+  tipTotal: 'Total e meta da partida — perde quem a alcança (§10.5)',
   tipSound: 'Som ao colocar peças',
   tipNew: 'Abandonar a partida atual',
-  tipLang: 'Idioma da interface',
   confirmNewMatch: 'Abandonar a partida atual e começar outra?',
 
   statusNewRound: 'Novo jogo',
@@ -1081,7 +1067,6 @@ const pt: Dict = {
   whySwap: 'após o empate os papéis se invertem',
 
   historyLive: 'Histórico da partida',
-  historyExternal: 'Revisão de um protocolo carregado',
   historyDeal: (name) => `Distribuição — ${name} joga primeiro`,
   historyPos: (k, m) => `jogada ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Jogo ${n} — ${cause}, ${s0}:${s1}`,
@@ -1165,7 +1150,6 @@ const zh: Dict = {
   tagline:
     '规则全新的多米诺：如棋般深邃，运气恰到好处。',
   linkSupport: '支持作者',
-  linkRules: '游戏规则',
   howtoLink: '玩法',
   howtoKicker: (n, total) => `玩法 · ${n} / ${total}`,
   howtoNext: '下一步',
@@ -1186,8 +1170,8 @@ const zh: Dict = {
   howtoS3Title: '对子',
   howtoS3Text: '对子直接接——端点保持开放；横放——该分支永久封闭。',
   howtoS3Sub: '对子不能转弯。只有同点数的对子才能封闭端点。',
-  howtoS4Title: '明手，暗牌库',
-  howtoS4Text: '对手能看到你的牌，如同下棋。唯一的秘密是牌库。',
+  howtoS4Title: '明手，暗牌堆',
+  howtoS4Text: '对手能看到你的牌，如同下棋。唯一的秘密是牌堆。',
   howtoS4Sub: '无牌可出就摸一张。仍不能出，轮到对手。',
   howtoS5Title: '一局结束与计分',
   howtoS5Text: '一局在有人出完牌时结束，或在僵局时结束——无人能出。',
@@ -1201,7 +1185,7 @@ const zh: Dict = {
   howtoClosed: '已封闭',
   howtoYou: '你的牌',
   howtoOpponent: '对手',
-  howtoBoneyard: '牌库',
+  howtoBoneyard: '牌堆',
   howtoOut: '出完——手中无牌',
   howtoFish: '僵局——无人能出',
   howtoPoints: '分数——手中点数',
@@ -1234,10 +1218,9 @@ const zh: Dict = {
   tipMark: '标记出牌归属：先手的牌更亮，后手的更暗',
   tipFit: '自动缩放：让整棵树保持在视野内（双击桌面开启）',
   tipMirror: '镜像桌面：从对面看到的样子——根牌在右侧，树向左生长',
-  tipTotal: '比赛总分（§10.5）',
+  tipTotal: '比赛总分与目标——先达到者输（§10.5）',
   tipSound: '放牌音效',
   tipNew: '放弃当前比赛',
-  tipLang: '界面语言',
   confirmNewMatch: '放弃当前比赛并开始新的一场？',
 
   statusNewRound: '新的一局',
@@ -1301,7 +1284,6 @@ const zh: Dict = {
   whySwap: '平局后交换先后手',
 
   historyLive: '本场比赛的走子历史',
-  historyExternal: '复盘已加载的记录',
   historyDeal: (name) => `发牌——${name} 先行`,
   historyPos: (k, m) => `第 ${k}/${m} 着`,
   roundOptDone: (n, cause, s0, s1) => `第 ${n} 局——${cause}，${s0}:${s1}`,
@@ -1390,7 +1372,6 @@ const uk: Dict = {
   tagline:
     'Доміно за новими правилами: глибина шахів і точно відміряна випадковість.',
   linkSupport: 'Підтримати авторів',
-  linkRules: 'Правила гри',
   howtoLink: 'Як грати',
   howtoKicker: (n, total) => `Як грати · ${n} з ${total}`,
   howtoNext: 'Далі',
@@ -1460,10 +1441,9 @@ const uk: Dict = {
   tipMark: 'Позначити належність ходів: кістки першого гравця світліші, другого — темніші',
   tipFit: 'Автомасштаб: тримати все дерево в кадрі (подвійний клік по столу — увімкнути)',
   tipMirror: 'Дзеркальний стіл: вигляд з іншого боку — корінь праворуч, дерево росте ліворуч',
-  tipTotal: 'Загальний рахунок матчу (§10.5)',
+  tipTotal: 'Загальний рахунок матчу та мета — програє той, хто її набрав (§10.5)',
   tipSound: 'Звук виставляння кісток',
   tipNew: 'Покинути поточний матч',
-  tipLang: 'Мова інтерфейсу',
   confirmNewMatch: 'Покинути поточний матч і почати новий?',
 
   statusNewRound: 'Нова партія',
@@ -1527,7 +1507,6 @@ const uk: Dict = {
   whySwap: 'після нічиєї ролі міняються',
 
   historyLive: 'Історія ходів матчу',
-  historyExternal: 'Перегляд завантаженого протоколу',
   historyDeal: (name) => `Роздача — першим ходить ${name}`,
   historyPos: (k, m) => `хід ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Партія ${n} — ${cause}, ${s0}:${s1}`,
@@ -1615,7 +1594,6 @@ function frTiles(n: number): string {
 const fr: Dict = {
   tagline: 'Le domino avec de nouvelles règles : la profondeur des échecs et un hasard dosé au millimètre.',
   linkSupport: 'Soutenir les auteurs',
-  linkRules: 'Règles du jeu',
   howtoLink: 'Comment jouer',
   howtoKicker: (n, total) => `Comment jouer · ${n} sur ${total}`,
   howtoNext: 'Suivant',
@@ -1685,10 +1663,9 @@ const fr: Dict = {
   tipMark: 'Marquer les coups : dominos du premier joueur plus clairs, du second plus foncés',
   tipFit: 'Zoom automatique : garder tout l’arbre en vue (double-clic sur la table pour activer)',
   tipMirror: 'Table en miroir : la vue depuis l’autre côté — racine à droite, l’arbre pousse vers la gauche',
-  tipTotal: 'Score de la partie (§10.5)',
+  tipTotal: 'Score et objectif de la partie — qui l’atteint perd (§10.5)',
   tipSound: 'Son de pose des dominos',
   tipNew: 'Abandonner la partie en cours',
-  tipLang: 'Langue de l’interface',
   confirmNewMatch: 'Abandonner la partie en cours et en commencer une nouvelle ?',
 
   statusNewRound: 'Nouvelle manche',
@@ -1752,7 +1729,6 @@ const fr: Dict = {
   whySwap: 'les rôles s’inversent après une égalité',
 
   historyLive: 'Historique des coups de la partie',
-  historyExternal: 'Revue d’un protocole chargé',
   historyDeal: (name) => `Donne — ${name} commence`,
   historyPos: (k, m) => `coup ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Manche ${n} — ${cause}, ${s0}:${s1}`,
@@ -1840,7 +1816,6 @@ function itTiles(n: number): string {
 const it: Dict = {
   tagline: 'Il domino con regole nuove: la profondità degli scacchi e una fortuna dosata al millimetro.',
   linkSupport: 'Sostieni gli autori',
-  linkRules: 'Regole del gioco',
   howtoLink: 'Come si gioca',
   howtoKicker: (n, total) => `Come si gioca · ${n} di ${total}`,
   howtoNext: 'Avanti',
@@ -1910,10 +1885,9 @@ const it: Dict = {
   tipMark: 'Segna le mosse: tessere del primo giocatore più chiare, del secondo più scure',
   tipFit: 'Zoom automatico: tutto l’albero in vista (doppio clic sul tavolo per attivare)',
   tipMirror: 'Tavolo specchiato: la vista dall’altro lato — radice a destra, l’albero cresce a sinistra',
-  tipTotal: 'Punteggio della partita (§10.5)',
+  tipTotal: 'Punteggio e obiettivo della partita — chi lo raggiunge perde (§10.5)',
   tipSound: 'Suono di posa delle tessere',
   tipNew: 'Abbandona la partita in corso',
-  tipLang: 'Lingua dell’interfaccia',
   confirmNewMatch: 'Abbandonare la partita in corso e iniziarne una nuova?',
 
   statusNewRound: 'Nuova mano',
@@ -1977,7 +1951,6 @@ const it: Dict = {
   whySwap: 'i ruoli si scambiano dopo un pareggio',
 
   historyLive: 'Cronologia delle mosse della partita',
-  historyExternal: 'Revisione di un protocollo caricato',
   historyDeal: (name) => `Distribuzione — inizia ${name}`,
   historyPos: (k, m) => `mossa ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `Mano ${n} — ${cause}, ${s0}:${s1}`,
@@ -2061,7 +2034,6 @@ const it: Dict = {
 const ja: Dict = {
   tagline: '新しいルールのドミノ：チェスの深さと、きっちり量られた運。',
   linkSupport: '作者を応援する',
-  linkRules: 'ゲームのルール',
   howtoLink: '遊び方',
   howtoKicker: (n, total) => `遊び方 · ${n} / ${total}`,
   howtoNext: '次へ',
@@ -2131,10 +2103,9 @@ const ja: Dict = {
   tipMark: '手番の持ち主を表示：先手の牌は明るく、後手の牌は暗く',
   tipFit: '自動ズーム：木全体を画面内に（テーブルをダブルクリックで有効化）',
   tipMirror: '鏡像テーブル：反対側からの眺め — 根が右、木は左へ伸びる',
-  tipTotal: 'マッチの合計点（§10.5）',
+  tipTotal: 'マッチの合計点と目標——達した側が負け（§10.5）',
   tipSound: '牌を置く音',
   tipNew: '現在のマッチを放棄',
-  tipLang: '表示言語',
   confirmNewMatch: '現在のマッチを放棄して新しく始めますか？',
 
   statusNewRound: '新しいラウンド',
@@ -2198,7 +2169,6 @@ const ja: Dict = {
   whySwap: '引き分けの後は先後を交代',
 
   historyLive: 'マッチの手番履歴',
-  historyExternal: '読み込んだ棋譜を再生中',
   historyDeal: (name) => `配牌 — ${name} が先手`,
   historyPos: (k, m) => `手番 ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `ラウンド ${n} — ${cause}、${s0}:${s1}`,
@@ -2282,7 +2252,6 @@ const ja: Dict = {
 const ko: Dict = {
   tagline: '새 규칙의 도미노: 체스의 깊이와 정확히 재어 넣은 운.',
   linkSupport: '제작자 후원하기',
-  linkRules: '게임 규칙',
   howtoLink: '게임 방법',
   howtoKicker: (n, total) => `게임 방법 · ${n} / ${total}`,
   howtoNext: '다음',
@@ -2352,10 +2321,9 @@ const ko: Dict = {
   tipMark: '수의 주인 표시: 선의 타일은 밝게, 후의 타일은 어둡게',
   tipFit: '자동 확대/축소: 나무 전체를 화면에 (테이블을 두 번 클릭해 켜기)',
   tipMirror: '거울 테이블: 반대편에서 본 모습 — 뿌리는 오른쪽, 나무는 왼쪽으로 자람',
-  tipTotal: '매치 합계 (§10.5)',
+  tipTotal: '매치 합계와 목표 — 먼저 도달하면 패배 (§10.5)',
   tipSound: '타일 놓는 소리',
   tipNew: '현재 매치 포기',
-  tipLang: '표시 언어',
   confirmNewMatch: '현재 매치를 포기하고 새로 시작할까요?',
 
   statusNewRound: '새 라운드',
@@ -2419,7 +2387,6 @@ const ko: Dict = {
   whySwap: '무승부 뒤에는 선후를 바꿈',
 
   historyLive: '매치의 수 기록',
-  historyExternal: '불러온 기보 보는 중',
   historyDeal: (name) => `패 나눔 — ${name} 님이 선`,
   historyPos: (k, m) => `수 ${k}/${m}`,
   roundOptDone: (n, cause, s0, s1) => `라운드 ${n} — ${cause}, ${s0}:${s1}`,
