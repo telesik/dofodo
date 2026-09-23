@@ -1,7 +1,7 @@
 {
   "name": "dofodo-app",
   "private": true,
-  "version": "1.6.4-next",
+  "version": "1.6.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
