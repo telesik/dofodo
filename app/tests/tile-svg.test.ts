@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   TILE_L,
   TILE_W,
-  bonsaiEmblem,
+  treeEmblem,
   tileBack,
   tileDefs,
   tileFace,
@@ -64,7 +64,7 @@ describe('tileFace — лицо кости', () => {
 });
 
 describe('tileBack — рубашка', () => {
-  it('тёмный лак с эмблемой бонсая и рамкой', () => {
+  it('тёмный лак с эмблемой дерева и рамкой', () => {
     const svg = tileBack();
     expect(svg).toContain('url(#g-back)');
     expect(svg).toContain('class="emblem"');
@@ -73,9 +73,9 @@ describe('tileBack — рубашка', () => {
   });
 });
 
-describe('bonsaiEmblem', () => {
+describe('treeEmblem', () => {
   it('позиция и масштаб уходят в transform', () => {
-    const svg = bonsaiEmblem(10, -4, 40);
+    const svg = treeEmblem(10, -4, 40);
     expect(svg).toContain('translate(10 -4)');
     expect(svg).toContain('scale(2)');
     expect(svg).not.toContain('NaN');

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // «Как играть» (идея 0032): шесть слайдов, навигация вперёд/назад, «Пропустить»
 // и «Понятно» закрывают, тап по фону закрывает; на последнем слайде —
-// ссылка на полные правила; все семь языков дают полный набор строк.
+// ссылка на полные правила; все языки (LOCALES) дают полный набор строк.
 import { describe, expect, it, vi } from 'vitest';
 import { howtoSlides, openHowTo } from '../src/ui/howto';
 import { L, LOCALES, setLocale } from '../src/ui/i18n';
@@ -68,7 +68,7 @@ describe('howto', () => {
     expect(root()).toBeNull();
   });
 
-  it('все семь языков: строки на месте, слайды строятся', () => {
+  it('все языки: строки на месте, слайды строятся', () => {
     for (const { code } of LOCALES) {
       setLocale(code);
       expect(L().howtoKicker(2, 5)).toContain('2');

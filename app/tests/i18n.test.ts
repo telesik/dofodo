@@ -17,7 +17,7 @@ describe('matchRoundLabel (фича 0015)', () => {
       expect(label, code).toContain('10');
       expect(label, code).toContain('150');
       // Порядок ловит перепутанные плейсхолдеры (`Партия ${target}…`):
-      // во всех семи формах номер партии стоит раньше цели.
+      // во всех локалях номер партии стоит раньше цели.
       expect(label.indexOf('10'), code).toBeLessThan(label.indexOf('150'));
     }
   });

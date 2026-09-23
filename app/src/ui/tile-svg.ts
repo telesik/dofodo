@@ -190,12 +190,12 @@ export function tileBack(opts: TileFaceOptions = {}): string {
       fill="url(#g-back)" stroke="#0d1712" stroke-width="1.2"/>
     <rect x="${-L / 2 + 3}" y="${-W / 2 + 3}" width="${L - 6}" height="${W - 6}"
       rx="${TILE_R - 2}" fill="none" stroke="rgba(201,168,106,0.45)" stroke-width="1"/>
-    ${bonsaiEmblem(0, 0, W * 0.34)}
+    ${treeEmblem(0, 0, W * 0.34)}
   </g>`;
 }
 
-/** Мини-эмблема бонсая: чаша, ствол, три кроны. */
-export function bonsaiEmblem(cx: number, cy: number, s: number): string {
+/** Мини-эмблема дерева на рубашке: чаша, ствол, три кроны. */
+export function treeEmblem(cx: number, cy: number, s: number): string {
   return `
   <g class="emblem" transform="translate(${cx} ${cy}) scale(${s / 20})" opacity="0.6">
     <path d="M -7 8 q 7 4 14 0 l -1.6 3 q -5.4 2.4 -10.8 0 z" fill="#c9a86a"/>
