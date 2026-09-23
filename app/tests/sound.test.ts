@@ -332,7 +332,7 @@ describe('sound.ts — записи: разметка и сэмпловое пр
 
     gainLog.length = 0;
     setSoundEnabled(false);
-    // Глушение бьёт и по уже играющему: мастеру выставлен 0 (sound.ts:266).
+    // Глушение бьёт и по уже играющему: мастеру выставлен 0 (setValueAtTime в sound.ts).
     expect(gainLog).toContain(0);
 
     ctx.started.length = 0;

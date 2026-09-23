@@ -1,7 +1,7 @@
 // RNG: детерминированная цепочка mulberry32 (движок) и криптослучайный
 // стартовый seed нового матча. Цепочка косвенно проверена реплеем — здесь
-// её базовые свойства и seedFromCrypto, который движковым тестам не нужен
-// и потому нигде больше не вызывается.
+// её базовые свойства и seedFromCrypto, который движковые тесты не трогают
+// (в приложении он даёт seed нового матча: match.ts, app.ts).
 import { describe, expect, it } from 'vitest';
 import { nextFloat, nextInt, seedFromCrypto, shuffle } from '../src/engine/rng';
 

@@ -46,7 +46,7 @@ describe('nextRoundButton', () => {
     }
   });
 
-  it('все семь языков дают три разных подписи', () => {
+  it('все языки дают три разных подписи', () => {
     for (const { code } of LOCALES) {
       setLocale(code);
       const d = L();
