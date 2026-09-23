@@ -1460,11 +1460,15 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       extLinks.push(
         `<a href="${opts.googlePlayUrl}" target="_blank" rel="noopener">${L().linkGooglePlay}</a>`,
       );
+    // Язык — прямо на карточке: игрок, не знающий текущего языка, не
+    // догадается заглянуть за шестерёнку (дубль настройки из ⚙; имена языков
+    // в списке — на самих языках). Кнопка настроек на карточке: она
+    // перекрывает шапку целиком, и ⚙ шапки отсюда не достать; шестерёнка на
+    // самой кнопке — чтобы при случайно выбранном чужом языке игрок нашёл
+    // настройки по значку, не читая подпись. (Комментарии здесь, а не в
+    // разметке: HTML-комментарии из шаблона попадали в DOM пользователя.)
     elOverlay.innerHTML = `
       <div class="card">
-        <!-- Язык — прямо на карточке: игрок, не знающий текущего языка,
-             не догадается заглянуть за шестерёнку. Дубль настройки из ⚙;
-             имена языков в списке написаны на самих языках. -->
         <select id="inp-lang-start" class="lang-select lang-corner">${localeOptionsHtml()}</select>
         <h1 class="title-with-logo">${logoSvg(34, 'title-logo')}<span><span class="gold">D</span>ofodo</span></h1>
         <p class="sub">${L().tagline}</p>
@@ -1528,10 +1532,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           ${savedInfo}
         </div>
         <div class="btn-row">
-          <!-- Стартовая карточка перекрывает шапку целиком, поэтому ⚙ отсюда
-               не достать: вход в настройки нужен и здесь. Шестерёнка на самой
-               кнопке — чтобы при случайно выбранном чужом языке игрок нашёл
-               настройки по значку, не читая подпись. -->
           <button class="btn ghost-btn" data-action="settings-open">${gearSvg('btn-ico')}${L().settingsTitle}</button>
         </div>
         ${platformActionsRow()}
@@ -1566,6 +1566,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     const n1 = secondName();
     const ta = parseTile(a);
     const tb = parseTile(b);
+    // Цель матча в скобках показывается всегда, и при канонических 100 тоже:
+    // не заставлять игрока помнить дефолт (фича 0015).
     $('#lot-row').innerHTML = `
       <div class="lot-side ${lotFirst === 0 ? 'win' : ''}">
         ${tileSvgElement(tileFace(ta.hi, ta.lo, { shadow: 'flat' }), 92, { extraClass: 'lot-tile' })}
@@ -1823,8 +1825,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         <h2>${causeTitle}</h2>
         <p class="sub">${causeSub}${result.winner === null ? L().resultTieNote : ''}</p>
         <div class="result-grid">${rows}</div>
-        <!-- Цель в скобках показывается всегда, и при канонических 100 тоже:
-             не заставлять игрока помнить дефолт (фича 0015). -->
         <div class="match-round">${L().matchRoundLabel(match.rounds.length, matchTarget(match.variant))}</div>
         ${timeRow}
         <div class="match-score">${esc(nameOf(0))} ${match.totals[0]} : ${match.totals[1]} ${esc(
@@ -2055,7 +2055,6 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     'replay-last': () => seekReplay(() => Number.MAX_SAFE_INTEGER),
   };
 
-  // Ползунок и селект партии в панели истории; выбор файла протокола.
   // Приложение ушло с глаз (сворачивание, блокировка, внешний браузер) —
   // текущий замер времени хода испорчен (идея 0003).
   document.addEventListener('visibilitychange', () => {
@@ -2069,6 +2068,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     turnStartedAt = null;
   });
 
+  // Ползунок (replay-slider) и селект партии (replay-round) панели истории.
   document.addEventListener('input', (ev) => {
     const t = ev.target as HTMLInputElement;
     if (t.id === 'replay-slider' && replay) {
