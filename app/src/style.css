@@ -1826,3 +1826,21 @@ select {
   text-underline-offset: 3px;
 }
 
+
+/* Tip jar платформенной надстройки: вид оверлея и тоста — здесь, геометрию
+   (позиция, центровка) надстройка задаёт inline. z-index 80 — выше настроек
+   (70) и лобби (50): оверлей открывается из настроек и обязан лечь поверх. */
+.tip-jar-overlay {
+  z-index: 80;
+  background: rgba(10, 14, 12, 0.72);
+}
+
+.tip-jar-toast {
+  z-index: 80;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  background: rgba(40, 28, 16, 0.94);
+  color: #e0b090;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}

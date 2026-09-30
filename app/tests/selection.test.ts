@@ -153,6 +153,8 @@ describe('политика кегля фокусируемых контроло�
       '.replay-pos',
       '.pile-count',
       '#toast',
+      // Тост «спасибо» tip jar платформенной надстройки: не фокусируется.
+      '.tip-jar-toast',
       '#tutor-bar',
       '#version-badge',
       '.card .sub',
