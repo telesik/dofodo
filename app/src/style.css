@@ -363,6 +363,9 @@ h1.title-with-logo {
   overflow-x: auto;
   padding: 10px 4px 6px;
   scrollbar-width: thin;
+  /* Вдоль ряда палец прокручивает руку, поперёк — берёт кость и ведёт её
+     к столу (ход перетягиванием): вертикальный жест браузеру не отдаём. */
+  touch-action: pan-x;
 }
 
 .hand-tile {
@@ -1641,6 +1644,22 @@ hr.sep {
 .flying-tile.fly-place {
   transition: none;
   transform-origin: 44px 22px;
+}
+
+/* Кость под пальцем (ход перетягиванием): за пальцем идёт почти без
+   задержки, на тень встаёт коротким доводом, в руку возвращается плавно. */
+.flying-tile.drag-tile {
+  transform-origin: 44px 22px;
+  transition: transform 0.05s linear;
+  will-change: transform;
+}
+
+.flying-tile.drag-tile.snapped {
+  transition: transform 0.12s ease-out;
+}
+
+.flying-tile.drag-tile.returning {
+  transition: transform 0.2s ease;
 }
 
 /* Страховка от iOS-автозума для будущих контролов: фокус на контроле

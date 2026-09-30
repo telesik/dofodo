@@ -44,6 +44,31 @@ export interface BoardRenderOptions {
   hideSeq?: number | null;
 }
 
+/** Кость на экране: центр в px окна, угол в градусах, длина кости в px. */
+export interface ScreenPose {
+  x: number;
+  y: number;
+  angle: number;
+  scale: number;
+}
+
+/** Тень хода на экране — для перетягивания кости из руки (telesik-team#164). */
+export interface GhostTarget {
+  readonly move: Move;
+  /**
+   * Точка прилипания. У «прямо» и поворота — центр дальней половины: приставная
+   * у теней одного конца общая, а дальние разнесены на клетку с лишним — палец
+   * различает варианты увереннее, чем по центрам костей. У корня и «поперёк» —
+   * центр кости.
+   */
+  readonly x: number;
+  readonly y: number;
+  /** Как кость ляжет на эту тень. */
+  readonly pose: ScreenPose;
+  /** Значения половин в порядке клеток тени (как у выложенной кости). */
+  readonly values: readonly [number, number];
+}
+
 /** Совпадение хода с ожидающим подтверждения (включая сторону поворота). */
 export function samePlacement(a: Move, b: Move): boolean {
   if (a.type !== b.type) return false;
@@ -149,6 +174,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
   let autoFit = true;
   let lastGame: GameState | null = null;
   let lastGhostCells: Vec[] = [];
+  let lastGhosts: { move: Move; cells: readonly [Vec, Vec]; values: readonly [number, number] }[] = [];
   let tweenHandle = 0;
   let mirror = false;
 
@@ -535,6 +561,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     // На приставную клетку полутень не претендует, так что адресат клика
     // по ней от порядка не зависит.
     lastGhostCells = [];
+    lastGhosts = [];
     if (opts.selected !== null) {
       const farHalf = farHalfGhosts(opts.ghostMoves, opts.pending);
       const halves: string[] = [];
@@ -545,18 +572,16 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
           // берём у движка: разъедься они с ROOT_CELLS, тень корня встала бы
           // не туда, где потом окажется сам корень.
           lastGhostCells.push(ROOT_CELLS[0], ROOT_CELLS[1]);
-          parts.push(ghostSvg(game, m, ROOT_CELLS, 'root', opts));
+          const t = parseTile(m.tile);
+          lastGhosts.push({ move: m, cells: ROOT_CELLS, values: [t.hi, t.lo] });
+          parts.push(ghostSvg(m, ROOT_CELLS, [t.hi, t.lo], 'root', opts));
         } else if (m.type === 'place') {
           const geo = placementGeometry(game, m.tile, m.endId, m.mode, m.side);
           lastGhostCells.push(geo.cells[0], geo.cells[1]);
-          const svgPart = ghostSvg(
-            game,
-            m,
-            [geo.cells[0], geo.cells[1]],
-            m.mode,
-            opts,
-            farHalf.has(m),
-          );
+          const cells: readonly [Vec, Vec] = [geo.cells[0], geo.cells[1]];
+          const values: readonly [number, number] = [geo.values[0], geo.values[1]];
+          lastGhosts.push({ move: m, cells, values });
+          const svgPart = ghostSvg(m, cells, values, m.mode, opts, farHalf.has(m));
           (farHalf.has(m) ? halves : parts).push(svgPart);
         }
       }
@@ -584,23 +609,13 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
   }
 
   function ghostSvg(
-    game: GameState,
     move: Extract<Move, { type: 'place' } | { type: 'placeRoot' }>,
     cells: readonly [Vec, Vec],
+    values: readonly [number, number],
     mode: string,
     opts: BoardRenderOptions,
     farHalfOnly = false,
   ): string {
-    const values: [number, number] =
-      move.type === 'place'
-        ? (() => {
-            const geo = placementGeometry(game, move.tile, move.endId, move.mode, move.side);
-            return [geo.values[0], geo.values[1]];
-          })()
-        : (() => {
-            const t = parseTile(move.tile);
-            return [t.hi, t.lo];
-          })();
     const dataMove = opts.interactive
       ? `data-move='${JSON.stringify(move).replace(/'/g, '&#39;')}'`
       : '';
@@ -644,19 +659,39 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       .join('');
   }
 
-  /** Экранные координаты центра выложенной кости (для летящего клона). */
-  function placedScreenPoint(seq: number): { x: number; y: number; angle: number; scale: number } | null {
-    const p = lastGame?.placed[seq];
-    if (!p) return null;
+  /** Кость в мировых клетках a→b — на экране; null, пока стол не свёрстан. */
+  function screenPose(a: Vec, b: Vec): ScreenPose | null {
     const rect = svg.getBoundingClientRect();
     if (rect.width === 0) return null;
-    const { cx, cy, angle } = tileCenterAngle(scene(p.cells[0]), scene(p.cells[1]));
+    const { cx, cy, angle } = tileCenterAngle(scene(a), scene(b));
     return {
       x: rect.left + ((cx - vb.x) / vb.w) * rect.width,
       y: rect.top + ((cy - vb.y) / vb.h) * rect.height,
       angle,
       scale: (TILE_L / vb.w) * rect.width,
     };
+  }
+
+  /** Экранные координаты центра выложенной кости (для летящего клона). */
+  function placedScreenPoint(seq: number): ScreenPose | null {
+    const p = lastGame?.placed[seq];
+    return p ? screenPose(p.cells[0], p.cells[1]) : null;
+  }
+
+  /**
+   * Тени последнего рендера на экране. Считаются по текущему кадру при каждом
+   * вызове: пока кость тянут, автомасштаб может ещё доезжать.
+   */
+  function ghostTargets(): GhostTarget[] {
+    const out: GhostTarget[] = [];
+    for (const g of lastGhosts) {
+      const pose = screenPose(g.cells[0], g.cells[1]);
+      if (!pose) return [];
+      const whole = g.move.type === 'placeRoot' || (g.move.type === 'place' && g.move.mode === 'cross');
+      const anchor = whole ? pose : screenPose(g.cells[1], g.cells[1])!;
+      out.push({ move: g.move, x: anchor.x, y: anchor.y, pose, values: g.values });
+    }
+    return out;
   }
 
   return {
@@ -666,6 +701,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       fit(animate);
     },
     placedScreenPoint,
+    ghostTargets,
     /** Довести кость в кадр минимальным сдвигом (автомасштаб выключен). */
     ensureVisible(seq: number, margin = 40): void {
       const pt = placedScreenPoint(seq);
