@@ -27,7 +27,8 @@ import {
   type TileId,
   type Variant,
 } from '../engine';
-import { createBoard, samePlacement } from './board';
+import { createBoard, samePlacement, type ScreenPose } from './board';
+import { dragIntent, nearestAngle, pickSnap } from './drag-snap';
 import { detectLocale, getLocale, L, LOCALES, setLocale, type Locale } from './i18n';
 import { nextRoundButton } from './next-round-button';
 import { openHowTo, openHowToAsk } from './howto';
@@ -68,6 +69,26 @@ const RULES_DOC_LANG: Record<Locale, string> = {
 
 function rulesDocUrl(): string {
   return `https://github.com/telesik/dofodo/blob/main/docs/RULES.${RULES_DOC_LANG[getLocale()]}.md`;
+}
+
+/** Длинная сторона HTML-клона кости в полёте и под пальцем, px. */
+const FLY_PX = 88;
+
+/** Перетягивание кости из руки: от нажатия до отпускания (telesik-team#164). */
+interface TileDrag {
+  readonly pointerId: number;
+  readonly tile: TileId;
+  readonly player: 0 | 1;
+  /** Палец или перо: кость берётся только движением поперёк ряда руки. */
+  readonly touch: boolean;
+  readonly startX: number;
+  readonly startY: number;
+  /** Клон под пальцем; null — кость ещё не взята (нажатие без движения). */
+  clone: HTMLElement | null;
+  /** Вариант позиции, к которому кость сейчас прилипла. */
+  snap: Move | null;
+  /** Текущий угол клона: доворот к тени идёт от него коротким путём. */
+  angle: number;
 }
 
 interface PileSprite {
@@ -320,6 +341,12 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   /** Кость, скрытая на столе, пока к месту летит её клон. */
   let flyingSeq: number | null = null;
   let flightCancel: (() => void) | null = null;
+  /** Кость, которую тянут из руки к столу (telesik-team#164). */
+  let drag: TileDrag | null = null;
+  /** Кость в руке, скрытая, пока её клон под пальцем или летит назад в руку. */
+  let dragHidden: { readonly player: 0 | 1; readonly tile: TileId } | null = null;
+  /** Клик, которым браузер завершает перетягивание, ходом не считается. */
+  let swallowClick = false;
   let showRoundOver = false;
   let roundOverTimer = 0;
   let autoPassTimer = 0;
@@ -698,25 +725,30 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   }
 
   /** HTML-клон кости для полёта (рука → стол, куча → рука): лицо без тени,
-   *  88 px по длинной стороне; в документ добавляет и убирает вызывающий. */
+   *  FLY_PX по длинной стороне; в документ добавляет и убирает вызывающий. */
   function makeFlyingTile(values: readonly [number, number], extraClass = ''): HTMLElement {
     const el = document.createElement('div');
     el.className = extraClass ? `flying-tile ${extraClass}` : 'flying-tile';
-    el.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), 88);
+    el.innerHTML = tileSvgElement(tileFace(values[0], values[1], { shadow: 'flat' }), FLY_PX);
     return el;
+  }
+
+  /** Кость в руке как старт полёта: центр её места, стоит вертикально. */
+  function handPose(rect: DOMRect): ScreenPose {
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, angle: 90, scale: FLY_PX };
   }
 
   /**
    * Полёт кости из руки к месту установки. Цель пересчитывается каждый кадр:
    * автомасштаб в это же время может панорамировать и зумить стол.
    */
-  function flyPlacement(seq: number, values: readonly [number, number], from: DOMRect): void {
+  function flyPlacement(seq: number, values: readonly [number, number], start: ScreenPose): void {
     flightCancel?.();
     flyingSeq = seq; // отменённый полёт мог сбросить флаг скрытия
     const clone = makeFlyingTile(values, 'fly-place');
     document.body.appendChild(clone);
-    const start = { x: from.left + from.width / 2, y: from.top + from.height / 2 };
-    const startAngle = 90; // кость в руке стоит вертикально
+    const startAngle = start.angle;
+    const startScale = start.scale / FLY_PX;
     const t0 = performance.now();
     const dur = 340;
     let raf = 0;
@@ -739,7 +771,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       const x = start.x + (target.x - start.x) * e;
       const y = start.y + (target.y - start.y) * e;
       const angle = startAngle + (target.angle - startAngle) * e;
-      const scale = 1 + (target.scale / 88 - 1) * e;
+      const scale = startScale + (target.scale / FLY_PX - startScale) * e;
       clone.style.left = `${x - 44}px`;
       clone.style.top = `${y - 22}px`;
       clone.style.transform = `rotate(${angle}deg) scale(${scale.toFixed(3)})`;
@@ -769,7 +801,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
 
   /** external — ход рождён не за этим экраном (BLE-надстройка):
    *  своё t не подставляем, пришедшее не трогаем. */
-  function dispatch(move: Move, external = false): void {
+  function dispatch(move: Move, external = false, flyStart?: ScreenPose): void {
     if (replay || !match || match.round.phase === 'over') return;
     if (!external && move.t === undefined && turnStartedAt !== null) {
       move = { ...move, t: Math.max(0, Math.round(performance.now() - turnStartedAt)) };
@@ -820,7 +852,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (round.phase === 'over' && match.outcome) opts.onMatchOver?.(match);
     renderAll();
     if (placedSeq !== null) {
-      if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.values, flyFrom);
+      // Перетянутая кость уже стоит на своей тени — долетает оттуда, а не из руки.
+      if (flyFrom) flyPlacement(placedSeq, round.placed[placedSeq]!.values, flyStart ?? handPose(flyFrom));
       // Автомасштаб сам держит всё в кадре; без него доводим кость минимальным
       // сдвигом — после перекладки дерева она могла уехать за край.
       if (!board.isAutoFit()) board.ensureVisible(placedSeq);
@@ -830,6 +863,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   // --- Рендер ----------------------------------------------------------------
 
   function renderAll(): void {
+    dropStaleDrag();
     if (replay) {
       elTutorBar.hidden = true;
       elConfirmBar.hidden = true;
@@ -1049,6 +1083,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
           !view && round.mustPlay === t && isActive && !botsTurnNow() && !notMyTurn()
             ? 'must'
             : '',
+          // Кость под пальцем (или летит назад): место в руке за ней остаётся.
+          !view && dragHidden?.tile === t && dragHidden.player === player ? 'incoming' : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -1141,7 +1177,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
       animateSeq,
       interactive: round.phase !== 'over',
       markOwners,
-      pending,
+      // Тень, к которой прилипла перетягиваемая кость, выглядит как черновик.
+      pending: drag?.snap ?? pending,
       hideSeq: flyingSeq,
     });
   }
@@ -1943,6 +1980,218 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     }, 430);
   }
 
+  // --- Ход перетягиванием кости из руки (telesik-team#164) ----------------------
+  // Дополнение к ходу тапом: кость ведут пальцем от руки к столу. У тени она
+  // встаёт на ближайший вариант позиции, движение пальца меняет вариант или
+  // уводит кость прочь; ставит её отпускание пальца. Отпущенная мимо теней
+  // кость возвращается на своё место в руке. Логика жеста — drag-snap.ts.
+
+  /** Палец держит кость чуть в стороне стола: под пальцем её не видно. */
+  const DRAG_LIFT_PX = 34;
+  /** Прилипание: длина кости на экране, но не меньше пальца. */
+  const SNAP_MIN_PX = 44;
+  const DRAG_RETURN_MS = 200;
+
+  function wiggle(el: HTMLElement): void {
+    el.classList.remove('wiggle');
+    void el.offsetWidth;
+    el.classList.add('wiggle');
+  }
+
+  function handTileEl(player: 0 | 1, tile: TileId): HTMLElement | null {
+    return document.querySelector<HTMLElement>(
+      `.hand-tile[data-player="${player}"][data-tile="${tile}"]`,
+    );
+  }
+
+  function placeDragClone(d: TileDrag, clone: HTMLElement, pose: ScreenPose, snapped: boolean): void {
+    d.angle = nearestAngle(d.angle, pose.angle);
+    clone.classList.toggle('snapped', snapped);
+    clone.style.transform =
+      `translate(${(pose.x - FLY_PX / 2).toFixed(1)}px, ${(pose.y - FLY_PX / 4).toFixed(1)}px) ` +
+      `rotate(${d.angle.toFixed(1)}deg) scale(${(pose.scale / FLY_PX).toFixed(3)})`;
+  }
+
+  /** Порог пройден: кость берётся из руки. false — брать нечего или нельзя. */
+  function beginDrag(d: TileDrag): boolean {
+    const el = handTileEl(d.player, d.tile);
+    if (!el || replay || !match || match.round.phase === 'over' || notMyTurn()) return false;
+    const round = match.round;
+    // Обязательная кость (после добора) отсекается тем же условием:
+    // легальные ходы есть только у неё.
+    const playable = legalMoves(round).some(
+      (m) => (m.type === 'place' || m.type === 'placeRoot') && m.tile === d.tile,
+    );
+    if (!playable) {
+      // Кости некуда встать — то же покачивание, что и на тап.
+      wiggle(el);
+      return false;
+    }
+    const t = parseTile(d.tile);
+    const clone = makeFlyingTile([t.hi, t.lo], 'drag-tile');
+    clone.style.left = '0';
+    clone.style.top = '0';
+    placeDragClone(d, clone, handPose(el.getBoundingClientRect()), false);
+    document.body.appendChild(clone);
+    d.clone = clone;
+    // Захват — на контейнере руки: сама кость перерисовывается рендером,
+    // а события пальца должны приходить до самого отпускания.
+    try {
+      handEl(d.player).setPointerCapture(d.pointerId);
+    } catch {
+      /* указатель уже отпущен — обойдёмся без захвата */
+    }
+    selected = d.tile;
+    pending = null;
+    dragHidden = { player: d.player, tile: d.tile };
+    renderAll();
+    // Как и при выборе тапом: тень корня всегда в кадре.
+    if (round.phase === 'root') enableAutoFit();
+    return true;
+  }
+
+  /** Кость идёт за пальцем и прилипает к ближайшей тени в радиусе. */
+  function moveDrag(d: TileDrag, clone: HTMLElement, px: number, py: number): void {
+    if (!match) return;
+    // Палец закрывает кость: держим её со стороны стола от пальца.
+    const lift = !d.touch ? 0 : d.player === bottomSeat() ? -DRAG_LIFT_PX : DRAG_LIFT_PX;
+    const probe = { x: px, y: py + lift };
+    const targets = board.ghostTargets();
+    const radius = Math.max(SNAP_MIN_PX, targets[0]?.pose.scale ?? 0);
+    const snap = pickSnap(
+      probe,
+      targets.map((g) => ({ x: g.x, y: g.y, item: g.move })),
+      radius,
+      d.snap,
+      samePlacement,
+    );
+    const changed = snap === null ? d.snap !== null : d.snap === null || !samePlacement(snap, d.snap);
+    const target = snap && targets.find((g) => g.move === snap);
+    if (changed) {
+      d.snap = snap;
+      renderBoard(match.round, legalMoves(match.round));
+    }
+    if (!target) {
+      placeDragClone(d, clone, { ...probe, angle: 90, scale: FLY_PX }, false);
+      return;
+    }
+    // Клон несёт кость как в руке (старшее число первым); тень может лежать
+    // наоборот — тогда клон довёрнут на пол-оборота.
+    const t = parseTile(d.tile);
+    const flip = target.values[0] !== t.hi ? 180 : 0;
+    placeDragClone(d, clone, { ...target.pose, angle: target.pose.angle + flip }, true);
+  }
+
+  /** Палец отпущен (или жест отменён системой). */
+  function endDrag(d: TileDrag, cancelled: boolean): void {
+    drag = null;
+    const clone = d.clone;
+    if (!clone) return; // нажатие без движения — это тап, его ведёт click
+    swallowClick = true;
+    const snap = cancelled ? null : d.snap;
+    if (!snap) {
+      // Мимо теней: кость улетает назад на своё место в руке.
+      const hidden = dragHidden;
+      renderAll();
+      const home = handTileEl(d.player, d.tile);
+      if (home) {
+        clone.classList.add('returning');
+        placeDragClone(d, clone, handPose(home.getBoundingClientRect()), false);
+      }
+      window.setTimeout(() => {
+        clone.remove();
+        if (dragHidden === hidden) {
+          dragHidden = null;
+          handTileEl(d.player, d.tile)?.classList.remove('incoming');
+        }
+      }, DRAG_RETURN_MS);
+      return;
+    }
+    clone.remove();
+    dragHidden = null;
+    if (confirmOn) {
+      // Подтверждение ходов действует как при тапе по тени: отпущенная
+      // кость становится черновиком и ждёт «Поставить».
+      pending = snap;
+      pendingAt = performance.now();
+      renderAll();
+      return;
+    }
+    const target = board.ghostTargets().find((g) => samePlacement(g.move, snap));
+    dispatch(snap, false, target?.pose);
+  }
+
+  /** Перетягивание потеряло смысл (чужой ход, история, сброс матча) — бросаем. */
+  function dropStaleDrag(): void {
+    if (!drag?.clone) return;
+    const live =
+      !replay &&
+      !!match &&
+      match.round.phase !== 'over' &&
+      !notMyTurn() &&
+      match.round.current === drag.player &&
+      match.round.hands[drag.player].includes(drag.tile);
+    if (live) return;
+    drag.clone.remove();
+    drag = null;
+    dragHidden = null;
+  }
+
+  document.addEventListener('pointerdown', (ev) => {
+    swallowClick = false;
+    if (drag || ev.button !== 0) return;
+    const el = (ev.target as Element).closest<HTMLElement>('.hand-tile[data-tile]');
+    if (!el || replay || !match || match.round.phase === 'over') return;
+    const player = Number(el.dataset.player) as 0 | 1;
+    if (player !== match.round.current || notMyTurn()) return;
+    drag = {
+      pointerId: ev.pointerId,
+      tile: el.dataset.tile as TileId,
+      player,
+      touch: ev.pointerType === 'touch' || ev.pointerType === 'pen',
+      startX: ev.clientX,
+      startY: ev.clientY,
+      clone: null,
+      snap: null,
+      angle: 90,
+    };
+  });
+  document.addEventListener('pointermove', (ev) => {
+    const d = drag;
+    if (!d || ev.pointerId !== d.pointerId) return;
+    if (!d.clone) {
+      const intent = dragIntent(ev.clientX - d.startX, ev.clientY - d.startY, d.touch);
+      if (intent === 'none') return;
+      // Вдоль ряда — прокрутка руки, её ведёт сам браузер.
+      if (intent === 'scroll' || !beginDrag(d)) {
+        drag = null;
+        return;
+      }
+    }
+    if (d.clone) moveDrag(d, d.clone, ev.clientX, ev.clientY);
+  });
+  document.addEventListener('pointerup', (ev) => {
+    const d = drag;
+    if (!d || ev.pointerId !== d.pointerId) return;
+    if (d.clone) moveDrag(d, d.clone, ev.clientX, ev.clientY);
+    endDrag(d, false);
+  });
+  document.addEventListener('pointercancel', (ev) => {
+    if (drag && ev.pointerId === drag.pointerId) endDrag(drag, true);
+  });
+  // Раньше остальных обработчиков кликов: отпускание перетянутой кости
+  // не должно стать ни выбором кости, ни ходом по тени, ни добором.
+  document.addEventListener(
+    'click',
+    (ev) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      ev.stopPropagation();
+      ev.preventDefault();
+    },
+    true,
+  );
+
   // --- События -------------------------------------------------------------------
 
   document.addEventListener('click', (ev) => {
@@ -2005,9 +2254,7 @@ export function initApp(opts: AppOptions = {}): AppHandle {
         (m): m is Extract<Move, { tile: TileId }> => 'tile' in m && m.tile === tile,
       );
       if (mine.length === 0) {
-        handTile.classList.remove('wiggle');
-        void handTile.offsetWidth;
-        handTile.classList.add('wiggle');
+        wiggle(handTile);
         return;
       }
       selected = selected === tile && !round.mustPlay ? null : tile;
