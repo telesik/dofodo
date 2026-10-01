@@ -35,6 +35,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          # Общие модули — подмодуль commons/ (telesik-web-commons).
+          submodules: recursive
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -59,6 +61,8 @@ jobs:
             echo "=== building $ref"
             wt="$(mktemp -d)"
             git worktree add --force "$wt" "$ref"
+            # В новом рабочем дереве подмодули пусты — поднять (у веток без подмодулей команда ничего не делает).
+            git -C "$wt" submodule update --init --recursive
             ver="$(node -p "require('$wt/app/package.json').version")"
             if [ -z "$ver" ] || [ "$ver" = "undefined" ]; then
               echo "у ветки $ref нет версии в app/package.json — пропуск"; git worktree remove --force "$wt"; continue
