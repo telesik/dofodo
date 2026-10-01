@@ -3,6 +3,8 @@
 // Ссылки на параграфы (§) едины во всех языках — нумерация RULES.md
 // и RULES.en.md совпадает один в один.
 
+import { createI18n } from '../../../commons/src/i18n';
+
 export type Locale = 'ru' | 'en' | 'es' | 'de' | 'pt' | 'uk' | 'zh' | 'fr' | 'it' | 'ja' | 'ko';
 
 // Порядок списка (решение автора 07.09.2026): автонимы по алфавиту —
@@ -2468,27 +2470,14 @@ const ko: Dict = {
 
 const DICTS: Record<Locale, Dict> = { ru, en, es, de, pt, uk, zh, fr, it, ja, ko };
 
-let current: Locale = 'ru';
+// Механика (текущий словарь, переключение, выбор стартового языка) — общий
+// модуль студии (подмодуль commons/, telesik-web-commons); словари и набор
+// языков — здесь.
+const i18n = createI18n<Locale, Dict>({ dicts: DICTS, locales: LOCALES, initial: 'ru', fallback: 'en' });
 
 /** Текущий словарь. */
-export function L(): Dict {
-  return DICTS[current];
-}
-
-export function getLocale(): Locale {
-  return current;
-}
-
-export function setLocale(locale: Locale): void {
-  current = locale;
-}
-
+export const L = i18n.L;
+export const getLocale = i18n.getLocale;
+export const setLocale = i18n.setLocale;
 /** Подобрать стартовый язык по настройке браузера; для прочих языков — английский. */
-export function detectLocale(preferred?: string | null): Locale {
-  if (preferred && preferred in DICTS) return preferred as Locale;
-  const nav = (navigator.language || 'en').toLowerCase();
-  for (const { code } of LOCALES) {
-    if (nav.startsWith(code)) return code;
-  }
-  return 'en';
-}
+export const detectLocale = i18n.detectLocale;
