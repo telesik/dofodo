@@ -11,7 +11,12 @@ const PLACE_SOUND: Record<'root' | 'straight' | 'turn' | 'cross', PlaceSound> = 
   cross: 'heavy', // поперёк — жёстче и ниже
 };
 
+/** Каким стуком звучит выставление: прямо/поворот — обычный, поперёк — жёстче и ниже. */
+export function placeSoundOf(kind: 'root' | 'straight' | 'turn' | 'cross'): PlaceSound {
+  return PLACE_SOUND[kind];
+}
+
 /** Выставление кости: прямо/поворот — обычный стук, поперёк — жёстче и ниже. */
 export function playPlace(kind: 'root' | 'straight' | 'turn' | 'cross'): void {
-  playPlaceSound(PLACE_SOUND[kind]);
+  playPlaceSound(placeSoundOf(kind));
 }
