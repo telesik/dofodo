@@ -9,6 +9,7 @@ import {
   isDouble,
   chooseBotMove,
   legalMoves,
+  matchProtocol,
   moveEquals,
   shuffleLayout,
   nextRound,
@@ -38,6 +39,9 @@ import { ensureTileDefs, tileBack, tileFace, tileSvgElement } from './tile-svg';
 import { logoSvg } from './logo';
 import { gearSvg } from './icons';
 import { lcg } from './lcg';
+import { localStore, matchSave, writeJson, type KVStore } from './store';
+
+export type { KVStore } from './store';
 
 /** Ключи хранилища: сейв матча и настройки интерфейса. Экспортированы для
  *  мобильной надстройки (миграция, паспорт сети) — литералы там повторялись. */
@@ -99,13 +103,6 @@ interface PileSprite {
 }
 
 // ---------------------------------------------------------------------------
-
-/** Синхронное хранилище настроек и матча; по умолчанию — localStorage. */
-export interface KVStore {
-  get(key: string): string | null;
-  set(key: string, value: string): void;
-  remove(key: string): void;
-}
 
 /** Дополнительный пункт селектора соперника (регистрирует платформенная
  *  надстройка). id не должен совпадать с 'human'/'easy'/'normal'/'strong'. */
@@ -256,11 +253,7 @@ export interface AppHandle {
 }
 
 export function initApp(opts: AppOptions = {}): AppHandle {
-  const store: KVStore = opts.storage ?? {
-    get: (k) => localStorage.getItem(k),
-    set: (k, v) => localStorage.setItem(k, v),
-    remove: (k) => localStorage.removeItem(k),
-  };
+  const store: KVStore = opts.storage ?? localStore();
 
   // Дополнительные пункты соперника имеют смысл только вместе с обработчиком
   // старта: пункт без onOpponentStart делал бы кнопку старта молча мёртвой.
@@ -472,30 +465,23 @@ export function initApp(opts: AppOptions = {}): AppHandle {
   }
 
   function persistUi(): void {
-    try {
-      store.set(
-        LS_UI_KEY,
-        JSON.stringify({
-          markOwners,
-          autoFit: autoFitOn,
-          sound: soundOn,
-          locale: getLocale(),
-          mirror: mirrorBoard,
-          confirm: confirmOn,
-          tutor: tutorOn,
-          opponent: opponentPref,
-          target: targetPref,
-          p1Name: savedP1,
-          p2Name: savedP2,
-          toggles: Object.fromEntries(toggleState),
-          roundsDone,
-          tutorAsked,
-          howtoShown,
-        }),
-      );
-    } catch {
-      /* ignore */
-    }
+    writeJson(store, LS_UI_KEY, {
+      markOwners,
+      autoFit: autoFitOn,
+      sound: soundOn,
+      locale: getLocale(),
+      mirror: mirrorBoard,
+      confirm: confirmOn,
+      tutor: tutorOn,
+      opponent: opponentPref,
+      target: targetPref,
+      p1Name: savedP1,
+      p2Name: savedP2,
+      toggles: Object.fromEntries(toggleState),
+      roundsDone,
+      tutorAsked,
+      howtoShown,
+    });
   }
 
   const board = createBoard(svgBoard, {
@@ -535,75 +521,54 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     match?.names[p] ?? (p === 0 ? L().defaultP1 : L().defaultP2);
   const tileLabel = (t: TileId): string => t.replace('-', ':');
 
+  // Сейв матча — в конверте с версией (приватный режим и отказ хранилища не
+  // страшны). Разбор кэшируется по строке из хранилища (telesik-team#123, O3):
+  // карточка старта перерисовывается на смену языка и соперника, а JSON.parse
+  // и проверка всего матча каждый раз — лишние.
+  const saved = matchSave<MatchState>(store, LS_KEY, { v: 2, validate: validateSaved });
+
   function persist(): void {
-    try {
-      if (match) store.set(LS_KEY, JSON.stringify({ v: 2, match }));
-    } catch {
-      /* приватный режим — не страшно */
-    }
+    if (match) saved.save(match);
   }
 
-  // Кэш разбора сохранения (telesik-team#123, O3): карточка старта
-  // перерисовывается на смену языка и соперника, а JSON.parse и валидация
-  // всего матча каждый раз — лишние. Ключ кэша — сама строка из хранилища:
-  // любая запись, в том числе извне оболочки, меняет её, и кэш сбрасывается сам.
-  let savedRaw: string | null = null;
-  let savedParsed: MatchState | null = null;
-  function loadSaved(): MatchState | null {
-    const drop = (): null => {
-      try {
-        store.remove(LS_KEY);
-      } catch {
-        /* ignore */
-      }
-      return null;
-    };
-    try {
-      const raw = store.get(LS_KEY);
-      if (!raw) return null;
-      if (raw === savedRaw) return savedParsed;
-      const TILE_RE = /^[0-6]-[0-6]$/;
-      const tiles = (x: unknown): boolean =>
-        Array.isArray(x) && x.every((t) => typeof t === 'string' && TILE_RE.test(t));
-      const data = JSON.parse(raw) as { v?: number; match?: MatchState };
-      const m = data?.match;
-      const r = m?.round;
-      const ok =
-        data?.v === 2 &&
-        Array.isArray(m?.names) &&
-        m.names.length === 2 &&
-        m.names.every((n) => typeof n === 'string') &&
-        Array.isArray(m.totals) &&
-        m.totals.length === 2 &&
-        m.totals.every((n) => typeof n === 'number') &&
-        !!r &&
-        (r.phase === 'root' || r.phase === 'main' || r.phase === 'over') &&
-        Array.isArray(r.hands) &&
-        r.hands.length === 2 &&
-        tiles(r.hands[0]) &&
-        tiles(r.hands[1]) &&
-        tiles(r.boneyard) &&
-        Array.isArray(r.placed) &&
-        Array.isArray(r.ends) &&
-        typeof r.seed === 'number' &&
-        Array.isArray(r.history) &&
-        Array.isArray(m.rounds) &&
-        // Цель матча из сырого JSON решает, когда матч кончится, —
-        // порченое значение (0, строка) сломало бы finishRound.
-        !!m.variant &&
-        targetOk(m.variant.target) &&
-        !!r.variant &&
-        targetOk(r.variant.target) &&
-        (m.bot == null ||
-          ((m.bot.player === 0 || m.bot.player === 1) &&
-            ['easy', 'normal', 'strong'].includes(m.bot.level)));
-      if (!ok) return drop();
-      savedRaw = raw;
-      savedParsed = m;
-      return m;
-    } catch {
-      return drop();
-    }
+  const loadSaved = (): MatchState | null => saved.load();
+
+  /** Проверка сейва из сырого JSON: null — сейв негоден и будет стёрт. */
+  function validateSaved(raw: unknown): MatchState | null {
+    const TILE_RE = /^[0-6]-[0-6]$/;
+    const tiles = (x: unknown): boolean =>
+      Array.isArray(x) && x.every((t) => typeof t === 'string' && TILE_RE.test(t));
+    const m = raw as MatchState | undefined;
+    const r = m?.round;
+    const ok =
+      Array.isArray(m?.names) &&
+      m.names.length === 2 &&
+      m.names.every((n) => typeof n === 'string') &&
+      Array.isArray(m.totals) &&
+      m.totals.length === 2 &&
+      m.totals.every((n) => typeof n === 'number') &&
+      !!r &&
+      (r.phase === 'root' || r.phase === 'main' || r.phase === 'over') &&
+      Array.isArray(r.hands) &&
+      r.hands.length === 2 &&
+      tiles(r.hands[0]) &&
+      tiles(r.hands[1]) &&
+      tiles(r.boneyard) &&
+      Array.isArray(r.placed) &&
+      Array.isArray(r.ends) &&
+      typeof r.seed === 'number' &&
+      Array.isArray(r.history) &&
+      Array.isArray(m.rounds) &&
+      // Цель матча из сырого JSON решает, когда матч кончится, —
+      // порченое значение (0, строка) сломало бы finishRound.
+      !!m.variant &&
+      targetOk(m.variant.target) &&
+      !!r.variant &&
+      targetOk(r.variant.target) &&
+      (m.bot == null ||
+        ((m.bot.player === 0 || m.bot.player === 1) &&
+          ['easy', 'normal', 'strong'].includes(m.bot.level)));
+    return ok ? m : null;
   }
 
   /** Валидная цель матча в сыром JSON: поля нет или целое больше нуля. */
@@ -1298,16 +1263,8 @@ export function initApp(opts: AppOptions = {}): AppHandle {
     if (!match) return;
     // Просмотр истории — не обдумывание позиции: замер испорчен (0003).
     turnStartedAt = null;
-    const rounds: RoundProtocol[] = match.rounds.map((r) => ({
-      seed: r.seed,
-      first: r.first,
-      moves: r.moves,
-      result: { cause: r.cause, sums: r.sums, added: r.added, winner: r.winner },
-    }));
-    const cur = match.round;
-    if (cur.phase !== 'over') {
-      rounds.push({ seed: cur.seed, first: cur.first, moves: cur.history });
-    }
+    // Завершённые партии плюс текущая, если она идёт.
+    const rounds = matchProtocol(match).rounds;
     if (rounds.length === 0) return;
     const roundIdx = rounds.length - 1;
     replay = {
