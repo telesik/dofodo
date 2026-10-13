@@ -5,5 +5,6 @@ export * from './layout';
 export * from './rules';
 export * from './bot';
 export * from './score';
+export * from './engine';
 export * from './match';
 export * from './replay';

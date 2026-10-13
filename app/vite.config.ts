@@ -13,6 +13,9 @@ function gitHash(): string {
 }
 
 export default defineConfig({
+  // Общие модули лежат в подмодуле commons/ рядом с app/ — вне корня Vite;
+  // dev-серверу нужно явное разрешение отдавать файлы оттуда.
+  server: { fs: { allow: ['..'] } },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
     __GIT_HASH__: JSON.stringify(gitHash()),

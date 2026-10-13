@@ -13,18 +13,12 @@ import {
 } from '../engine';
 import { CELL, PIPS, placedTransform, tileCenterAngle, tileFace, TILE_L, TILE_W, TILE_R } from './tile-svg';
 import { L } from './i18n';
+import { createViewport } from './viewport';
 
 export interface BoardHooks {
   onMove(move: Move): void;
   /** Автомасштаб переключился: false — пользователь подвигал/зумил стол сам. */
   onViewChange(auto: boolean): void;
-}
-
-interface ViewBox {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 export interface BoardRenderOptions {
@@ -42,6 +36,31 @@ export interface BoardRenderOptions {
   pending?: Move | null;
   /** Кость с этим seq скрыта: к месту летит её HTML-клон (анимация хода). */
   hideSeq?: number | null;
+}
+
+/** Кость на экране: центр в px окна, угол в градусах, длина кости в px. */
+export interface ScreenPose {
+  x: number;
+  y: number;
+  angle: number;
+  scale: number;
+}
+
+/** Тень хода на экране — для перетягивания кости из руки (telesik-team#164). */
+export interface GhostTarget {
+  readonly move: Move;
+  /**
+   * Точка прилипания. У «прямо» и поворота — центр дальней половины: приставная
+   * у теней одного конца общая, а дальние разнесены на клетку с лишним — палец
+   * различает варианты увереннее, чем по центрам костей. У корня и «поперёк» —
+   * центр кости.
+   */
+  readonly x: number;
+  readonly y: number;
+  /** Как кость ляжет на эту тень. */
+  readonly pose: ScreenPose;
+  /** Значения половин в порядке клеток тени (как у выложенной кости). */
+  readonly values: readonly [number, number];
 }
 
 /** Совпадение хода с ожидающим подтверждения (включая сторону поворота). */
@@ -145,50 +164,38 @@ export function tileTransform(a: Vec, b: Vec, mirror = false): string {
 }
 
 export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
-  let vb: ViewBox = { x: -CELL * 9, y: -CELL * 5, w: CELL * 18, h: CELL * 10 };
   let autoFit = true;
   let lastGame: GameState | null = null;
   let lastGhostCells: Vec[] = [];
-  let tweenHandle = 0;
+  let lastGhosts: { move: Move; cells: readonly [Vec, Vec]; values: readonly [number, number] }[] = [];
   let mirror = false;
 
   const scene = (c: Vec): Vec => sceneCell(c, mirror);
   const tileTr = (a: Vec, b: Vec): string => tileTransform(a, b, mirror);
 
-  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-  applyViewBox();
+  // Кадр стола — общий модуль: панорама, зум колесом и щипком, плавный
+  // переезд. Что считать содержимым и когда держать его в кадре — здесь.
+  const view = createViewport(svg, {
+    initial: { x: -CELL * 9, y: -CELL * 5, w: CELL * 18, h: CELL * 10 },
+    minW: MIN_W,
+    maxW: MAX_W,
+    // Нажатие на тень хода — работа с ходом, а не с камерой.
+    holdSelector: '[data-move]',
+    onGesture(kind) {
+      // Щипок сообщает о каждом шаге — автомасштаб выключается на первом.
+      if (kind === 'pinch' && !autoFit) return;
+      autoFit = false;
+      hooks.onViewChange(false);
+    },
+    onReset() {
+      autoFit = true;
+      fit();
+      hooks.onViewChange(true);
+    },
+  });
 
-  function applyViewBox(): void {
-    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  }
-
-  function setViewBox(next: ViewBox, animate: boolean): void {
-    cancelAnimationFrame(tweenHandle);
-    if (!animate) {
-      vb = next;
-      applyViewBox();
-      return;
-    }
-    const from = { ...vb };
-    const t0 = performance.now();
-    const dur = 260;
-    const step = (t: number): void => {
-      const k = Math.min(1, (t - t0) / dur);
-      const e = 1 - Math.pow(1 - k, 3);
-      vb = {
-        x: from.x + (next.x - from.x) * e,
-        y: from.y + (next.y - from.y) * e,
-        w: from.w + (next.w - from.w) * e,
-        h: from.h + (next.h - from.h) * e,
-      };
-      applyViewBox();
-      if (k < 1) tweenHandle = requestAnimationFrame(step);
-    };
-    tweenHandle = requestAnimationFrame(step);
-  }
-
-  /** Прямоугольник, охватывающий фигуру, открытые концы и призраки ходов. */
-  function contentBox(game: GameState): ViewBox {
+  /** Границы фигуры на сцене: выложенные кости, открытые концы, призраки ходов. */
+  function contentBounds(game: GameState): { minX: number; maxX: number; minY: number; maxY: number } {
     let minX = -1.5;
     let maxX = 1.5;
     let minY = -1.5;
@@ -206,39 +213,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     }
     for (const e of game.ends) grow(e.attach);
     for (const c of lastGhostCells) grow(c);
-    // Границы самой фигуры на сцене, до подгонки под аспект и минимум, —
-    // по ним проверяется пересечение с кучей базара.
-    const rawMinX = minX;
-    const rawMaxX = maxX;
-    const rawMinY = minY;
-    const rawMaxY = maxY;
-    const rect = svg.getBoundingClientRect();
-    const aspect = rect.width > 0 && rect.height > 0 ? rect.width / rect.height : 16 / 9;
-    let w = (maxX - minX) * CELL;
-    let h = (maxY - minY) * CELL;
-    // Подгоняем под аспект вьюпорта, чтобы фигура занимала кадр целиком.
-    if (w / h < aspect) {
-      const w2 = h * aspect;
-      minX -= (w2 - w) / 2 / CELL;
-      w = w2;
-    } else {
-      const h2 = w / aspect;
-      minY -= (h2 - h) / 2 / CELL;
-      h = h2;
-    }
-    const scale = Math.max(1, fitMinW(rect.width || 1280) / w);
-    if (scale > 1) {
-      // Раздвигаем кадр вокруг центра, сохраняя аспект.
-      minX -= (w * (scale - 1)) / 2 / CELL;
-      minY -= (h * (scale - 1)) / 2 / CELL;
-      w *= scale;
-      h *= scale;
-    }
-    return avoidPile(
-      { x: minX * CELL, y: minY * CELL, w, h },
-      { x0: rawMinX * CELL, y0: rawMinY * CELL, x1: rawMaxX * CELL, y1: rawMaxY * CELL },
-      rect,
-    );
+    return { minX, maxX, minY, maxY };
   }
 
   /**
@@ -248,176 +223,25 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
    * С зеркальным столом всё то же самое, меняется только, какой край дерева
    * подбирается к куче: обычно — растущий кончик, в зеркале — корень.
    */
-  // Элемент кучи ищется один раз, а прямоугольник svg приходит из contentBox
-  // (telesik-team#123, O4): два принудительных layout-чтения за рендер
-  // вместо трёх плюс поиска по DOM.
+  // Элемент кучи ищется один раз (telesik-team#123, O4).
   let pileEl: Element | null = null;
-  function avoidPile(
-    vb: ViewBox,
-    raw: { x0: number; y0: number; x1: number; y1: number },
-    sr: DOMRect,
-  ): ViewBox {
-    pileEl ??= document.querySelector('#boneyard');
-    if (!pileEl) return vb;
-    const pr = pileEl.getBoundingClientRect();
-    if (pr.width === 0 || sr.width === 0) return vb;
-    const px0 = pr.left - sr.left;
-    const py0 = pr.top - sr.top;
-    let out = vb;
-    for (let i = 0; i < 10; i++) {
-      const sx1 = ((raw.x1 - out.x) / out.w) * sr.width;
-      const sy1 = ((raw.y1 - out.y) / out.h) * sr.height;
-      const sx0 = ((raw.x0 - out.x) / out.w) * sr.width;
-      const sy0 = ((raw.y0 - out.y) / out.h) * sr.height;
-      const hit =
-        sx1 > px0 && sx0 < pr.right - sr.left && sy1 > py0 && sy0 < pr.bottom - sr.top;
-      if (!hit) break;
-      out = { x: out.x, y: out.y, w: out.w * 1.09, h: out.h * 1.09 };
-    }
-    return out;
-  }
 
   function fit(animate = true): void {
     if (!lastGame) return;
-    setViewBox(contentBox(lastGame), animate);
+    pileEl ??= document.querySelector('#boneyard');
+    view.set(
+      view.frame(contentBounds(lastGame), {
+        unit: CELL,
+        minW: fitMinW,
+        avoid: pileEl ? pileEl.getBoundingClientRect() : null,
+      }),
+      animate,
+    );
   }
-
-  // --- Панорама и зум --------------------------------------------------------
-
-  let dragging = false;
-  let dragStart = { x: 0, y: 0 };
-  let vbStart = vb;
-  let moved = false;
-
-  // Порог «это драг, а не клик»: пальцу нужен запас больше, чем мыши, —
-  // тап по призраку легко уезжает на 5–8 px.
-  const DRAG_PX = matchMedia('(pointer: coarse)').matches ? 10 : 4;
-
-  // Мультитач: активные указатели и состояние щипка (дистанция и центр
-  // прошлого замера в экранных px; шаги применяются инкрементально).
-  const pointers = new Map<number, { x: number; y: number }>();
-  let pinch: { d: number; cx: number; cy: number } | null = null;
-
-  function pinchFrom(pts: { x: number; y: number }[]): { d: number; cx: number; cy: number } {
-    const [a, b] = [pts[0]!, pts[1]!];
-    return {
-      d: Math.hypot(b.x - a.x, b.y - a.y),
-      cx: (a.x + b.x) / 2,
-      cy: (a.y + b.y) / 2,
-    };
-  }
-
-  /**
-   * Зум кадра в k раз вокруг экранной точки (cx, cy): мировая точка под ней
-   * остаётся на месте, ширина зажата в [MIN_W, MAX_W]. Кадр не применяется:
-   * вызывающий может ещё сдвинуть его (панорама щипка) и применяет сам.
-   */
-  function zoomAt(cx: number, cy: number, k: number): void {
-    const rect = svg.getBoundingClientRect();
-    const w = Math.min(MAX_W, Math.max(MIN_W, vb.w * k));
-    const kk = w / vb.w;
-    const px = vb.x + ((cx - rect.left) / rect.width) * vb.w;
-    const py = vb.y + ((cy - rect.top) / rect.height) * vb.h;
-    cancelAnimationFrame(tweenHandle);
-    vb = { x: px - (px - vb.x) * kk, y: py - (py - vb.y) * kk, w, h: vb.h * kk };
-  }
-
-  svg.addEventListener('pointerdown', (ev) => {
-    if (ev.button !== 0) return; // панорама и клики — только основной кнопкой
-    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    if (pointers.size === 2) {
-      // Второй палец превращает драг в щипок; кликом это уже не станет.
-      dragging = false;
-      moved = true;
-      pinch = pinchFrom([...pointers.values()]);
-      svg.setPointerCapture(ev.pointerId);
-      return;
-    }
-    if (pointers.size > 2 || pinch) return;
-    moved = false;
-    // Захват указателя — только когда начинается панорама: захват на svg
-    // ретаргетит события, и клик по призраку перестал бы находить цель.
-    if ((ev.target as Element).closest('[data-move]')) return;
-    dragging = true;
-    dragStart = { x: ev.clientX, y: ev.clientY };
-    vbStart = { ...vb };
-    svg.setPointerCapture(ev.pointerId);
-  });
-  svg.addEventListener('pointermove', (ev) => {
-    if (pointers.has(ev.pointerId)) {
-      pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    }
-    if (pinch && pointers.size >= 2) {
-      const cur = pinchFrom([...pointers.values()]);
-      if (cur.d < 1 || pinch.d < 1) return;
-      // Зум вокруг мировой точки под центром щипка…
-      zoomAt(pinch.cx, pinch.cy, pinch.d / cur.d);
-      // …плюс панорама на смещение самого центра.
-      const scale = vb.w / svg.getBoundingClientRect().width;
-      vb = { ...vb, x: vb.x - (cur.cx - pinch.cx) * scale, y: vb.y - (cur.cy - pinch.cy) * scale };
-      applyViewBox();
-      pinch = cur;
-      if (autoFit) {
-        autoFit = false;
-        hooks.onViewChange(false);
-      }
-      return;
-    }
-    if (!dragging) return;
-    const rect = svg.getBoundingClientRect();
-    const scale = vb.w / rect.width;
-    const dx = (ev.clientX - dragStart.x) * scale;
-    const dy = (ev.clientY - dragStart.y) * scale;
-    if (Math.abs(ev.clientX - dragStart.x) + Math.abs(ev.clientY - dragStart.y) > DRAG_PX) {
-      moved = true;
-    }
-    if (moved) {
-      cancelAnimationFrame(tweenHandle);
-      vb = { ...vb, x: vbStart.x - dx, y: vbStart.y - dy };
-      applyViewBox();
-    }
-  });
-  const endDrag = (ev: PointerEvent): void => {
-    pointers.delete(ev.pointerId);
-    if (pinch) {
-      // Щипок закончился (или потерял палец): остаток не превращаем в драг,
-      // чтобы стол не прыгал; следующий pointerdown начнёт жест заново.
-      // Если пальцев всё ещё два и больше — пересеваем замер по оставшимся.
-      pinch = pointers.size >= 2 ? pinchFrom([...pointers.values()]) : null;
-      return;
-    }
-    if (dragging && moved) {
-      autoFit = false;
-      hooks.onViewChange(false);
-    }
-    dragging = false;
-  };
-  svg.addEventListener('pointerup', endDrag);
-  svg.addEventListener('pointercancel', endDrag);
-
-  svg.addEventListener(
-    'wheel',
-    (ev) => {
-      ev.preventDefault();
-      zoomAt(ev.clientX, ev.clientY, ev.deltaY > 0 ? 1.15 : 1 / 1.15);
-      applyViewBox();
-      autoFit = false;
-      hooks.onViewChange(false);
-    },
-    { passive: false },
-  );
-
-  svg.addEventListener('dblclick', (ev) => {
-    // Двойной клик по призраку — это работа с ходом, а не с камерой.
-    if ((ev.target as Element).closest('[data-move]')) return;
-    autoFit = true;
-    fit();
-    hooks.onViewChange(true);
-  });
 
   svg.addEventListener('click', (ev) => {
     const el = (ev.target as Element).closest<SVGElement>('[data-move]');
-    if (!el || moved) return;
+    if (!el || view.dragged()) return;
     const move = JSON.parse(el.dataset.move!) as Move;
     hooks.onMove(move);
   });
@@ -535,6 +359,7 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     // На приставную клетку полутень не претендует, так что адресат клика
     // по ней от порядка не зависит.
     lastGhostCells = [];
+    lastGhosts = [];
     if (opts.selected !== null) {
       const farHalf = farHalfGhosts(opts.ghostMoves, opts.pending);
       const halves: string[] = [];
@@ -545,18 +370,16 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
           // берём у движка: разъедься они с ROOT_CELLS, тень корня встала бы
           // не туда, где потом окажется сам корень.
           lastGhostCells.push(ROOT_CELLS[0], ROOT_CELLS[1]);
-          parts.push(ghostSvg(game, m, ROOT_CELLS, 'root', opts));
+          const t = parseTile(m.tile);
+          lastGhosts.push({ move: m, cells: ROOT_CELLS, values: [t.hi, t.lo] });
+          parts.push(ghostSvg(m, ROOT_CELLS, [t.hi, t.lo], 'root', opts));
         } else if (m.type === 'place') {
           const geo = placementGeometry(game, m.tile, m.endId, m.mode, m.side);
           lastGhostCells.push(geo.cells[0], geo.cells[1]);
-          const svgPart = ghostSvg(
-            game,
-            m,
-            [geo.cells[0], geo.cells[1]],
-            m.mode,
-            opts,
-            farHalf.has(m),
-          );
+          const cells: readonly [Vec, Vec] = [geo.cells[0], geo.cells[1]];
+          const values: readonly [number, number] = [geo.values[0], geo.values[1]];
+          lastGhosts.push({ move: m, cells, values });
+          const svgPart = ghostSvg(m, cells, values, m.mode, opts, farHalf.has(m));
           (farHalf.has(m) ? halves : parts).push(svgPart);
         }
       }
@@ -584,23 +407,13 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
   }
 
   function ghostSvg(
-    game: GameState,
     move: Extract<Move, { type: 'place' } | { type: 'placeRoot' }>,
     cells: readonly [Vec, Vec],
+    values: readonly [number, number],
     mode: string,
     opts: BoardRenderOptions,
     farHalfOnly = false,
   ): string {
-    const values: [number, number] =
-      move.type === 'place'
-        ? (() => {
-            const geo = placementGeometry(game, move.tile, move.endId, move.mode, move.side);
-            return [geo.values[0], geo.values[1]];
-          })()
-        : (() => {
-            const t = parseTile(move.tile);
-            return [t.hi, t.lo];
-          })();
     const dataMove = opts.interactive
       ? `data-move='${JSON.stringify(move).replace(/'/g, '&#39;')}'`
       : '';
@@ -644,19 +457,40 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       .join('');
   }
 
-  /** Экранные координаты центра выложенной кости (для летящего клона). */
-  function placedScreenPoint(seq: number): { x: number; y: number; angle: number; scale: number } | null {
-    const p = lastGame?.placed[seq];
-    if (!p) return null;
+  /** Кость в мировых клетках a→b — на экране; null, пока стол не свёрстан. */
+  function screenPose(a: Vec, b: Vec): ScreenPose | null {
     const rect = svg.getBoundingClientRect();
     if (rect.width === 0) return null;
-    const { cx, cy, angle } = tileCenterAngle(scene(p.cells[0]), scene(p.cells[1]));
+    const vb = view.get();
+    const { cx, cy, angle } = tileCenterAngle(scene(a), scene(b));
     return {
       x: rect.left + ((cx - vb.x) / vb.w) * rect.width,
       y: rect.top + ((cy - vb.y) / vb.h) * rect.height,
       angle,
       scale: (TILE_L / vb.w) * rect.width,
     };
+  }
+
+  /** Экранные координаты центра выложенной кости (для летящего клона). */
+  function placedScreenPoint(seq: number): ScreenPose | null {
+    const p = lastGame?.placed[seq];
+    return p ? screenPose(p.cells[0], p.cells[1]) : null;
+  }
+
+  /**
+   * Тени последнего рендера на экране. Считаются по текущему кадру при каждом
+   * вызове: пока кость тянут, автомасштаб может ещё доезжать.
+   */
+  function ghostTargets(): GhostTarget[] {
+    const out: GhostTarget[] = [];
+    for (const g of lastGhosts) {
+      const pose = screenPose(g.cells[0], g.cells[1]);
+      if (!pose) return [];
+      const whole = g.move.type === 'placeRoot' || (g.move.type === 'place' && g.move.mode === 'cross');
+      const anchor = whole ? pose : screenPose(g.cells[1], g.cells[1])!;
+      out.push({ move: g.move, x: anchor.x, y: anchor.y, pose, values: g.values });
+    }
+    return out;
   }
 
   return {
@@ -666,22 +500,11 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
       fit(animate);
     },
     placedScreenPoint,
+    ghostTargets,
     /** Довести кость в кадр минимальным сдвигом (автомасштаб выключен). */
     ensureVisible(seq: number, margin = 40): void {
       const pt = placedScreenPoint(seq);
-      if (!pt) return;
-      const rect = svg.getBoundingClientRect();
-      const x = pt.x - rect.left;
-      const y = pt.y - rect.top;
-      let dx = 0;
-      let dy = 0;
-      if (x < margin) dx = x - margin;
-      else if (x > rect.width - margin) dx = x - (rect.width - margin);
-      if (y < margin) dy = y - margin;
-      else if (y > rect.height - margin) dy = y - (rect.height - margin);
-      if (dx === 0 && dy === 0) return;
-      const k = vb.w / rect.width;
-      setViewBox({ ...vb, x: vb.x + dx * k, y: vb.y + dy * k }, true);
+      if (pt) view.reveal(pt, margin);
     },
     /**
      * Зеркальный стол: корень справа, дерево растёт влево. Настройка вида для
@@ -694,9 +517,8 @@ export function createBoard(svg: SVGSVGElement, hooks: BoardHooks) {
     setMirror(on: boolean): void {
       if (on === mirror) return;
       mirror = on;
-      cancelAnimationFrame(tweenHandle);
-      vb = { ...vb, x: -(vb.x + vb.w) };
-      applyViewBox();
+      const vb = view.get();
+      view.set({ ...vb, x: -(vb.x + vb.w) }, false);
     },
 
     /** Явно включить/выключить автомасштаб (галочка в шапке). */
