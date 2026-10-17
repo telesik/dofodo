@@ -21,6 +21,10 @@ export default defineConfig({
     __GIT_HASH__: JSON.stringify(gitHash()),
   },
   test: {
+    // Node 25+ подставляет свой глобальный localStorage (Web Storage; без
+    // --localstorage-file — undefined), и он перекрывает localStorage jsdom —
+    // выключаем там, где он есть (telesik/telesik-team#453).
+    poolOptions: { forks: { execArgv: 'localStorage' in globalThis ? ['--no-experimental-webstorage'] : [] } },
     // Метрика покрытия (тикет 0014): `npm run coverage` — отчёт в терминал
     // (text), для глаз (html в coverage/, вне git) и машиночитаемый (lcov).
     // Пороги — «пол-храповик» (ratchet): зафиксирован ПЕРВЫЙ фактический
