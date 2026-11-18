@@ -81,3 +81,36 @@ describe('словари целиком', () => {
     }
   });
 });
+
+// Единственное число счётчика костей: «1 tile», а не «1 tiles». В тестах
+// игра всегда шла с полными руками — форма для одной кости ни разу не
+// проверялась (подсчёт ветвей vitest 4, telesik-team#854).
+describe('счётчик костей: одна кость и много', () => {
+  const one: Partial<Record<(typeof LOCALES)[number]['code'], [string, string]>> = {
+    en: ['1 tile', '7 tiles'],
+    es: ['1 ficha', '7 fichas'],
+    de: ['1 Stein', '7 Steine'],
+    pt: ['1 peça', '7 peças'],
+    fr: ['1 domino', '7 dominos'],
+    it: ['1 tessera', '7 tessere'],
+  };
+
+  it('подпись руки и закрытой руки согласуется с числом', () => {
+    for (const [code, [single, many]] of Object.entries(one)) {
+      setLocale(code as (typeof LOCALES)[number]['code']);
+      expect(L().handMeta(1, 3), code).toContain(single);
+      expect(L().handMeta(1, 3), code).not.toContain(many.split(' ')[1]);
+      expect(L().handMetaHidden(1), code).toContain(single);
+      expect(L().handMeta(7, 30), code).toContain(many);
+      expect(L().handMetaHidden(7), code).toContain(many);
+    }
+  });
+
+  it('украинская отмена: 1 кістка, 3 кістки, 13 кісток, 22 кістки', () => {
+    setLocale('uk');
+    expect(L().handMeta(1, 0)).toContain('1 кістка');
+    expect(L().handMeta(3, 0)).toContain('3 кістки');
+    expect(L().handMeta(13, 0)).toContain('13 кісток');
+    expect(L().handMeta(22, 0)).toContain('22 кістки');
+  });
+});
